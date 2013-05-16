@@ -146,8 +146,6 @@ public class PartitioningRunner extends
 
     Class keyClass = null;
     Class valueClass = null;
-    Class outputKeyClass = null;
-    Class outputValueClass = null;
     while ((pair = peer.readNext()) != null) {
       if (keyClass == null && valueClass == null) {
         keyClass = pair.getKey().getClass();
@@ -160,11 +158,6 @@ public class PartitioningRunner extends
         continue;
       }
 
-      if (outputKeyClass == null && outputValueClass == null) {
-        outputKeyClass = outputPair.getKey().getClass();
-        outputValueClass = outputPair.getValue().getClass();
-      }
-
       int index = converter.getPartitionId(outputPair, partitioner, conf, peer,
           desiredNum);
 
@@ -173,7 +166,7 @@ public class PartitioningRunner extends
         map = converter.newMap();
         values.put(index, map);
       }
-      map.put(outputPair.getKey(), outputPair.getValue());
+      map.put(pair.getKey(), pair.getValue());
     }
 
     // The reason of use of Memory is to reduce file opens
@@ -181,7 +174,7 @@ public class PartitioningRunner extends
       Path destFile = new Path(partitionDir + "/part-" + e.getKey() + "/file-"
           + peer.getPeerIndex());
       SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf,
-          destFile, outputKeyClass, outputValueClass, CompressionType.NONE);
+          destFile, keyClass, valueClass, CompressionType.NONE);
 
       for (Map.Entry<Writable, Writable> v : e.getValue().entrySet()) {
         writer.append(v.getKey(), v.getValue());
@@ -191,34 +184,26 @@ public class PartitioningRunner extends
 
     peer.sync();
     FileStatus[] status = fs.listStatus(partitionDir);
+    // To avoid race condition, we should store the peer number
+    int peerNum = peer.getNumPeers();
     // Call sync() one more time to avoid concurrent access
     peer.sync();
 
     // merge files into one.
     // TODO if we use header info, we might able to merge files without full
     // scan.
-    for (FileStatus statu : status) {
+    for (FileStatus stat : status) {
       int partitionID = Integer
-          .parseInt(statu.getPath().getName().split("[-]")[1]);
-      int denom = desiredNum / peer.getNumPeers();
-      int assignedID = partitionID;
-      if (denom > 1) {
-        assignedID = partitionID / denom;
-      }
-
-      if (assignedID == peer.getNumPeers())
-        assignedID = assignedID - 1;
+          .parseInt(stat.getPath().getName().split("[-]")[1]);
 
       // TODO set replica factor to 1.
-      // TODO and check whether we can write to specific DataNode.
-      if (assignedID == peer.getPeerIndex()) {
+      if (getMergeProcessorID(partitionID, peerNum) == peer.getPeerIndex()) {
         Path partitionFile = new Path(partitionDir + "/"
             + getPartitionName(partitionID));
 
-        FileStatus[] files = fs.listStatus(statu.getPath());
+        FileStatus[] files = fs.listStatus(stat.getPath());
         SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf,
-            partitionFile, outputKeyClass, outputValueClass,
-            CompressionType.NONE);
+            partitionFile, keyClass, valueClass, CompressionType.NONE);
 
         for (int i = 0; i < files.length; i++) {
           LOG.debug("merge '" + files[i].getPath() + "' into " + partitionDir
@@ -227,10 +212,9 @@ public class PartitioningRunner extends
           SequenceFile.Reader reader = new SequenceFile.Reader(fs,
               files[i].getPath(), conf);
 
-          Writable key = (Writable) ReflectionUtils.newInstance(outputKeyClass,
+          Writable key = (Writable) ReflectionUtils.newInstance(keyClass, conf);
+          Writable value = (Writable) ReflectionUtils.newInstance(valueClass,
               conf);
-          Writable value = (Writable) ReflectionUtils.newInstance(
-              outputValueClass, conf);
 
           while (reader.next(key, value)) {
             writer.append(key, value);
@@ -239,9 +223,13 @@ public class PartitioningRunner extends
         }
 
         writer.close();
-        fs.delete(statu.getPath(), true);
+        fs.delete(stat.getPath(), true);
       }
     }
+  }
+
+  public static int getMergeProcessorID(int partitionID, int peerNum) {
+    return partitionID % peerNum;
   }
 
   @SuppressWarnings("rawtypes")
