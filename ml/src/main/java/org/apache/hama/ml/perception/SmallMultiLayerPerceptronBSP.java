@@ -1,0 +1,42 @@
+package org.apache.hama.ml.perception;
+
+import java.net.URI;
+
+import org.apache.hama.ml.math.DoubleVector;
+
+
+/**
+ *	SmallMultiLayerPerceptronBSP is a kind of multilayer perceptron
+ *	whose parameters can be fit into the memory of a single machine.
+ *	This kind of model can be trained and used more efficiently than
+ *	the BigMultiLayerPerceptronBSP, whose parameters are distributedly
+ *	stored in multiple machines.
+ *
+ */
+public class SmallMultiLayerPerceptronBSP implements ClassificationPerceptron {
+
+	@Override
+	public void train(DoubleVector trainingInstance, int classLabelIndex) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void loadModel(URI modelUri) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void saveModel(URI ModelUri) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public DoubleVector classify(DoubleVector featureVector) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

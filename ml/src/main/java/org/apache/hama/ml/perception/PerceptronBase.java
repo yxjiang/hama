@@ -1,10 +1,12 @@
 package org.apache.hama.ml.perception;
 
+import java.net.URI;
+
 import org.apache.hama.ml.math.DoubleVector;
 
 /**
  *	PerceptronBase defines the common behavior of all the concrete perceptrons. 
- *
+ *	
  */
 public interface PerceptronBase {
 	
@@ -15,4 +17,16 @@ public interface PerceptronBase {
 	 */
 	public abstract void train(DoubleVector trainingInstance, int classLabelIndex);
 	
+	/**
+	 * Directly load the existing model parameters from the specific location.
+	 * @param modelUrl	The location to load the model parameters.
+	 */
+	public abstract void loadModel(URI modelUri);
+	
+	/**
+	 * Store the trained model to specific location.
+	 * The learnt parameter can be reloaded next time to avoid the training from scratch.
+	 * @param modelUri	The location to save the model parameters.
+	 */
+	public abstract void saveModel(URI ModelUri);
 }
