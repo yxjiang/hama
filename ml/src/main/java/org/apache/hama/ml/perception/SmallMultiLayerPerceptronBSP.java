@@ -6,14 +6,23 @@ import org.apache.hama.ml.math.DoubleVector;
 
 
 /**
- *	SmallMultiLayerPerceptronBSP is a kind of multilayer perceptron
- *	whose parameters can be fit into the memory of a single machine.
- *	This kind of model can be trained and used more efficiently than
- *	the BigMultiLayerPerceptronBSP, whose parameters are distributedly
- *	stored in multiple machines.
+ * SmallMultiLayerPerceptronBSP is a kind of multilayer perceptron
+ * whose parameters can be fit into the memory of a single machine.
+ * This kind of model can be trained and used more efficiently than
+ * the BigMultiLayerPerceptronBSP, whose parameters are distributedly
+ * stored in multiple machines.
+ *
+ * In general, it it is a multilayer perceptron that consists
+ * of one input layer, multiple hidden layer and one output layer.
+ * 
+ * The number of neurons in the input layer should be consistent with the
+ * number of features in the training instance.
+ * The number of neurons in the output layer
  *
  */
-public class SmallMultiLayerPerceptronBSP implements ClassificationPerceptron {
+public class SmallMultiLayerPerceptronBSP implements PerceptronBase {
+	
+	
 
 	@Override
 	public void train(DoubleVector trainingInstance, int classLabelIndex) {
@@ -34,7 +43,7 @@ public class SmallMultiLayerPerceptronBSP implements ClassificationPerceptron {
 	}
 
 	@Override
-	public DoubleVector classify(DoubleVector featureVector) {
+	public DoubleVector output(DoubleVector featureVector) {
 		// TODO Auto-generated method stub
 		return null;
 	}

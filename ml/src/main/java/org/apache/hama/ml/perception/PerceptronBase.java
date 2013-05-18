@@ -29,4 +29,11 @@ public interface PerceptronBase {
 	 * @param modelUri	The location to save the model parameters.
 	 */
 	public abstract void saveModel(URI ModelUri);
+	
+	/**
+	 * Get the output based on the input instance and the learned model.
+	 * @param featureVector
+	 * @return	The results.
+	 */
+	public abstract DoubleVector output(DoubleVector featureVector);
 }
