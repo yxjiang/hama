@@ -25,7 +25,7 @@ public class SmallMultiLayerPerceptronBSP implements PerceptronBase {
 	
 
 	@Override
-	public void train(DoubleVector trainingInstance, int classLabelIndex) {
+	public void train(DoubleVector trainingInstance, DoubleVector classLabel) {
 		// TODO Auto-generated method stub
 		
 	}
