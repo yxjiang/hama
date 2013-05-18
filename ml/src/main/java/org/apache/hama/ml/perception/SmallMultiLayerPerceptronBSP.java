@@ -1,8 +1,14 @@
 package org.apache.hama.ml.perception;
 
+import java.io.IOException;
 import java.net.URI;
 
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hama.bsp.BSP;
+import org.apache.hama.bsp.BSPPeer;
+import org.apache.hama.bsp.sync.SyncException;
 import org.apache.hama.ml.math.DoubleVector;
+import org.apache.hama.ml.writable.VectorWritable;
 
 
 /**
@@ -20,9 +26,14 @@ import org.apache.hama.ml.math.DoubleVector;
  * The number of neurons in the output layer
  *
  */
-public class SmallMultiLayerPerceptronBSP implements PerceptronBase {
+public class SmallMultiLayerPerceptronBSP extends BSP<LongWritable, VectorWritable, LongWritable, VectorWritable, MLPMessage> implements PerceptronBase {
 	
-	
+	@Override
+	public void bsp(BSPPeer<LongWritable, VectorWritable, LongWritable, VectorWritable, MLPMessage> peer)
+			throws IOException, SyncException, InterruptedException {
+		// TODO Auto-generated method stub
+		
+	}
 
 	@Override
 	public void train(DoubleVector trainingInstance, DoubleVector classLabel) {
