@@ -9,7 +9,7 @@ import org.apache.hama.ml.writable.MatrixWritable;
 
 /**
  * SmallMLPMessage is used to exchange information for the
- * {@link SmallMultiLayerPerceptronBSP}.
+ * {@link SmallMultiLayerPerceptron}.
  * It send the whole parameter matrix from one task to another.
  * 
  */
