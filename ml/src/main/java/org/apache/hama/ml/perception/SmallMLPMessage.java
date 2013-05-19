@@ -4,29 +4,31 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hama.ml.math.DenseDoubleMatrix;
+import org.apache.hama.ml.math.DoubleMatrix;
+import org.apache.hama.ml.writable.MatrixWritable;
 
 /**
  * SmallMLPMessage is used to exchange information for the
  * {@link SmallMultiLayerPerceptronBSP}.
  * It send the whole parameter matrix from one task to another.
- *
+ * 
  */
 public class SmallMLPMessage implements MLPMessage {
 	
-	private DenseDoubleMatrix matrix;
-
-	@Override
-	public void readFields(DataInput arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
+	private MatrixWritable matrix;
+	
+	public SmallMLPMessage(DoubleMatrix mat) {
+		this.matrix = new MatrixWritable(mat);
 	}
 
 	@Override
-	public void write(DataOutput arg0) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void readFields(DataInput input) throws IOException {
+		this.matrix.readFields(input);
 	}
 
+	@Override
+	public void write(DataOutput output) throws IOException {
+		this.matrix.write(output);
+	}
 
 }

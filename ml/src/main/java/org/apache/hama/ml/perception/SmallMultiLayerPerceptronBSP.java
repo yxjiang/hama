@@ -28,6 +28,9 @@ import org.apache.hama.ml.writable.VectorWritable;
  */
 public class SmallMultiLayerPerceptronBSP extends BSP<LongWritable, VectorWritable, LongWritable, VectorWritable, MLPMessage> implements PerceptronBase {
 	
+	/**
+	 * Train this multi-layer perceptron with given portion of data.
+	 */
 	@Override
 	public void bsp(BSPPeer<LongWritable, VectorWritable, LongWritable, VectorWritable, MLPMessage> peer)
 			throws IOException, SyncException, InterruptedException {
