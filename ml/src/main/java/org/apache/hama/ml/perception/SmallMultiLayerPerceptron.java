@@ -1,8 +1,17 @@
 package org.apache.hama.ml.perception;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
+import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
+import org.apache.hama.ml.writable.MatrixWritable;
+import org.apache.hama.ml.writable.VectorWritable;
 
 
 
@@ -21,13 +30,25 @@ import org.apache.hama.ml.math.DoubleVector;
  * The number of neurons in the output layer
  *
  */
-public class SmallMultiLayerPerceptron extends MultiLayerPerceptron {
+public class SmallMultiLayerPerceptron extends MultiLayerPerceptron implements Writable {
 
 	/*	The path of the existing model	*/
 	private Path modelPath;
+	
+	/*	Meta-data	*/
+	private static String MLPType = "SmallMLP";
+	
+	private double learningRate;
+	private boolean regularization;
+	private double momentum;
+	private int numberOfLayers;
+	private String squashingFunctionName;
+	private String costFunctionName;
+	private DoubleVector layerSizeVector;
+	
 	/*	The in-memory weight matrix	*/
-	private DenseDoubleMatrix weightMat;
-
+	private DoubleMatrix weightMatrix;
+	
 	
 	public SmallMultiLayerPerceptron(Path modelPath) {
 		super(modelPath);
@@ -52,6 +73,31 @@ public class SmallMultiLayerPerceptron extends MultiLayerPerceptron {
 	public DoubleVector output(DoubleVector featureVector) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void readFields(DataInput input) throws IOException {
+		this.learningRate = input.readDouble();
+		this.regularization = input.readBoolean();
+		this.momentum = input.readDouble();
+		this.numberOfLayers = input.readInt();
+		this.squashingFunctionName = WritableUtils.readString(input);
+		this.costFunctionName = WritableUtils.readString(input);
+		this.layerSizeVector = VectorWritable.readVector(input);
+		this.weightMatrix = MatrixWritable.read(input);
+	}
+
+	@Override
+	public void write(DataOutput output) throws IOException {
+		output.writeDouble(learningRate);
+		output.writeBoolean(regularization);
+		output.writeDouble(momentum);
+		output.writeInt(numberOfLayers);
+		WritableUtils.writeString(output, squashingFunctionName);
+		WritableUtils.writeString(output, costFunctionName);
+		VectorWritable.writeVector(layerSizeVector, output);
+		MatrixWritable matrixWritable = new MatrixWritable(weightMatrix);
+		matrixWritable.write(output);
 	}
 
 }
