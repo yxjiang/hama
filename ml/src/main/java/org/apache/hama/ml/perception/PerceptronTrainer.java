@@ -11,19 +11,23 @@ import org.apache.hama.ml.writable.VectorWritable;
 
 /**
  * The trainer that is used to train the perceptron with BSP.
- *
+ * The trainer would read the training data and obtain the trained parameters of the model.
  */
 public abstract class PerceptronTrainer 
-	extends BSP<LongWritable, VectorWritable, NeuronPairWritable, NullWritable, MLPMessage> {
+	extends BSP<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> {
 	
 	/*	The perceptron model	*/
 	private MultiLayerPerceptron model;
-
+	
+	public PerceptronTrainer(MultiLayerPerceptron model) {
+		this.model = model;
+	}
+	
 	/**
    * {@inheritDoc}
    */
   @Override
-  public abstract void bsp(BSPPeer<LongWritable, VectorWritable, NeuronPairWritable, NullWritable, MLPMessage> peer) 
+  public abstract void bsp(BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
   		throws IOException, SyncException, InterruptedException;
 	
 }

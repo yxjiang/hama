@@ -1,6 +1,6 @@
 package org.apache.hama.ml.perception;
 
-import java.net.URI;
+import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.math.DoubleVector;
@@ -12,10 +12,53 @@ import org.apache.hama.ml.math.DoubleVector;
 public abstract class MultiLayerPerceptron {
 	
 	/*	The trainer for the model	*/
-	private PerceptronTrainer trainer;	
+	protected PerceptronTrainer trainer;	
 	/*	The file path that contains the model meta-data	*/
-	private Path modelPath;
+	protected Path modelPath;
 	
+	/*	Model meta-data	*/
+	protected String MLPType;
+  protected double learningRate;
+	protected boolean regularization;
+	protected double momentum;
+	protected int numberOfLayers;
+	protected String squashingFunctionName;
+	protected String costFunctionName;
+	protected int[] layerSizeArray;
+	
+	protected CostFunction costFunction;
+	protected SquashingFunction squashingFunction;
+	
+	/**
+	 * Initialize the MLP.
+	 * @param modelPath							The location in file system to store the model.
+	 * @param learningRate					Larger learningRate makes MLP learn more aggressive.
+	 * @param regularization				Turn on regularization make MLP less likely to overfit.
+	 * @param numberOfLayers				The number of layers (including input and output layer). It should be at least 3.
+	 * @param momentum							The momentum makes the historical adjust have affect to current adjust.
+	 * @param squashingFunctionName	The name of squashing function.
+	 * @param costFunctionName			The name of the cost function.
+	 * @param layerSizeArray				The number of neurons for each layer. Note that the actual size of each layer is one more than the input size.
+	 */
+	public MultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, int numberOfLayers, double momentum,
+			String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
+		this.modelPath = modelPath;
+		this.learningRate = 0.5;
+		this.regularization = false;	//	no regularization
+		this.momentum = 0;	//	no momentum
+		this.numberOfLayers = 3;
+		this.squashingFunctionName = "Sigmoid";
+		this.costFunctionName = "MSE";
+		this.layerSizeArray = new int[]{3 + 1, 2 + 1, 2 + 1};
+		
+		this.costFunction = new CostFunction();
+		this.squashingFunction = new Sigmoid();
+	}
+	
+	/**
+	 * Initialize a multi-layer perceptron with existing model.
+	 * @param modelPath		Location of existing model meta-data.
+	 */
 	public MultiLayerPerceptron(Path modelPath) {
 		this.modelPath = modelPath;
 	}
@@ -33,7 +76,19 @@ public abstract class MultiLayerPerceptron {
 	 * @param featureVector	The feature of an instance to feed the perceptron.
 	 * @return	The results.
 	 */
-	public abstract DoubleVector output(DoubleVector featureVector);
+	public abstract DoubleVector output(DoubleVector featureVector) throws Exception;
+	
+	/**
+	 * Read the model meta-data from the specified location.
+	 * @throws IOException
+	 */
+	protected abstract void readFromModel() throws IOException;
+	
+	/**
+	 * Write the model data to specified location.
+	 * @throws IOException
+	 */
+	public abstract void writeModelToFile() throws IOException;
 	
 //	/**
 //	 * Feed the training instance to the perceptron to update the weights.
@@ -51,5 +106,41 @@ public abstract class MultiLayerPerceptron {
 //	 * The dimension of vector should be the same as the number of neurons in the output layer.
 //	 */
 //	protected abstract void train(DoubleVector trainingInstance, DoubleVector classLabel);
+
+	public Path getModelPath() {
+		return modelPath;
+	}
+
+	public String getMLPType() {
+		return MLPType;
+	}
+
+	public double getLearningRate() {
+		return learningRate;
+	}
+
+	public boolean isRegularization() {
+		return regularization;
+	}
+
+	public double getMomentum() {
+		return momentum;
+	}
+
+	public int getNumberOfLayers() {
+		return numberOfLayers;
+	}
+
+	public String getSquashingFunctionName() {
+		return squashingFunctionName;
+	}
+
+	public String getCostFunctionName() {
+		return costFunctionName;
+	}
+
+	public int[] getLayerSizeArray() {
+		return layerSizeArray;
+	}
 
 }
