@@ -34,23 +34,23 @@ public abstract class MultiLayerPerceptron {
 	 * @param modelPath							The location in file system to store the model.
 	 * @param learningRate					Larger learningRate makes MLP learn more aggressive.
 	 * @param regularization				Turn on regularization make MLP less likely to overfit.
-	 * @param numberOfLayers				The number of layers (including input and output layer). It should be at least 3.
 	 * @param momentum							The momentum makes the historical adjust have affect to current adjust.
 	 * @param squashingFunctionName	The name of squashing function.
 	 * @param costFunctionName			The name of the cost function.
 	 * @param layerSizeArray				The number of neurons for each layer. Note that the actual size of each layer is one more than the input size.
 	 */
-	public MultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, int numberOfLayers, double momentum,
+	public MultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, double momentum,
 			String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
 		this.modelPath = modelPath;
-		this.learningRate = 0.5;
-		this.regularization = false;	//	no regularization
-		this.momentum = 0;	//	no momentum
-		this.numberOfLayers = 3;
-		this.squashingFunctionName = "Sigmoid";
-		this.costFunctionName = "MSE";
-		this.layerSizeArray = new int[]{3 + 1, 2 + 1, 2 + 1};
+		this.learningRate = learningRate;
+		this.regularization = regularization;	//	no regularization
+		this.momentum = momentum;	//	no momentum
+		this.squashingFunctionName = squashingFunctionName;
+		this.costFunctionName = costFunctionName;
+		this.layerSizeArray = layerSizeArray;
+		this.numberOfLayers = this.layerSizeArray.length;
 		
+		//	hard-coded
 		this.costFunction = new CostFunction();
 		this.squashingFunction = new Sigmoid();
 	}

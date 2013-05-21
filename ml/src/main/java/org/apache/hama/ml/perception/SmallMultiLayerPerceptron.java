@@ -3,6 +3,7 @@ package org.apache.hama.ml.perception;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -43,10 +44,11 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	/**
 	 * {@inheritDoc}
 	 */
-	public SmallMultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, int numberOfLayers, 
+	public SmallMultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, 
 			double momentum, String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
-		super(modelPath, learningRate, regularization, numberOfLayers, momentum, 
+		super(modelPath, learningRate, regularization, momentum, 
 				squashingFunctionName, costFunctionName, layerSizeArray);
+		this.MLPType = "SmallMLP";
 		initializeWeightMatrix();
 	}
 	
@@ -72,12 +74,13 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		//	each layer contains one bias neuron
 		Random rnd = new Random();
 		for (int i = 0; i < this.numberOfLayers - 1; ++i) {
-			this.weightMatrix[i] = new DenseDoubleMatrix(this.layerSizeArray[i], this.layerSizeArray[i + 1]);
+			//	add weights for bias
+			this.weightMatrix[i] = new DenseDoubleMatrix(this.layerSizeArray[i] + 1, this.layerSizeArray[i + 1]);
 			int rowCount = this.weightMatrix[i].getRowCount();
 			int colCount = this.weightMatrix[i].getColumnCount();
 			for (int row = 0; row < rowCount; ++row) {
 				for (int col = 0; col < colCount; ++col) {
-					this.weightMatrix[i].set(row, colCount, rnd.nextGaussian());
+					this.weightMatrix[i].set(row, col, rnd.nextGaussian());
 				}
 			}
 		}
@@ -101,16 +104,19 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	 */
 	public DoubleVector output(DoubleVector featureVector) throws Exception {
 		//	start from the first hidden layer
-		double[] intermediateResults = new double[this.layerSizeArray[0]];
-		if (intermediateResults.length != featureVector.getDimension()) {
-			throw new Exception("Input feature dimension incorrect!");
+		double[] intermediateResults = new double[this.layerSizeArray[0] + 1];
+		if (intermediateResults.length - 1 != featureVector.getDimension()) {
+			throw new Exception("Input feature dimension incorrect! The dimension of input layer is " + 
+					(this.layerSizeArray[0] - 1)  + ", but the dimension of input feature is " + featureVector.getDimension());
 		}
 		
+		//	fill with input features
 		intermediateResults[0] = 1.0;	//	bias
 		for (int i = 0; i < featureVector.getDimension(); ++i) {
 			intermediateResults[i + 1] = featureVector.get(i);
 		}
 		
+		//	forward the intermediate results to next layer
 		for (int fromLayer = 0; fromLayer < this.numberOfLayers - 1; ++fromLayer) {
 			intermediateResults = forward(fromLayer, intermediateResults);
 		}
@@ -120,25 +126,44 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	
 	/**
 	 * Calculate the intermediate results of layer fromLayer + 1.
-	 * @param fromLayer
+	 * @param fromLayer		The index of layer that forwards the intermediate results from.
 	 * @return
 	 */
 	private double[] forward(int fromLayer, double[] intermediateResult) {
-		double[] results = new double[this.layerSizeArray[fromLayer + 1]];
-		results[0] = 1.0;	//	the bias
-		for (int neuronIdx = 1; neuronIdx < this.layerSizeArray[fromLayer + 1]; ++neuronIdx) {
-			//	aggregate the result from previous layer
-			for (int prevNeuronIdx = 0; prevNeuronIdx < this.layerSizeArray[fromLayer]; ++prevNeuronIdx) {
-				results[neuronIdx] += this.weightMatrix[fromLayer].get(prevNeuronIdx, neuronIdx) * intermediateResult[prevNeuronIdx];
-			}
-			results[neuronIdx] = this.squashingFunction.calculate(0, results[neuronIdx]);	//	calculate via squashing function
+		int toLayer = fromLayer + 1;
+		double[] results = null;
+		int offset = 0;
+		
+		if (toLayer < this.layerSizeArray.length - 1) {	//	add bias if it is not output layer
+			results = new double[this.layerSizeArray[toLayer] + 1];
+			offset = 1;
+			results[0] = 1.0;	//	the bias
+//			System.out.printf("From: %d to %d, # neurons at %d: %d\n", fromLayer, toLayer, toLayer, this.layerSizeArray[toLayer] + 1);
+//			System.out.printf("Mat size: [%d, %d]\n", this.weightMatrix[fromLayer].getRowCount(), this.weightMatrix[fromLayer].getColumnCount());
 		}
+		else {
+			results = new double[this.layerSizeArray[toLayer]];	//	no bias
+//			System.out.println("Output layer.");
+		}
+		
+		for (int neuronIdx = 0; neuronIdx < this.layerSizeArray[toLayer]; ++neuronIdx) {
+			//	aggregate the results from previous layer
+//			System.out.printf("For neuron %d\n", neuronIdx);
+			for (int prevNeuronIdx = 0; prevNeuronIdx < this.layerSizeArray[fromLayer] + 1; ++prevNeuronIdx) {
+//				System.out.printf("\t+ %f * %f", this.weightMatrix[fromLayer].get(prevNeuronIdx, neuronIdx), intermediateResult[prevNeuronIdx]);
+				results[neuronIdx + offset] += this.weightMatrix[fromLayer].get(prevNeuronIdx, neuronIdx) * intermediateResult[prevNeuronIdx];
+			}
+//			System.out.printf("=%f\n", results[neuronIdx + offset]);
+			results[neuronIdx + offset] = this.squashingFunction.calculate(0, results[neuronIdx + offset]);	//	calculate via squashing function
+		}
+//		System.out.printf("Result of layer: %d, %s\n", toLayer, Arrays.toString(results));
 		
 		return results;
 	}
 
 	@Override
 	public void readFields(DataInput input) throws IOException {
+		this.MLPType = WritableUtils.readString(input);
 		this.learningRate = input.readDouble();
 		this.regularization = input.readBoolean();
 		this.momentum = input.readDouble();
@@ -153,10 +178,15 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		this.weightMatrix = new DenseDoubleMatrix[this.numberOfLayers - 1];
 		for (int i = 0; i < numberOfLayers - 1; ++i)
 			this.weightMatrix[i] = MatrixWritable.read(input);
+		
+		//	hard-coded
+		this.squashingFunction = new Sigmoid();
+		this.costFunction = new CostFunction();
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
+		WritableUtils.writeString(output, MLPType);
 		output.writeDouble(learningRate);
 		output.writeBoolean(regularization);
 		output.writeDouble(momentum);
@@ -194,7 +224,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	public void writeModelToFile() throws IOException {
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(conf);
-		Path modelPath = new Path("model.data");
 		FSDataOutputStream stream = fs.create(modelPath, true);
 		this.write(stream);
 		stream.close();
