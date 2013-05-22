@@ -4,18 +4,23 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.net.URI;
+import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.writable.MatrixWritable;
+import org.apache.hama.ml.writable.VectorWritable;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -26,7 +31,7 @@ public class TestSmallMultiLayerPerceptron {
 	 */
 	@Test
 	public void testWriteReadMLP() {
-		Path modelPath = new Path("sampleModel.data");
+		String modelPath = "sampleModel.data";
 		double learningRate = 0.5;
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
@@ -55,7 +60,7 @@ public class TestSmallMultiLayerPerceptron {
 			assertEquals(costFunctionName, mlp.getCostFunctionName());
 			assertArrayEquals(layerSizeArray, mlp.getLayerSizeArray());
 			//		delete test file
-			fs.delete(modelPath, true);
+			fs.delete(new Path(modelPath), true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -67,11 +72,11 @@ public class TestSmallMultiLayerPerceptron {
 	@Test
 	public void testOutput() {
 		//	write the MLP meta-data manually
-		Path modelPath = new Path("sampleModel.data");
+		String modelPath = "sampleModel.data";
 		Configuration conf = new Configuration();
 		try {
 			FileSystem fs = FileSystem.get(conf);
-			FSDataOutputStream output = fs.create(modelPath);
+			FSDataOutputStream output = fs.create(new Path(modelPath));
 			
 			String MLPType = "SmallMLP";
 			double learningRate = 0.5;
@@ -139,11 +144,61 @@ public class TestSmallMultiLayerPerceptron {
 		//	delete meta-data
 		try {
 			FileSystem fs = FileSystem.get(conf);
-			fs.delete(modelPath, true);
+			fs.delete(new Path(modelPath), true);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+	}
+	
+	/**
+	 * Test the training method.
+	 */
+	@Test
+	public void testTraining() {
+		Configuration conf = new Configuration();
+		//	write in some training instances
+		String strDataPath = "hdfs://localhost:9000/tmp/dummy";
+		Path dataPath = new Path(strDataPath);
+		try {
+			URI uri = new URI(strDataPath);
+			FileSystem hdfs = FileSystem.get(uri, conf);
+			if (!hdfs.exists(dataPath)) {
+				hdfs.createNewFile(dataPath);
+				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
+																					LongWritable.class, VectorWritable.class);
+				Random rnd = new Random();
+				int dim = 3;
+				for (int i = 0; i < 100; ++i) {
+					double[] vec = new double[dim];
+					for (int d = 0; d < dim; ++d) {
+						vec[d] = rnd.nextDouble();
+					}
+					VectorWritable vecWritable = new VectorWritable(new DenseDoubleVector(vec));
+					writer.append(new LongWritable(i), vecWritable);
+				}
+				writer.close();
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		//	begin training
+		String modelPath = "sampleModel.data";
+		double learningRate = 0.5;
+		boolean regularization = false;	//	no regularization
+		double momentum = 0;	//	no momentum
+		String squashingFunctionName = "Sigmoid";
+		String costFunctionName = "SquareError";
+		int[] layerSizeArray = new int[]{3, 2, 2, 3};
+		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(modelPath, learningRate, regularization, 
+				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
+		try {
+			mlp.train(dataPath);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

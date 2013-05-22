@@ -3,21 +3,32 @@ package org.apache.hama.ml.perception;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
+import org.apache.hadoop.mapred.lib.NullOutputFormat;
+import org.apache.hama.HamaConfiguration;
+import org.apache.hama.bsp.BSPJob;
+import org.apache.hama.bsp.BSPPeer;
+import org.apache.hama.bsp.sync.SyncException;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.writable.MatrixWritable;
+import org.apache.hama.ml.writable.VectorWritable;
 
 
 
@@ -44,7 +55,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	/**
 	 * {@inheritDoc}
 	 */
-	public SmallMultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, 
+	public SmallMultiLayerPerceptron(String modelPath, double learningRate, boolean regularization, 
 			double momentum, String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
 		super(modelPath, learningRate, regularization, momentum, 
 				squashingFunctionName, costFunctionName, layerSizeArray);
@@ -55,7 +66,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	/**
 	 * {@inheritDoc}
 	 */
-	public SmallMultiLayerPerceptron(Path modelPath) {
+	public SmallMultiLayerPerceptron(String modelPath) {
 		super(modelPath);
 		if (modelPath != null) {
 			try {
@@ -84,17 +95,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 				}
 			}
 		}
-	}
-
-	@Override
-	/**
-	 * {@inheritDoc}
-	 */
-	public void train(Path dataInputPath) {
-		// TODO Auto-generated method stub
-		//	call a BSP job to train the model and then store the result into weightMat
-		
-		
 	}
 
 	@Override
@@ -211,9 +211,14 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	@Override
 	protected void readFromModel() throws IOException {
 		Configuration conf = new Configuration();
-		FileSystem fs = FileSystem.get(conf);
-		FSDataInputStream is = new FSDataInputStream(fs.open(modelPath));
-		this.readFields(is);
+		try {
+			URI uri = new URI(modelPath);
+			FileSystem fs = FileSystem.get(uri, conf);
+			FSDataInputStream is = new FSDataInputStream(fs.open(new Path(modelPath)));
+			this.readFields(is);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -224,9 +229,63 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	public void writeModelToFile() throws IOException {
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(conf);
-		FSDataOutputStream stream = fs.create(modelPath, true);
+		FSDataOutputStream stream = fs.create(new Path(modelPath), true);
 		this.write(stream);
 		stream.close();
+	}
+	
+	@Override
+	/**
+	 * {@inheritDoc}
+	 */
+	public void train(Path dataInputPath) throws IOException, InterruptedException, ClassNotFoundException {
+		// TODO Auto-generated method stub
+		//	call a BSP job to train the model and then store the result into weightMat
+		
+		//	create the BSP training job
+		Configuration conf = new Configuration();
+		HamaConfiguration hamaConf = new HamaConfiguration(conf);
+		BSPJob job = new BSPJob(hamaConf, SmallMLPTrainer.class);
+		job.setJobName("Small scale MLP training");
+		job.setJarByClass(SmallMLPTrainer.class);
+		job.setBspClass(SmallMLPTrainer.class);
+		job.setInputPath(dataInputPath);
+		job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+		job.setInputKeyClass(LongWritable.class);
+		job.setInputValueClass(VectorWritable.class);
+		job.setOutputKeyClass(NullWritable.class);
+		job.setOutputValueClass(NullWritable.class);
+		job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
+		
+		int numTasks = 6;
+		job.setNumBspTask(numTasks);
+		job.waitForCompletion(true);
+	}
+	
+	
+	/**
+	 * The perceptron trainer for small scale MLP.
+	 *
+	 */
+	private static class SmallMLPTrainer extends PerceptronTrainer {
+		
+		private static final Log LOG = LogFactory.getLog(SmallMLPTrainer.class);
+		
+		@Override
+		public void setup(
+	      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
+	      throws IOException, InterruptedException {
+			
+		}
+
+		@Override
+		public void bsp(BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
+				throws IOException, SyncException, InterruptedException {
+			// TODO Auto-generated method stub
+			LOG.info("Do something...");
+			LOG.info("Finished.");
+		}
+
 	}
 	
 }

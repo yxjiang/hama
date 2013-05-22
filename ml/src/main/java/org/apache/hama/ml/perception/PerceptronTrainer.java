@@ -16,13 +16,6 @@ import org.apache.hama.ml.writable.VectorWritable;
 public abstract class PerceptronTrainer 
 	extends BSP<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> {
 	
-	/*	The perceptron model	*/
-	private MultiLayerPerceptron model;
-	
-	public PerceptronTrainer(MultiLayerPerceptron model) {
-		this.model = model;
-	}
-	
 	/**
    * {@inheritDoc}
    */

@@ -14,7 +14,7 @@ public abstract class MultiLayerPerceptron {
 	/*	The trainer for the model	*/
 	protected PerceptronTrainer trainer;	
 	/*	The file path that contains the model meta-data	*/
-	protected Path modelPath;
+	protected String modelPath;
 	
 	/*	Model meta-data	*/
 	protected String MLPType;
@@ -39,7 +39,7 @@ public abstract class MultiLayerPerceptron {
 	 * @param costFunctionName			The name of the cost function.
 	 * @param layerSizeArray				The number of neurons for each layer. Note that the actual size of each layer is one more than the input size.
 	 */
-	public MultiLayerPerceptron(Path modelPath, double learningRate, boolean regularization, double momentum,
+	public MultiLayerPerceptron(String modelPath, double learningRate, boolean regularization, double momentum,
 			String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
 		this.modelPath = modelPath;
 		this.learningRate = learningRate;
@@ -59,7 +59,7 @@ public abstract class MultiLayerPerceptron {
 	 * Initialize a multi-layer perceptron with existing model.
 	 * @param modelPath		Location of existing model meta-data.
 	 */
-	public MultiLayerPerceptron(Path modelPath) {
+	public MultiLayerPerceptron(String modelPath) {
 		this.modelPath = modelPath;
 	}
 	
@@ -69,7 +69,7 @@ public abstract class MultiLayerPerceptron {
 	 * It then write the model to modelPath.
 	 * @param dataInputPath 	The path of the data.
 	 */
-	public abstract void train(Path dataInputPath);
+	public abstract void train(Path dataInputPath) throws Exception;
 	
 	/**
 	 * Get the output based on the input instance and the learned model.
@@ -107,7 +107,7 @@ public abstract class MultiLayerPerceptron {
 //	 */
 //	protected abstract void train(DoubleVector trainingInstance, DoubleVector classLabel);
 
-	public Path getModelPath() {
+	public String getModelPath() {
 		return modelPath;
 	}
 
