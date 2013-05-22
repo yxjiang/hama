@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.BitSet;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -18,7 +20,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
-import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
@@ -238,12 +239,16 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	/**
 	 * {@inheritDoc}
 	 */
-	public void train(Path dataInputPath) throws IOException, InterruptedException, ClassNotFoundException {
+	public void train(Path dataInputPath, Map<String, String> trainingParams) 
+			throws IOException, InterruptedException, ClassNotFoundException {
 		// TODO Auto-generated method stub
 		//	call a BSP job to train the model and then store the result into weightMat
 		
 		//	create the BSP training job
 		Configuration conf = new Configuration();
+		for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
+			conf.set(entry.getKey(), entry.getValue());
+		}
 		HamaConfiguration hamaConf = new HamaConfiguration(conf);
 		BSPJob job = new BSPJob(hamaConf, SmallMLPTrainer.class);
 		job.setJobName("Small scale MLP training");
@@ -257,7 +262,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		job.setOutputValueClass(NullWritable.class);
 		job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
 		
-		int numTasks = 6;
+		int numTasks = conf.getInt("tasks", 1);
 		job.setNumBspTask(numTasks);
 		job.waitForCompletion(true);
 	}
@@ -270,20 +275,138 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	private static class SmallMLPTrainer extends PerceptronTrainer {
 		
 		private static final Log LOG = LogFactory.getLog(SmallMLPTrainer.class);
+		private BitSet statusSet;	//	used by master only, check whether all slaves finishes reading
+		
+		private int numRead = 0;
+		private boolean terminated = false;
 		
 		@Override
-		public void setup(
-	      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-	      throws IOException, InterruptedException {
-			
+		protected void extraSetup(
+				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) {
+			this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
 		}
-
+		
+		@Override
+		protected void extraCleanup(
+				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer
+				) {
+			System.out.printf("Task %d read %d records.\n", peer.getPeerIndex(), this.numRead);
+		}
+		
 		@Override
 		public void bsp(BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
 				throws IOException, SyncException, InterruptedException {
 			// TODO Auto-generated method stub
-			LOG.info("Do something...");
+			LOG.info("Start training...");
+			if (trainingMode.equalsIgnoreCase("minibatch.gradient.descent")) {
+				LOG.info("Training Mode: minibatch.gradient.descent");
+				trainByMinibatch(peer);
+			}
+			
 			LOG.info("Finished.");
+		}
+		
+		/**
+		 * Train the MLP with stochastic gradient descent.
+		 * @param peer
+		 * @throws IOException
+		 * @throws SyncException
+		 * @throws InterruptedException
+		 */
+		private void trainByMinibatch(
+				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
+						throws IOException, SyncException, InterruptedException {
+			
+			int maxIteration = conf.getInt("training.iteration", 1);
+			LOG.info("Training Iteration: " + maxIteration);
+			
+			for (int i = 0; i < maxIteration; ++i) {
+				peer.reopenInput();
+				
+				while (true) {
+					//	master merges the updates
+					if (peer.getPeerIndex() == 0) {
+						mergeUpdate(peer);
+					}
+					peer.sync();
+					
+					//	update weights
+					boolean terminate = updateWeights(peer);
+					if (terminate) {
+						break;
+					}
+					
+					peer.sync();
+				}
+			}
+			
+		}
+		
+		/**
+		 * Train the MLP with training data.
+		 * @param peer
+		 * @return Whether terminates.
+		 * @throws IOException
+		 */
+		private boolean updateWeights(
+				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
+				throws IOException {
+			//	receive update message
+			if (peer.getNumCurrentMessages() > 0) {
+				SmallMLPMessage message = (SmallMLPMessage)peer.getCurrentMessage();
+				this.terminated = message.isTerminated();
+				
+				if (this.terminated) {
+					return true;
+				}
+			}
+			
+			//	update weight according to training data
+			int count = 0;
+			LongWritable recordId = new LongWritable();
+			VectorWritable trainingInstance = new VectorWritable();
+			boolean hasMore = false;
+			while (count++ < this.batchSize) {
+				hasMore = peer.readNext(recordId, trainingInstance);
+				++numRead;
+				if (!hasMore) {
+					break;
+				}
+			}
+			
+			SmallMLPMessage message = new SmallMLPMessage(peer.getPeerIndex(), null);
+			message.setTerminated(!hasMore);
+			peer.send(peer.getPeerName(0), message);	//	send status to master
+			
+			return false;
+		}
+		
+		/**
+		 * Merge the updates from slaves task.
+		 * @param peer
+		 * @throws IOException 
+		 */
+		private void mergeUpdate(
+				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
+				throws IOException {
+			
+			while (peer.getNumCurrentMessages() > 0) {
+				SmallMLPMessage message = (SmallMLPMessage)peer.getCurrentMessage();
+				if (message.isTerminated()) {
+					this.statusSet.set(message.getOwner().get());
+				}
+			}
+			
+			//	check if all tasks finishes reading data
+			if (this.statusSet.cardinality() == conf.getInt("tasks", 1)) {
+				this.terminated = true;
+			}
+			
+			for (String peerName : peer.getAllPeerNames()) {
+				SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), null);
+				msg.setTerminated(this.terminated);
+				peer.send(peerName, msg);
+			}
 		}
 
 	}

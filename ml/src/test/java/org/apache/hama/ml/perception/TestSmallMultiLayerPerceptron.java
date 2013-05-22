@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.hadoop.conf.Configuration;
@@ -20,7 +22,6 @@ import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.writable.MatrixWritable;
 import org.apache.hama.ml.writable.VectorWritable;
-import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -164,13 +165,14 @@ public class TestSmallMultiLayerPerceptron {
 		try {
 			URI uri = new URI(strDataPath);
 			FileSystem hdfs = FileSystem.get(uri, conf);
+			hdfs.delete(dataPath, true);
 			if (!hdfs.exists(dataPath)) {
 				hdfs.createNewFile(dataPath);
 				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
 																					LongWritable.class, VectorWritable.class);
 				Random rnd = new Random();
 				int dim = 3;
-				for (int i = 0; i < 100; ++i) {
+				for (int i = 0; i < 1000; ++i) {
 					double[] vec = new double[dim];
 					for (int d = 0; d < dim; ++d) {
 						vec[d] = rnd.nextDouble();
@@ -195,8 +197,15 @@ public class TestSmallMultiLayerPerceptron {
 		int[] layerSizeArray = new int[]{3, 2, 2, 3};
 		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(modelPath, learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
+		
+		Map<String, String> trainingParams = new HashMap<String, String>();
+		trainingParams.put("training.iteration", "1");
+		trainingParams.put("training.mode", "minibatch.gradient.descent");
+		trainingParams.put("training.batch.size", "100");
+		trainingParams.put("tasks", "3");
+		
 		try {
-			mlp.train(dataPath);
+			mlp.train(dataPath, trainingParams);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

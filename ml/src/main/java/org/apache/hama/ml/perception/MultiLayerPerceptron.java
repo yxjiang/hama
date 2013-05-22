@@ -1,6 +1,7 @@
 package org.apache.hama.ml.perception;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.math.DoubleVector;
@@ -68,8 +69,9 @@ public abstract class MultiLayerPerceptron {
 	 * This method invokes a perceptron training BSP task to train the model.
 	 * It then write the model to modelPath.
 	 * @param dataInputPath 	The path of the data.
+	 * @param trainingParams	Extra parameters for training.
 	 */
-	public abstract void train(Path dataInputPath) throws Exception;
+	public abstract void train(Path dataInputPath, Map<String, String> trainingParams) throws Exception;
 	
 	/**
 	 * Get the output based on the input instance and the learned model.
