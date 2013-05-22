@@ -290,7 +290,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		protected void extraCleanup(
 				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer
 				) {
-			System.out.printf("Task %d read %d records.\n", peer.getPeerIndex(), this.numRead);
+			LOG.info(String.format("Task %d read %d records.\n", peer.getPeerIndex(), this.numRead));
 		}
 		
 		@Override
@@ -373,6 +373,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 					break;
 				}
 			}
+			
+			LOG.info(String.format("Slave %d read %d records.\n", peer.getPeerIndex(), this.numRead));
 			
 			SmallMLPMessage message = new SmallMLPMessage(peer.getPeerIndex(), !hasMore, null);
 			peer.send(peer.getPeerName(0), message);	//	send status to master

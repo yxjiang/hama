@@ -22,6 +22,7 @@ import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.writable.MatrixWritable;
 import org.apache.hama.ml.writable.VectorWritable;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
