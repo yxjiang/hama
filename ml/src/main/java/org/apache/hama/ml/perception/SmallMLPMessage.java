@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.writable.MatrixWritable;
 
@@ -16,34 +17,46 @@ import org.apache.hama.ml.writable.MatrixWritable;
  */
 public class SmallMLPMessage extends MLPMessage {
 	
-	private IntWritable owner;	//	the ID of the task who creates the message
-	private MatrixWritable matrix;
+	private int owner;	//	the ID of the task who creates the message
+	private DenseDoubleMatrix updatedWeights;	
 	
-	public SmallMLPMessage(int owner, DoubleMatrix mat) {
-		this.owner = new IntWritable(owner);
-		this.matrix = new MatrixWritable(mat);
+	public SmallMLPMessage() {
+	}
+	
+	public SmallMLPMessage(int owner, boolean terminated, DenseDoubleMatrix mat) {
+		super(terminated);
+		this.owner = owner;
+		this.updatedWeights = mat;
 	}
 
 	/**
 	 * Get the owner task Id of the message.
 	 * @return
 	 */
-	public IntWritable getOwner() {
+	public int getOwner() {
 		return owner;
+	}
+	
+	/**
+	 * Get the updated weights.
+	 * @return
+	 */
+	public DenseDoubleMatrix getUpdatedWeights() {
+		return this.updatedWeights;
 	}
 
 	@Override
 	public void readFields(DataInput input) throws IOException {
-		this.owner.readFields(input);
-		this.terminated.readFields(input);
-		this.matrix.readFields(input);
+		this.owner = input.readInt();
+		this.terminated = input.readBoolean();
+		this.updatedWeights = (DenseDoubleMatrix)MatrixWritable.read(input);
 	}
 
 	@Override
 	public void write(DataOutput output) throws IOException {
-		this.owner.write(output);
-		this.terminated.write(output);
-		this.matrix.write(output);
+		output.writeInt(this.owner);
+		output.writeBoolean(this.terminated);
+		MatrixWritable.write(this.updatedWeights, output);
 	}
 
 }

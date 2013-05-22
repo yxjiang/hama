@@ -374,8 +374,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 				}
 			}
 			
-			SmallMLPMessage message = new SmallMLPMessage(peer.getPeerIndex(), null);
-			message.setTerminated(!hasMore);
+			SmallMLPMessage message = new SmallMLPMessage(peer.getPeerIndex(), !hasMore, null);
 			peer.send(peer.getPeerName(0), message);	//	send status to master
 			
 			return false;
@@ -393,7 +392,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			while (peer.getNumCurrentMessages() > 0) {
 				SmallMLPMessage message = (SmallMLPMessage)peer.getCurrentMessage();
 				if (message.isTerminated()) {
-					this.statusSet.set(message.getOwner().get());
+					this.statusSet.set(message.getOwner());
 				}
 			}
 			
@@ -403,8 +402,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			}
 			
 			for (String peerName : peer.getAllPeerNames()) {
-				SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), null);
-				msg.setTerminated(this.terminated);
+				SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), this.terminated, null);
 				peer.send(peerName, msg);
 			}
 		}

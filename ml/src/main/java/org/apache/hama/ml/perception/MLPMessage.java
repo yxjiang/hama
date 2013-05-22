@@ -1,7 +1,6 @@
 package org.apache.hama.ml.perception;
 
 import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
 /**
@@ -10,14 +9,21 @@ import org.apache.hadoop.io.Writable;
  *
  */
 public abstract class MLPMessage implements Writable {
-	protected BooleanWritable terminated;
+	protected boolean terminated;
+	
+	public MLPMessage() {
+	}
+	
+	public MLPMessage(boolean terminated) {
+		setTerminated(terminated);
+	}
 	
 	public void setTerminated(boolean terminated) {
-		this.terminated = new BooleanWritable(terminated);
+		this.terminated = terminated;
 	}
 
 	public boolean isTerminated() {
-		return terminated.get();
+		return terminated;
 	}
 	
 	
