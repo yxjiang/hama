@@ -32,7 +32,6 @@ public abstract class MultiLayerPerceptron {
 	
 	/**
 	 * Initialize the MLP.
-	 * @param modelPath							The location in file system to store the model.
 	 * @param learningRate					Larger learningRate makes MLP learn more aggressive.
 	 * @param regularization				Turn on regularization make MLP less likely to overfit.
 	 * @param momentum							The momentum makes the historical adjust have affect to current adjust.
@@ -40,9 +39,8 @@ public abstract class MultiLayerPerceptron {
 	 * @param costFunctionName			The name of the cost function.
 	 * @param layerSizeArray				The number of neurons for each layer. Note that the actual size of each layer is one more than the input size.
 	 */
-	public MultiLayerPerceptron(String modelPath, double learningRate, boolean regularization, double momentum,
+	public MultiLayerPerceptron(double learningRate, boolean regularization, double momentum,
 			String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
-		this.modelPath = modelPath;
 		this.learningRate = learningRate;
 		this.regularization = regularization;	//	no regularization
 		this.momentum = momentum;	//	no momentum
@@ -88,9 +86,10 @@ public abstract class MultiLayerPerceptron {
 	
 	/**
 	 * Write the model data to specified location.
+	 * @param modelPath							The location in file system to store the model.
 	 * @throws IOException
 	 */
-	public abstract void writeModelToFile() throws IOException;
+	public abstract void writeModelToFile(String modelPath) throws IOException;
 	
 //	/**
 //	 * Feed the training instance to the perceptron to update the weights.

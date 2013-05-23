@@ -56,9 +56,9 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	/**
 	 * {@inheritDoc}
 	 */
-	public SmallMultiLayerPerceptron(String modelPath, double learningRate, boolean regularization, 
+	public SmallMultiLayerPerceptron(double learningRate, boolean regularization, 
 			double momentum, String squashingFunctionName, String costFunctionName, int[] layerSizeArray) {
-		super(modelPath, learningRate, regularization, momentum, 
+		super(learningRate, regularization, momentum, 
 				squashingFunctionName, costFunctionName, layerSizeArray);
 		this.MLPType = "SmallMLP";
 		initializeWeightMatrix();
@@ -227,7 +227,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	 * @throws IOException
 	 */
 	@Override
-	public void writeModelToFile() throws IOException {
+	public void writeModelToFile(String modelPath) throws IOException {
 		Configuration conf = new Configuration();
 		FileSystem fs = FileSystem.get(conf);
 		FSDataOutputStream stream = fs.create(new Path(modelPath), true);
@@ -249,6 +249,23 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
 			conf.set(entry.getKey(), entry.getValue());
 		}
+		
+		//	put model related parameters
+		conf.set("modelPath", modelPath == null? "" : modelPath);
+		if (modelPath == null || modelPath.trim().length() == 0) {	//	build model from scratch
+			conf.set("learningRate", "" + this.learningRate);
+			conf.set("regularization", "" + this.regularization);
+			conf.set("momentum", "" + this.momentum);
+			conf.set("squashingFunctionName", this.squashingFunctionName);
+			conf.set("costFunctionName", this.costFunctionName);
+			StringBuilder layerSizeArraySb = new StringBuilder();
+			for (int layerSize : this.layerSizeArray) {
+				layerSizeArraySb.append(layerSize);
+				layerSizeArraySb.append(' ');
+			}
+			conf.set("layerSizeArray", layerSizeArraySb.toString());
+		}
+		
 		HamaConfiguration hamaConf = new HamaConfiguration(conf);
 		BSPJob job = new BSPJob(hamaConf, SmallMLPTrainer.class);
 		job.setJobName("Small scale MLP training");
@@ -280,10 +297,32 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		private int numRead = 0;
 		private boolean terminated = false;
 		
+		private SmallMultiLayerPerceptron inMemoryPerceptron;
+		
 		@Override
 		protected void extraSetup(
 				BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) {
 			this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
+			
+			String modelPath = conf.get("modelPath");
+			if (modelPath == null || modelPath.trim().length() == 0) {	//	build model from scratch
+				double learningRate = Double.parseDouble(conf.get("learningRate"));
+				boolean regularization = Boolean.parseBoolean(conf.get("regularization"));
+				double momentum = Double.parseDouble(conf.get("momentum"));
+				String squashingFunctionName = conf.get("squashingFunctionName");
+				String costFunctionName = conf.get("costFunctionName");
+				String[] layerSizeArrayStr = conf.get("layerSizeArray").trim().split(" ");
+				int[] layerSizeArray = new int[layerSizeArrayStr.length];
+				inMemoryPerceptron = new SmallMultiLayerPerceptron(learningRate, regularization, momentum, 
+						squashingFunctionName, costFunctionName, layerSizeArray);
+				LOG.info("Training model from scratch.");
+			}
+			else {	//	read model from existing data
+				inMemoryPerceptron = new SmallMultiLayerPerceptron(modelPath);
+				LOG.info("Training with existing model.");
+			}
+			
+			
 		}
 		
 		@Override

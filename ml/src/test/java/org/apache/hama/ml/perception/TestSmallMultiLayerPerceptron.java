@@ -40,10 +40,10 @@ public class TestSmallMultiLayerPerceptron {
 		String squashingFunctionName = "Sigmoid";
 		String costFunctionName = "SquareError";
 		int[] layerSizeArray = new int[]{3, 2, 2, 3};
-		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(modelPath, learningRate, regularization, 
+		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		try {
-			mlp.writeModelToFile();
+			mlp.writeModelToFile(modelPath);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -196,7 +196,7 @@ public class TestSmallMultiLayerPerceptron {
 		String squashingFunctionName = "Sigmoid";
 		String costFunctionName = "SquareError";
 		int[] layerSizeArray = new int[]{3, 2, 2, 3};
-		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(modelPath, learningRate, regularization, 
+		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
 		Map<String, String> trainingParams = new HashMap<String, String>();
