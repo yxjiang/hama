@@ -237,6 +237,35 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		this.weightMatrice = matrices;
 	}
 	
+	/**
+	 * Get the updated weights using one training instance.
+	 * @param trainingInstance		The trainingInstance is the concatenation of feature vector and class label vector.
+	 * @return	The update of each weight.
+	 * @throws Exception 
+	 */
+	DenseDoubleMatrix[] trainByInstance(DoubleVector trainingInstance) throws Exception {
+		
+		double[] trainingFeature = new double[this.layerSizeArray[0]];
+		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
+		
+		for (int i = 0; i < trainingFeature.length; ++i) {
+			trainingFeature[i] = trainingInstance.get(i);
+		}
+		
+		for (int i = 0; i < trainingLabels.length; ++i) {
+			trainingLabels[i] = trainingInstance.get(i + trainingFeature.length);
+		}
+		
+		DoubleVector trainingFeatureVec = new DenseDoubleVector(trainingFeature);
+		DoubleVector actualOutputVec = this.output(trainingFeatureVec);
+		
+		//	update the weights according to training labels and actual output
+		
+		
+		
+		return null;
+	}
+	
 	@Override
 	/**
 	 * {@inheritDoc}

@@ -10,6 +10,17 @@ public class CostFunction {
 	 */
 	public static double squaredError(double target, double actual) {
 		double diff = target - actual;
-		return diff * diff;
+		return 0.5 * diff * diff;
 	}
+	
+	/**
+	 * Get the partial derivative of squared error.
+	 * @param target
+	 * @param actual
+	 * @return
+	 */
+	public static double squaredErrorPartialDerivative(double target, double actual) {
+		return actual - target;
+	}
+	
 }

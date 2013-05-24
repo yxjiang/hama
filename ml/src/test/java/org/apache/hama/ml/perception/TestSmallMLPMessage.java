@@ -54,7 +54,7 @@ public class TestSmallMLPMessage {
 			out.close();
 			
 			FSDataInputStream in = fs.open(path);
-			SmallMLPMessage outMessage = new SmallMLPMessage();
+			SmallMLPMessage outMessage = new SmallMLPMessage(0, false, null);
 			outMessage.readFields(in);
 			
 			assertEquals(owner, outMessage.getOwner());

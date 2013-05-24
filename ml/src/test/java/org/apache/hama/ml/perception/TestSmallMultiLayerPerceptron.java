@@ -172,7 +172,7 @@ public class TestSmallMultiLayerPerceptron {
 				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
 																					LongWritable.class, VectorWritable.class);
 				Random rnd = new Random();
-				int dim = 3;
+				int dim = 6;
 				for (int i = 0; i < 1000; ++i) {
 					double[] vec = new double[dim];
 					for (int d = 0; d < dim; ++d) {
@@ -202,7 +202,7 @@ public class TestSmallMultiLayerPerceptron {
 		Map<String, String> trainingParams = new HashMap<String, String>();
 		trainingParams.put("training.iteration", "1");
 		trainingParams.put("training.mode", "minibatch.gradient.descent");
-		trainingParams.put("training.batch.size", "100");
+		trainingParams.put("training.batch.size", "200");
 		trainingParams.put("tasks", "3");
 		
 		try {

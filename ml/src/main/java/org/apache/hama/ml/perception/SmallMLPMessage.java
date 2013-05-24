@@ -3,6 +3,7 @@ package org.apache.hama.ml.perception;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
@@ -20,9 +21,6 @@ public class SmallMLPMessage extends MLPMessage {
 	private int owner;	//	the ID of the task who creates the message
 	private DenseDoubleMatrix[] weightUpdatedMatrices;	
 	private int numOfMatrices;
-	
-	public SmallMLPMessage() {
-	}
 	
 	public SmallMLPMessage(int owner, boolean terminated, DenseDoubleMatrix[] mat) {
 		super(terminated);
