@@ -269,7 +269,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		
 		
 		
-		return null;
+		return this.weightMatrice;
 	}
 	
 	@Override

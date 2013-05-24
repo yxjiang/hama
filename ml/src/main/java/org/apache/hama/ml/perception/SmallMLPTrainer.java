@@ -141,6 +141,8 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		}
 		
 		//	update weight according to training data
+		DenseDoubleMatrix[] weightUpdates = this.initWeightMatrices();
+		
 		int count = 0;
 		LongWritable recordId = new LongWritable();
 		VectorWritable trainingInstance = new VectorWritable();
@@ -149,11 +151,17 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			hasMore = peer.readNext(recordId, trainingInstance);
 			
 			try {
-				DenseDoubleMatrix[] weightUpdates = inMemoryPerceptron.trainByInstance(trainingInstance.getVector());
+				DenseDoubleMatrix[] singleTrainingInstanceUpdates = inMemoryPerceptron.trainByInstance(trainingInstance.getVector());
+				for (int m = 0; m < weightUpdates.length; ++m) {
+					weightUpdates[m] = (DenseDoubleMatrix)weightUpdates[m].add(singleTrainingInstanceUpdates[m]);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+			//	calculate the local mean (the mean of the local batch) of weight updates
+			for (int m = 0; m < weightUpdates.length; ++m) {
+				weightUpdates[m] = (DenseDoubleMatrix)weightUpdates[m].divide(this.batchSize);
+			}
 			
 			++numTrainingInstanceRead;
 			if (!hasMore) {
@@ -163,20 +171,8 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		
 		LOG.info(String.format("Task %d has read %d records.\n", peer.getPeerIndex(), this.numTrainingInstanceRead));
 		
-		
-		//	dummy matrix
-		DenseDoubleMatrix[] dummyUpdates = new DenseDoubleMatrix[this.layerSizeArray.length - 1];
-		for (int m = 0; m < dummyUpdates.length; ++m) {
-			dummyUpdates[m] = new DenseDoubleMatrix(this.layerSizeArray[m] + 1, this.layerSizeArray[m + 1]);
-			for (int r = 0; r < this.layerSizeArray[m] + 1; ++r) {
-				double[] row = new double[this.layerSizeArray[m + 1]];
-				Arrays.fill(row, 1);
-				dummyUpdates[m].setRow(r, row);
-			}
-		}
-		
-		
-		SmallMLPMessage message = new SmallMLPMessage(peer.getPeerIndex(), !hasMore, dummyUpdates);
+		//	send the weight updates to master task
+		SmallMLPMessage message = new SmallMLPMessage(peer.getPeerIndex(), !hasMore, weightUpdates);
 		peer.send(peer.getPeerName(0), message);	//	send status to master
 		
 		return !hasMore;
@@ -191,7 +187,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
 			throws IOException {
 		//	initialize the cache
-		DenseDoubleMatrix[] weightUpdateCache = this.initWeightUpdateCache();
+		DenseDoubleMatrix[] weightUpdateCache = this.initWeightMatrices();
 		
 		int numOfPartitions = peer.getNumCurrentMessages();
 		
@@ -207,7 +203,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			}
 		}
 		
-		//	calculate the mean of the weight updates
+		//	calculate the global mean (the mean of batches from all slave tasks) of the weight updates
 		for (int m = 0; m < weightUpdateCache.length; ++m) {
 			weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].divide(numOfPartitions);
 		}
@@ -232,9 +228,9 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 	}
 	
 	/**
-	 * Initialize the weight update cache.
+	 * Initialize the weight matrices.
 	 */
-	private DenseDoubleMatrix[] initWeightUpdateCache() {
+	private DenseDoubleMatrix[] initWeightMatrices() {
 		DenseDoubleMatrix[] weightUpdateCache = new DenseDoubleMatrix[this.layerSizeArray.length - 1];
 		//	initialize weight matrix each layer
 		for (int i = 0; i < weightUpdateCache.length; ++i) {
