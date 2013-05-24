@@ -233,8 +233,14 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		return this.weightMatrice;
 	}
 	
-	void setWeightMatrices(DenseDoubleMatrix[] matrices) {
-		this.weightMatrice = matrices;
+	/**
+	 * Update the weight matrices with given updates.
+	 * @param updateMatrices	The updates weights in matrix format.
+	 */
+	void updateWeightMatrices(DenseDoubleMatrix[] updateMatrices) {
+		for (int m = 0; m < this.weightMatrice.length; ++m) {
+			this.weightMatrice[m] = (DenseDoubleMatrix)this.weightMatrice[m].add(updateMatrices[m]);
+		}
 	}
 	
 	/**

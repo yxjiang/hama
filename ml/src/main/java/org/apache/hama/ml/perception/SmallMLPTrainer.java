@@ -217,11 +217,17 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			this.terminateTraining = true;
 		}
 		
+		LOG.info("Master: Weight update finishes.");
+		
+		//	update the weight matrices
+		this.inMemoryPerceptron.updateWeightMatrices(weightUpdateCache);
+		
 		for (String peerName : peer.getAllPeerNames()) {
-			//	the last parameter is hard coded
-			SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), this.terminateTraining, weightUpdateCache);
+			SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), this.terminateTraining, 
+					this.inMemoryPerceptron.getWeightMatrices());
 			peer.send(peerName, msg);
 		}
+		LOG.info("Maseter: Broadcast updated weight matrix finishes.");
 		
 	}
 	
