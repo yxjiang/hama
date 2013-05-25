@@ -20,7 +20,7 @@ public class CostFunction {
 	 * @return
 	 */
 	public static double squaredErrorPartialDerivative(double target, double actual) {
-		return actual - target;
+		return target- actual;
 	}
 	
 }

@@ -155,12 +155,73 @@ public class TestSmallMultiLayerPerceptron {
 	}
 	
 	/**
+	 * Test the trainByInstance method.
+	 */
+	@Test
+	public void testTrainByInstance() {
+		//	write in some training instances
+		Configuration conf = new Configuration();
+		String strDataPath = "hdfs://localhost:9000/tmp/dummy";
+		Path dataPath = new Path(strDataPath);
+		try {
+			URI uri = new URI(strDataPath);
+			FileSystem hdfs = FileSystem.get(uri, conf);
+			hdfs.delete(dataPath, true);
+			if (!hdfs.exists(dataPath)) {
+				hdfs.createNewFile(dataPath);
+				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
+																					LongWritable.class, VectorWritable.class);
+				Random rnd = new Random();
+				int dim = 6;
+				for (int i = 0; i < 1000; ++i) {
+					double[] vec = new double[dim];
+					for (int d = 0; d < dim; ++d) {
+						vec[d] = rnd.nextDouble();
+					}
+					VectorWritable vecWritable = new VectorWritable(new DenseDoubleVector(vec));
+					writer.append(new LongWritable(i), vecWritable);
+				}
+				writer.close();
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		//	begin training by one instance
+		String modelPath = "sampleModel.data";
+		double learningRate = 0.5;
+		boolean regularization = false;	//	no regularization
+		double momentum = 0;	//	no momentum
+		String squashingFunctionName = "Sigmoid";
+		String costFunctionName = "SquareError";
+		int[] layerSizeArray = new int[]{3, 2, 2, 3};
+		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
+				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
+		
+		Map<String, String> trainingParams = new HashMap<String, String>();
+		trainingParams.put("training.iteration", "1");
+		trainingParams.put("training.mode", "minibatch.gradient.descent");
+		trainingParams.put("training.batch.size", "200");
+		trainingParams.put("tasks", "3");
+		
+		double[] trainingInstanceArr = new double[] {0.5, 0.5, 0.5, 0.0, 0.0, 1.0};
+		DoubleVector trainingInstance = new DenseDoubleVector(trainingInstanceArr);
+		try {
+			mlp.trainByInstance(trainingInstance);
+//			mlp.train(dataPath, trainingParams);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
 	 * Test the training method.
 	 */
 	@Test
 	public void testTraining() {
-		Configuration conf = new Configuration();
 		//	write in some training instances
+		Configuration conf = new Configuration();
 		String strDataPath = "hdfs://localhost:9000/tmp/dummy";
 		Path dataPath = new Path(strDataPath);
 		try {

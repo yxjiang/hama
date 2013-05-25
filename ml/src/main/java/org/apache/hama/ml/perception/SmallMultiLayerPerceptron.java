@@ -5,6 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -91,13 +93,23 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			}
 		}
 	}
-
+	
 	@Override
 	/**
 	 * {@inheritDoc}
 	 * The model meta-data is stored in memory.
 	 */
 	public DoubleVector output(DoubleVector featureVector) throws Exception {
+		List<double[]> outputCache = this.outputInternal(featureVector);
+		//	the output of the last layer is the output of the MLP
+		return new DenseDoubleVector(outputCache.get(outputCache.size() - 1));
+	}
+
+	private List<double[]> outputInternal(DoubleVector featureVector) throws Exception {
+		
+		//	store the output of the hidden layers and output layer, each array store one layer
+		List<double[]> outputCache = new ArrayList<double[]>();
+		
 		//	start from the first hidden layer
 		double[] intermediateResults = new double[this.layerSizeArray[0] + 1];
 		if (intermediateResults.length - 1 != featureVector.getDimension()) {
@@ -110,13 +122,15 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		for (int i = 0; i < featureVector.getDimension(); ++i) {
 			intermediateResults[i + 1] = featureVector.get(i);
 		}
+		outputCache.add(intermediateResults);
 		
 		//	forward the intermediate results to next layer
 		for (int fromLayer = 0; fromLayer < this.numberOfLayers - 1; ++fromLayer) {
 			intermediateResults = forward(fromLayer, intermediateResults);
+			outputCache.add(intermediateResults);
 		}
 		
-		return new DenseDoubleVector(intermediateResults);
+		return outputCache;
 	}
 	
 	/**
@@ -156,6 +170,146 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		return results;
 	}
 
+	/**
+	 * Get the updated weights using one training instance.
+	 * @param trainingInstance		The trainingInstance is the concatenation of feature vector and class label vector.
+	 * @return	The update of each weight.
+	 * @throws Exception 
+	 */
+	public DenseDoubleMatrix[] trainByInstance(DoubleVector trainingInstance) throws Exception {
+		
+		double[] trainingFeature = new double[this.layerSizeArray[0]];
+		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
+		
+		for (int i = 0; i < trainingFeature.length; ++i) {
+			trainingFeature[i] = trainingInstance.get(i);
+		}
+		
+		for (int i = 0; i < trainingLabels.length; ++i) {
+			trainingLabels[i] = trainingInstance.get(i + trainingFeature.length);
+		}
+		
+		DoubleVector trainingFeatureVec = new DenseDoubleVector(trainingFeature);
+		List<double[]> outputCache = this.outputInternal(trainingFeatureVec);
+		
+		//	initialize weight update matrices
+		DenseDoubleMatrix[] weightUpdateMatrices = new DenseDoubleMatrix[this.layerSizeArray.length - 1];
+		for (int m = 0; m < weightUpdateMatrices.length; ++m) {
+			weightUpdateMatrices[m] = new DenseDoubleMatrix(this.layerSizeArray[m] + 1, this.layerSizeArray[m + 1]);
+		}
+		
+		//	calculate the delta of output layer
+		double[] delta = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
+		double[] outputLayerOutput = outputCache.get(outputCache.size() - 1);
+		double[] lastHiddenLayerOutput = outputCache.get(outputCache.size() - 2);
+		
+		for (int j = 0; j < delta.length; ++j) {
+			delta[j] = this.squashingFunction.gradientDescent(0, outputLayerOutput[j]) * 
+					this.costFunction.squaredErrorPartialDerivative(trainingLabels[j], outputLayerOutput[j]);
+			//	calculate the weight update matrix between the last hidden layer and the output layer
+			for (int i = 0; i < weightUpdateMatrices[weightUpdateMatrices.length - 1].getRowCount(); ++i) {
+				double updatedValue = this.learningRate * delta[j] * lastHiddenLayerOutput[i];
+				weightUpdateMatrices[weightUpdateMatrices.length - 1].set(i, j, updatedValue);
+			}
+		}
+		
+		//	calculate the delta for each hidden layer
+		for (int l = this.layerSizeArray.length - 2; l >= 1; --l) {
+			delta = backpropagate(l, delta, outputCache, weightUpdateMatrices);
+		}
+		
+		return this.weightMatrice;
+	}
+	
+	/**
+	 * Back-propagate the errors from nextLayer to prevLayer. 
+	 * The weight updated information will be stored in the weightUpdateMatrices,
+	 * and the delta of the prevLayer would be returned.
+	 * 
+	 * @param curLayerIdx						The layer index of the current layer.
+	 * @param nextLayerDelta				The delta of the next layer.
+	 * @param outputCache						The cache of the output of all the layers.
+	 * @param weightUpdateMatrices	The weight update matrices.
+	 * @return	The delta of the previous layer, will be used for next iteration of back-propagation.
+	 */
+	private double[] backpropagate(int curLayerIdx, double[] nextLayerDelta, 
+			List<double[]> outputCache, DenseDoubleMatrix[] weightUpdateMatrices) {
+		int prevLayerIdx = curLayerIdx - 1;
+		double[] delta = new double[this.layerSizeArray[curLayerIdx]];
+		double[] curLayerOutput = outputCache.get(curLayerIdx);
+		double[] prevLayerOutput = outputCache.get(prevLayerIdx);
+		
+		//	for each neuron j in nextLayer, calculate the delta
+		for (int j = 0; j < delta.length; ++j) {
+			delta[j] = 0;
+			//	aggregate delta from next layer
+			for (int k = 0; k < nextLayerDelta.length; ++k) {
+				double weight = this.weightMatrice[curLayerIdx].get(j, k);
+				delta[j] += weight * nextLayerDelta[k];
+			}
+			delta[j] *= this.squashingFunction.gradientDescent(0, curLayerOutput[j]);
+			
+			//		calculate the weight update matrix between the previous layer and the current layer
+			for (int i = 0; i < weightUpdateMatrices[prevLayerIdx].getRowCount(); ++i) {
+				double updatedValue = this.learningRate * delta[j];
+				updatedValue *= prevLayerOutput[i];
+				weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
+			}
+		}
+		
+		return delta;
+	}
+	
+	@Override
+	/**
+	 * {@inheritDoc}
+	 */
+	public void train(Path dataInputPath, Map<String, String> trainingParams) 
+			throws IOException, InterruptedException, ClassNotFoundException {
+		// TODO Auto-generated method stub
+		//	call a BSP job to train the model and then store the result into weightMat
+		
+		//	create the BSP training job
+		Configuration conf = new Configuration();
+		for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
+			conf.set(entry.getKey(), entry.getValue());
+		}
+		
+		//	put model related parameters
+		conf.set("modelPath", modelPath == null? "" : modelPath);
+		if (modelPath == null || modelPath.trim().length() == 0) {	//	build model from scratch
+			conf.set("MLPType", this.MLPType);
+			conf.set("learningRate", "" + this.learningRate);
+			conf.set("regularization", "" + this.regularization);
+			conf.set("momentum", "" + this.momentum);
+			conf.set("squashingFunctionName", this.squashingFunctionName);
+			conf.set("costFunctionName", this.costFunctionName);
+			StringBuilder layerSizeArraySb = new StringBuilder();
+			for (int layerSize : this.layerSizeArray) {
+				layerSizeArraySb.append(layerSize);
+				layerSizeArraySb.append(' ');
+			}
+			conf.set("layerSizeArray", layerSizeArraySb.toString());
+		}
+		
+		HamaConfiguration hamaConf = new HamaConfiguration(conf);
+		BSPJob job = new BSPJob(hamaConf, SmallMLPTrainer.class);
+		job.setJobName("Small scale MLP training");
+		job.setJarByClass(SmallMLPTrainer.class);
+		job.setBspClass(SmallMLPTrainer.class);
+		job.setInputPath(dataInputPath);
+		job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+		job.setInputKeyClass(LongWritable.class);
+		job.setInputValueClass(VectorWritable.class);
+		job.setOutputKeyClass(NullWritable.class);
+		job.setOutputValueClass(NullWritable.class);
+		job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
+		
+		int numTasks = conf.getInt("tasks", 1);
+		job.setNumBspTask(numTasks);
+		job.waitForCompletion(true);
+	}
+	
 	@Override
 	public void readFields(DataInput input) throws IOException {
 		this.MLPType = WritableUtils.readString(input);
@@ -241,85 +395,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		for (int m = 0; m < this.weightMatrice.length; ++m) {
 			this.weightMatrice[m] = (DenseDoubleMatrix)this.weightMatrice[m].add(updateMatrices[m]);
 		}
-	}
-	
-	/**
-	 * Get the updated weights using one training instance.
-	 * @param trainingInstance		The trainingInstance is the concatenation of feature vector and class label vector.
-	 * @return	The update of each weight.
-	 * @throws Exception 
-	 */
-	DenseDoubleMatrix[] trainByInstance(DoubleVector trainingInstance) throws Exception {
-		
-		double[] trainingFeature = new double[this.layerSizeArray[0]];
-		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
-		
-		for (int i = 0; i < trainingFeature.length; ++i) {
-			trainingFeature[i] = trainingInstance.get(i);
-		}
-		
-		for (int i = 0; i < trainingLabels.length; ++i) {
-			trainingLabels[i] = trainingInstance.get(i + trainingFeature.length);
-		}
-		
-		DoubleVector trainingFeatureVec = new DenseDoubleVector(trainingFeature);
-		DoubleVector actualOutputVec = this.output(trainingFeatureVec);
-		
-		//	update the weights according to training labels and actual output
-		
-		
-		
-		return this.weightMatrice;
-	}
-	
-	@Override
-	/**
-	 * {@inheritDoc}
-	 */
-	public void train(Path dataInputPath, Map<String, String> trainingParams) 
-			throws IOException, InterruptedException, ClassNotFoundException {
-		// TODO Auto-generated method stub
-		//	call a BSP job to train the model and then store the result into weightMat
-		
-		//	create the BSP training job
-		Configuration conf = new Configuration();
-		for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
-			conf.set(entry.getKey(), entry.getValue());
-		}
-		
-		//	put model related parameters
-		conf.set("modelPath", modelPath == null? "" : modelPath);
-		if (modelPath == null || modelPath.trim().length() == 0) {	//	build model from scratch
-			conf.set("MLPType", this.MLPType);
-			conf.set("learningRate", "" + this.learningRate);
-			conf.set("regularization", "" + this.regularization);
-			conf.set("momentum", "" + this.momentum);
-			conf.set("squashingFunctionName", this.squashingFunctionName);
-			conf.set("costFunctionName", this.costFunctionName);
-			StringBuilder layerSizeArraySb = new StringBuilder();
-			for (int layerSize : this.layerSizeArray) {
-				layerSizeArraySb.append(layerSize);
-				layerSizeArraySb.append(' ');
-			}
-			conf.set("layerSizeArray", layerSizeArraySb.toString());
-		}
-		
-		HamaConfiguration hamaConf = new HamaConfiguration(conf);
-		BSPJob job = new BSPJob(hamaConf, SmallMLPTrainer.class);
-		job.setJobName("Small scale MLP training");
-		job.setJarByClass(SmallMLPTrainer.class);
-		job.setBspClass(SmallMLPTrainer.class);
-		job.setInputPath(dataInputPath);
-		job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
-		job.setInputKeyClass(LongWritable.class);
-		job.setInputValueClass(VectorWritable.class);
-		job.setOutputKeyClass(NullWritable.class);
-		job.setOutputValueClass(NullWritable.class);
-		job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
-		
-		int numTasks = conf.getInt("tasks", 1);
-		job.setNumBspTask(numTasks);
-		job.waitForCompletion(true);
 	}
 	
 }
