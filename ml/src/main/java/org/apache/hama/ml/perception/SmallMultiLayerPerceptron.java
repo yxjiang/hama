@@ -205,7 +205,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		
 		for (int j = 0; j < delta.length; ++j) {
 			delta[j] = this.squashingFunction.gradientDescent(0, outputLayerOutput[j]) * 
-					this.costFunction.squaredErrorPartialDerivative(trainingLabels[j], outputLayerOutput[j]);
+					this.costFunction.getPartialDerivative(trainingLabels[j], outputLayerOutput[j]);
 			//	calculate the weight update matrix between the last hidden layer and the output layer
 			for (int i = 0; i < weightUpdateMatrices[weightUpdateMatrices.length - 1].getRowCount(); ++i) {
 				double updatedValue = this.learningRate * delta[j] * lastHiddenLayerOutput[i];
@@ -213,7 +213,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			}
 		}
 		
-		//	calculate the delta for each hidden layer
+		//	calculate the delta for each hidden layer through back-propagation
 		for (int l = this.layerSizeArray.length - 2; l >= 1; --l) {
 			delta = backpropagate(l, delta, outputCache, weightUpdateMatrices);
 		}
@@ -330,7 +330,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		
 		//	hard-coded
 		this.squashingFunction = new Sigmoid();
-		this.costFunction = new CostFunction();
+		this.costFunction = CostFunctionFactory.getCostFunction(this.costFunctionName);
 	}
 
 	@Override

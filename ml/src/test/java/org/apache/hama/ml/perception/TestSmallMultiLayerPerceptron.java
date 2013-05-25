@@ -38,7 +38,7 @@ public class TestSmallMultiLayerPerceptron {
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
 		String squashingFunctionName = "Sigmoid";
-		String costFunctionName = "SquareError";
+		String costFunctionName = "SquaredError";
 		int[] layerSizeArray = new int[]{3, 2, 2, 3};
 		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
@@ -85,7 +85,7 @@ public class TestSmallMultiLayerPerceptron {
 			boolean regularization = false;
 			double momentum = 0;
 			String squashingFunctionName = "Sigmoid";
-			String costFunctionName = "SquareError";
+			String costFunctionName = "SquaredError";
 			int[] layerSizeArray = new int[] {3, 2, 3, 3};
 			int numberOfLayers = layerSizeArray.length;
 			
@@ -194,7 +194,7 @@ public class TestSmallMultiLayerPerceptron {
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
 		String squashingFunctionName = "Sigmoid";
-		String costFunctionName = "SquareError";
+		String costFunctionName = "SquaredError";
 		int[] layerSizeArray = new int[]{3, 2, 2, 3};
 		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
