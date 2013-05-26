@@ -75,7 +75,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	}
 	
 	/**
-	 * Initialize weight matrix using Gaussian distribution. 
+	 * Initialize weight matrix using Gaussian distribution.
+	 * Each weight is initialized in range (-0.5, 0.5)
 	 */
 	private void initializeWeightMatrix() {
 		this.weightMatrice = new DenseDoubleMatrix[this.numberOfLayers - 1];
@@ -88,7 +89,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			int colCount = this.weightMatrice[i].getColumnCount();
 			for (int row = 0; row < rowCount; ++row) {
 				for (int col = 0; col < colCount; ++col) {
-					this.weightMatrice[i].set(row, col, rnd.nextGaussian());
+					this.weightMatrice[i].set(row, col, rnd.nextGaussian() - 0.5);
 				}
 			}
 		}
@@ -176,7 +177,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	 * @return	The update of each weight.
 	 * @throws Exception 
 	 */
-	public DenseDoubleMatrix[] trainByInstance(DoubleVector trainingInstance) throws Exception {
+	DenseDoubleMatrix[] trainByInstance(DoubleVector trainingInstance) throws Exception {
 		
 		double[] trainingFeature = new double[this.layerSizeArray[0]];
 		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
@@ -266,9 +267,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	 */
 	public void train(Path dataInputPath, Map<String, String> trainingParams) 
 			throws IOException, InterruptedException, ClassNotFoundException {
-		// TODO Auto-generated method stub
-		//	call a BSP job to train the model and then store the result into weightMat
-		
 		//	create the BSP training job
 		Configuration conf = new Configuration();
 		for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
@@ -385,6 +383,10 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	
 	DenseDoubleMatrix[] getWeightMatrices() {
 		return this.weightMatrice;
+	}
+	
+	void setWeightMatrices(DenseDoubleMatrix[] newMatrices) {
+		this.weightMatrice = newMatrices;
 	}
 	
 	/**

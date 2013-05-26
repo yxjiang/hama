@@ -32,6 +32,7 @@ public class TestSmallMultiLayerPerceptron {
 	 * Write and read the parameters of MLP.
 	 */
 	@Test
+	@Ignore
 	public void testWriteReadMLP() {
 		String modelPath = "sampleModel.data";
 		double learningRate = 0.5;
@@ -72,6 +73,7 @@ public class TestSmallMultiLayerPerceptron {
 	 * Test the output of an example MLP.
 	 */
 	@Test
+	@Ignore
 	public void testOutput() {
 		//	write the MLP meta-data manually
 		String modelPath = "sampleModel.data";
@@ -158,6 +160,7 @@ public class TestSmallMultiLayerPerceptron {
 	 * Test the trainByInstance method.
 	 */
 	@Test
+	@Ignore
 	public void testTrainByInstance() {
 		//	write in some training instances
 		Configuration conf = new Configuration();
@@ -219,7 +222,8 @@ public class TestSmallMultiLayerPerceptron {
 	 * Test the training method.
 	 */
 	@Test
-	public void testTraining() {
+	@Ignore
+ public void testTraining() {
 		//	write in some training instances
 		Configuration conf = new Configuration();
 		String strDataPath = "hdfs://localhost:9000/tmp/dummy";
@@ -270,6 +274,80 @@ public class TestSmallMultiLayerPerceptron {
 			mlp.train(dataPath, trainingParams);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Test the XOR problem.
+	 */
+	@Test
+	public void testTrainingByXOR() {
+		//	write in some training instances
+		Configuration conf = new Configuration();
+		String strDataPath = "hdfs://localhost:9000/tmp/xor";
+		Path dataPath = new Path(strDataPath);
+		
+		//	generate training data
+		DoubleVector[] trainingData = new DenseDoubleVector[] {
+				new DenseDoubleVector(new double[] {0, 0, 1, 0}),
+				new DenseDoubleVector(new double[] {0, 1, 0, 1}),
+				new DenseDoubleVector(new double[] {1, 0, 0, 1}),
+				new DenseDoubleVector(new double[] {1, 1, 0, 1})
+		};
+		
+		try {
+			URI uri = new URI(strDataPath);
+			FileSystem hdfs = FileSystem.get(uri, conf);
+			hdfs.delete(dataPath, true);
+			if (!hdfs.exists(dataPath)) {
+				hdfs.createNewFile(dataPath);
+				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
+																					LongWritable.class, VectorWritable.class);
+				
+				Random rnd = new Random();
+				for (int i = 0; i < 1000; ++i) {
+					VectorWritable vecWritable = new VectorWritable(trainingData[rnd.nextInt(4)]);
+					writer.append(new LongWritable(i), vecWritable);
+				}
+				writer.close();
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		//	begin training
+		String modelPath = "xorModel.data";
+		double learningRate = 0.2;
+		boolean regularization = false;	//	no regularization
+		double momentum = 0;	//	no momentum
+		String squashingFunctionName = "Sigmoid";
+		String costFunctionName = "SquareError";
+		int[] layerSizeArray = new int[]{2, 2, 2};
+		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
+				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
+		
+		Map<String, String> trainingParams = new HashMap<String, String>();
+		trainingParams.put("training.iteration", "5");
+		trainingParams.put("training.mode", "minibatch.gradient.descent");
+		trainingParams.put("training.batch.size", "200");
+		trainingParams.put("tasks", "3");
+		
+		try {
+			mlp.train(dataPath, trainingParams);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		//	test the model
+		for (int i = 0; i < trainingData.length; ++i) {
+			DoubleVector testVec = trainingData[i].slice(2);
+			try {
+				DenseDoubleVector resultVec = (DenseDoubleVector)mlp.output(testVec);
+				System.out.println(resultVec.toString());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
