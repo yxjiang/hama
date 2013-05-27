@@ -17,5 +17,5 @@ public abstract class SquashingFunction implements DoubleVectorFunction {
 	 * @param vector
 	 * @return
 	 */
-	public abstract double gradientDescent(int index, double value);
+	public abstract double getDerivative(double value);
 }

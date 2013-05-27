@@ -289,7 +289,7 @@ public class TestSmallMultiLayerPerceptron {
 																					LongWritable.class, VectorWritable.class);
 				
 				Random rnd = new Random();
-				for (int i = 0; i < 1000; ++i) {
+				for (int i = 0; i < 100; ++i) {
 					VectorWritable vecWritable = new VectorWritable(trainingData[rnd.nextInt(4)]);
 					writer.append(new LongWritable(i), vecWritable);
 				}
@@ -312,9 +312,9 @@ public class TestSmallMultiLayerPerceptron {
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
 		Map<String, String> trainingParams = new HashMap<String, String>();
-		trainingParams.put("training.iteration", "5");
+		trainingParams.put("training.iteration", "1000");
 		trainingParams.put("training.mode", "minibatch.gradient.descent");
-		trainingParams.put("training.batch.size", "200");
+		trainingParams.put("training.batch.size", "10");
 		trainingParams.put("tasks", "2");
 		trainingParams.put("modelPath", modelPath);
 		

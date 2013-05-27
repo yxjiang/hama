@@ -31,7 +31,6 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 	
 	private SmallMultiLayerPerceptron inMemoryPerceptron;
 	
-	
 	private int[] layerSizeArray;
 	
 	
@@ -172,6 +171,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 				weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].add(weightUpdates[m]);
 			}
 		}
+		
 		if (numOfPartitions != 0) {
 			//		calculate the global mean (the mean of batches from all slave tasks) of the weight updates
 			for (int m = 0; m < weightUpdateCache.length; ++m) {
@@ -185,8 +185,11 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			
 			LOG.info("Master: Weight update finishes.");
 			
+//			System.out.printf("Before merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 			//	update the weight matrices
 			this.inMemoryPerceptron.updateWeightMatrices(weightUpdateCache);
+			
+//			System.out.printf("After merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 		}
 		
 		

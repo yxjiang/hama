@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -180,26 +181,25 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 	 * @throws Exception 
 	 */
 	DenseDoubleMatrix[] trainByInstance(DoubleVector trainingInstance) throws Exception {
-		
-		double[] trainingFeature = new double[this.layerSizeArray[0]];
-		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
-		
-		for (int i = 0; i < trainingFeature.length; ++i) {
-			trainingFeature[i] = trainingInstance.get(i);
-		}
-		
-		for (int i = 0; i < trainingLabels.length; ++i) {
-			trainingLabels[i] = trainingInstance.get(i + trainingFeature.length);
-		}
-		
-		DoubleVector trainingFeatureVec = new DenseDoubleVector(trainingFeature);
-		List<double[]> outputCache = this.outputInternal(trainingFeatureVec);
-		
 		//	initialize weight update matrices
 		DenseDoubleMatrix[] weightUpdateMatrices = new DenseDoubleMatrix[this.layerSizeArray.length - 1];
 		for (int m = 0; m < weightUpdateMatrices.length; ++m) {
 			weightUpdateMatrices[m] = new DenseDoubleMatrix(this.layerSizeArray[m] + 1, this.layerSizeArray[m + 1]);
 		}
+		
+		if (trainingInstance == null) {
+			return weightUpdateMatrices;
+		}
+		
+		double[] trainingFeature = new double[this.layerSizeArray[0]];
+		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
+		
+		double[] trainingVec = trainingInstance.toArray();
+		Arrays.copyOfRange(trainingVec, 0, this.layerSizeArray[0]);
+		Arrays.copyOfRange(trainingVec, this.layerSizeArray[0], trainingVec.length);
+		
+		DoubleVector trainingFeatureVec = new DenseDoubleVector(trainingFeature);
+		List<double[]> outputCache = this.outputInternal(trainingFeatureVec);
 		
 		//	calculate the delta of output layer
 		double[] delta = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
@@ -207,10 +207,11 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		double[] lastHiddenLayerOutput = outputCache.get(outputCache.size() - 2);
 		
 		for (int j = 0; j < delta.length; ++j) {
-			delta[j] = this.squashingFunction.gradientDescent(0, outputLayerOutput[j]) * 
+			delta[j] = this.squashingFunction.getDerivative(outputLayerOutput[j]) * 
 					this.costFunction.getPartialDerivative(trainingLabels[j], outputLayerOutput[j]);
+			
 			//	calculate the weight update matrix between the last hidden layer and the output layer
-			for (int i = 0; i < weightUpdateMatrices[weightUpdateMatrices.length - 1].getRowCount(); ++i) {
+			for (int i = 0; i < this.layerSizeArray[this.layerSizeArray.length - 2]; ++i) {
 				double updatedValue = this.learningRate * delta[j] * lastHiddenLayerOutput[i];
 				weightUpdateMatrices[weightUpdateMatrices.length - 1].set(i, j, updatedValue);
 			}
@@ -221,7 +222,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			delta = backpropagate(l, delta, outputCache, weightUpdateMatrices);
 		}
 		
-		return this.weightMatrice;
+		return weightUpdateMatrices;
 	}
 	
 	/**
@@ -244,18 +245,16 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		
 		//	for each neuron j in nextLayer, calculate the delta
 		for (int j = 0; j < delta.length; ++j) {
-			delta[j] = 0;
 			//	aggregate delta from next layer
 			for (int k = 0; k < nextLayerDelta.length; ++k) {
 				double weight = this.weightMatrice[curLayerIdx].get(j, k);
 				delta[j] += weight * nextLayerDelta[k];
 			}
-			delta[j] *= this.squashingFunction.gradientDescent(0, curLayerOutput[j]);
+			delta[j] *= this.squashingFunction.getDerivative(curLayerOutput[j]);
 			
 			//		calculate the weight update matrix between the previous layer and the current layer
 			for (int i = 0; i < weightUpdateMatrices[prevLayerIdx].getRowCount(); ++i) {
-				double updatedValue = this.learningRate * delta[j];
-				updatedValue *= prevLayerOutput[i];
+				double updatedValue = this.learningRate * delta[j] * prevLayerOutput[i];
 				weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
 			}
 		}

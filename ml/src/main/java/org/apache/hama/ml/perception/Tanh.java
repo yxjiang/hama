@@ -13,7 +13,7 @@ public class Tanh extends SquashingFunction {
 	}
 
 	@Override
-	public double gradientDescent(int index, double value) {
+	public double getDerivative(double value) {
 		return 1 - value * value;
 	}
 

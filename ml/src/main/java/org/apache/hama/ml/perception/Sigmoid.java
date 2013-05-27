@@ -14,7 +14,7 @@ public class Sigmoid extends SquashingFunction {
 	}
 
 	@Override
-	public double gradientDescent(int index, double value) {
+	public double getDerivative(double value) {
 //		double fx = this.calculate(0, value);
 //		return fx * (1 - fx);
 		return value * (1 - value);
