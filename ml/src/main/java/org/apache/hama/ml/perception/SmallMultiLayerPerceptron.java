@@ -23,9 +23,11 @@ import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
+import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.writable.MatrixWritable;
 import org.apache.hama.ml.writable.VectorWritable;
+import org.mortbay.log.Log;
 
 
 
@@ -47,7 +49,7 @@ import org.apache.hama.ml.writable.VectorWritable;
 public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implements Writable {
 	
 	/*	The in-memory weight matrix	*/
-	DenseDoubleMatrix[] weightMatrice;
+	private DenseDoubleMatrix[] weightMatrice;
 	
 	/**
 	 * {@inheritDoc}
@@ -89,7 +91,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			int colCount = this.weightMatrice[i].getColumnCount();
 			for (int row = 0; row < rowCount; ++row) {
 				for (int col = 0; col < colCount; ++col) {
-					this.weightMatrice[i].set(row, col, rnd.nextGaussian() - 0.5);
+					this.weightMatrice[i].set(row, col, rnd.nextDouble() - 0.5);
 				}
 			}
 		}
@@ -274,7 +276,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		}
 		
 		//	put model related parameters
-		conf.set("modelPath", modelPath == null? "" : modelPath);
 		if (modelPath == null || modelPath.trim().length() == 0) {	//	build model from scratch
 			conf.set("MLPType", this.MLPType);
 			conf.set("learningRate", "" + this.learningRate);
@@ -291,6 +292,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		}
 		
 		HamaConfiguration hamaConf = new HamaConfiguration(conf);
+		
 		BSPJob job = new BSPJob(hamaConf, SmallMLPTrainer.class);
 		job.setJobName("Small scale MLP training");
 		job.setJarByClass(SmallMLPTrainer.class);
@@ -306,6 +308,11 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		int numTasks = conf.getInt("tasks", 1);
 		job.setNumBspTask(numTasks);
 		job.waitForCompletion(true);
+		
+		//	reload learned model
+		Log.info(String.format("Reload model from %s.", trainingParams.get("modelPath")));
+		this.modelPath = trainingParams.get("modelPath");
+		this.readFromModel();
 	}
 	
 	@Override
@@ -323,11 +330,10 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			this.layerSizeArray[i] = input.readInt();
 		}
 		this.weightMatrice = new DenseDoubleMatrix[this.numberOfLayers - 1];
-		for (int i = 0; i < numberOfLayers - 1; ++i)
+		for (int i = 0; i < numberOfLayers - 1; ++i) {
 			this.weightMatrice[i] = (DenseDoubleMatrix)MatrixWritable.read(input);
-		
-		//	hard-coded
-		this.squashingFunction = new Sigmoid();
+		}
+		this.squashingFunction = SquashingFunctionFactory.getSquashingFunction(this.squashingFunctionName);
 		this.costFunction = CostFunctionFactory.getCostFunction(this.costFunctionName);
 	}
 
@@ -346,7 +352,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			output.writeInt(this.layerSizeArray[i]);
 		}
 		for (int i = 0; i < numberOfLayers - 1; ++i) {
-			MatrixWritable matrixWritable = new MatrixWritable(weightMatrice[i]);
+			MatrixWritable matrixWritable = new MatrixWritable(this.weightMatrice[i]);
+//			System.out.printf("Write matrix %d.\n%s\n", i, this.weightMatrice[i].toString());
 			matrixWritable.write(output);
 		}
 	}

@@ -3,6 +3,8 @@ package org.apache.hama.ml.perception;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,9 +38,19 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 	@Override
 	protected void extraSetup(
 			BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) {
+		
 		this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
 		
-		String modelPath = conf.get("modelPath");
+		String outputModelPath = conf.get("modelPath");
+		if (outputModelPath == null || outputModelPath.trim().length() == 0) {
+			try {
+				throw new Exception("Please specify output model path.");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		String modelPath = conf.get("existingModelPath");
 		if (modelPath == null || modelPath.trim().length() == 0) {	//	build model from scratch
 			String MLPType = conf.get("MLPType");
 			double learningRate = Double.parseDouble(conf.get("learningRate"));
@@ -52,12 +64,12 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 				this.layerSizeArray[i] = Integer.parseInt(layerSizeArrayStr[i]);
 			}
 			
-			inMemoryPerceptron = new SmallMultiLayerPerceptron(learningRate, regularization, momentum, 
+			this.inMemoryPerceptron = new SmallMultiLayerPerceptron(learningRate, regularization, momentum, 
 					squashingFunctionName, costFunctionName, layerSizeArray);
 			LOG.info("Training model from scratch.");
 		}
 		else {	//	read model from existing data
-			inMemoryPerceptron = new SmallMultiLayerPerceptron(modelPath);
+			this.inMemoryPerceptron = new SmallMultiLayerPerceptron(modelPath);
 			LOG.info("Training with existing model.");
 		}
 		
@@ -68,6 +80,15 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer
 			) {
 		LOG.info(String.format("Task %d totally read %d records.\n", peer.getPeerIndex(), this.numTrainingInstanceRead));
+		//	master write learned model to disk
+		if (peer.getPeerIndex() == 0) {
+			try {
+				LOG.info(String.format("Master write learned model to %s\n", conf.get("modelPath")));
+				this.inMemoryPerceptron.writeModelToFile(conf.get("modelPath"));
+			} catch (IOException e) {
+				System.err.println("Please set a correct model path.");
+			}
+		}
 	}
 	
 	@Override
@@ -100,7 +121,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		for (int i = 0; i < maxIteration; ++i) {
 			LOG.info(String.format("Iteration [%d] begins...", i));
 			peer.reopenInput();
-			//	reset
+			//	reset status
 			if (peer.getPeerIndex() == 0) {
 				this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
 			}
@@ -127,6 +148,57 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		
 	}
 	
+	/**
+	 * Merge the updates from slaves task.
+	 * @param peer
+	 * @throws IOException 
+	 */
+	private void mergeUpdate(
+			BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
+			throws IOException {
+		//	initialize the cache
+		DenseDoubleMatrix[] weightUpdateCache = this.initWeightMatrices();
+		
+		int numOfPartitions = peer.getNumCurrentMessages();
+		
+		while (peer.getNumCurrentMessages() > 0) {
+			SmallMLPMessage message = (SmallMLPMessage)peer.getCurrentMessage();
+			if (message.isTerminated()) {
+				this.statusSet.set(message.getOwner());
+			}
+			//	aggregates the weights
+			DenseDoubleMatrix[] weightUpdates = message.getWeightsUpdatedMatrices();
+			for (int m = 0; m < weightUpdateCache.length; ++m) {
+				weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].add(weightUpdates[m]);
+			}
+		}
+		if (numOfPartitions != 0) {
+			//		calculate the global mean (the mean of batches from all slave tasks) of the weight updates
+			for (int m = 0; m < weightUpdateCache.length; ++m) {
+				weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].divide(numOfPartitions);
+			}
+			
+			//	check if all tasks finishes reading data
+			if (this.statusSet.cardinality() == conf.getInt("tasks", 1)) {
+				this.terminateTraining = true;
+			}
+			
+			LOG.info("Master: Weight update finishes.");
+			
+			//	update the weight matrices
+			this.inMemoryPerceptron.updateWeightMatrices(weightUpdateCache);
+		}
+		
+		
+		for (String peerName : peer.getAllPeerNames()) {
+			SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), this.terminateTraining, 
+					this.inMemoryPerceptron.getWeightMatrices());
+			peer.send(peerName, msg);
+		}
+		LOG.info("Master: Broadcast updated weight matrix finishes.");
+		
+	}
+
 	/**
 	 * Train the MLP with training data.
 	 * @param peer
@@ -175,7 +247,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		
 		//	calculate the local mean (the mean of the local batch) of weight updates
 		for (int m = 0; m < weightUpdates.length; ++m) {
-			weightUpdates[m] = (DenseDoubleMatrix)weightUpdates[m].divide(this.batchSize);
+			weightUpdates[m] = (DenseDoubleMatrix)weightUpdates[m].divide(count);
 		}
 		
 		LOG.info(String.format("Task %d has read %d records.\n", peer.getPeerIndex(), this.numTrainingInstanceRead));
@@ -185,55 +257,6 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		peer.send(peer.getPeerName(0), message);	//	send status to master
 		
 		return !hasMore;
-	}
-	
-	/**
-	 * Merge the updates from slaves task.
-	 * @param peer
-	 * @throws IOException 
-	 */
-	private void mergeUpdate(
-			BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
-			throws IOException {
-		//	initialize the cache
-		DenseDoubleMatrix[] weightUpdateCache = this.initWeightMatrices();
-		
-		int numOfPartitions = peer.getNumCurrentMessages();
-		
-		while (peer.getNumCurrentMessages() > 0) {
-			SmallMLPMessage message = (SmallMLPMessage)peer.getCurrentMessage();
-			if (message.isTerminated()) {
-				this.statusSet.set(message.getOwner());
-			}
-			//	aggregates the weights
-			DenseDoubleMatrix[] weightUpdates = message.getWeightsUpdatedMatrices();
-			for (int m = 0; m < weightUpdateCache.length; ++m) {
-				weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].add(weightUpdates[m]);
-			}
-		}
-		
-		//	calculate the global mean (the mean of batches from all slave tasks) of the weight updates
-		for (int m = 0; m < weightUpdateCache.length; ++m) {
-			weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].divide(numOfPartitions);
-		}
-		
-		//	check if all tasks finishes reading data
-		if (this.statusSet.cardinality() == conf.getInt("tasks", 1)) {
-			this.terminateTraining = true;
-		}
-		
-		LOG.info("Master: Weight update finishes.");
-		
-		//	update the weight matrices
-		this.inMemoryPerceptron.updateWeightMatrices(weightUpdateCache);
-		
-		for (String peerName : peer.getAllPeerNames()) {
-			SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), this.terminateTraining, 
-					this.inMemoryPerceptron.getWeightMatrices());
-			peer.send(peerName, msg);
-		}
-		LOG.info("Master: Broadcast updated weight matrix finishes.");
-		
 	}
 	
 	/**
@@ -261,6 +284,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			double[][] values = mat[i].getValues();
 			for (int d = 0; d < values.length; ++d) {
 				sb.append(Arrays.toString(values[d]));
+				sb.append('\n');
 			}
 			sb.append('\n');
 		}

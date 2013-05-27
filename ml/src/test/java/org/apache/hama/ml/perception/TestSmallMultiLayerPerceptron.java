@@ -161,58 +161,42 @@ public class TestSmallMultiLayerPerceptron {
 	 */
 	@Test
 	@Ignore
-	public void testTrainByInstance() {
-		//	write in some training instances
-		Configuration conf = new Configuration();
-		String strDataPath = "hdfs://localhost:9000/tmp/dummy";
-		Path dataPath = new Path(strDataPath);
-		try {
-			URI uri = new URI(strDataPath);
-			FileSystem hdfs = FileSystem.get(uri, conf);
-			hdfs.delete(dataPath, true);
-			if (!hdfs.exists(dataPath)) {
-				hdfs.createNewFile(dataPath);
-				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
-																					LongWritable.class, VectorWritable.class);
-				Random rnd = new Random();
-				int dim = 6;
-				for (int i = 0; i < 1000; ++i) {
-					double[] vec = new double[dim];
-					for (int d = 0; d < dim; ++d) {
-						vec[d] = rnd.nextDouble();
-					}
-					VectorWritable vecWritable = new VectorWritable(new DenseDoubleVector(vec));
-					writer.append(new LongWritable(i), vecWritable);
-				}
-				writer.close();
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	public void testSingleMachineTraining() {
+		//	generate training data
+		DoubleVector[] trainingData = new DenseDoubleVector[] {
+				new DenseDoubleVector(new double[] {0, 0, 0}),
+				new DenseDoubleVector(new double[] {0, 1, 1}),
+				new DenseDoubleVector(new double[] {1, 0, 1}),
+				new DenseDoubleVector(new double[] {1, 1, 0})
+		};
 		
 		//	begin training by one instance
 		String modelPath = "sampleModel.data";
-		double learningRate = 0.5;
+		double learningRate = 0.2;
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
 		String squashingFunctionName = "Sigmoid";
 		String costFunctionName = "SquaredError";
-		int[] layerSizeArray = new int[]{3, 2, 2, 3};
+		int[] layerSizeArray = new int[]{2, 2, 1};
 		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
-		Map<String, String> trainingParams = new HashMap<String, String>();
-		trainingParams.put("training.iteration", "1");
-		trainingParams.put("training.mode", "minibatch.gradient.descent");
-		trainingParams.put("training.batch.size", "200");
-		trainingParams.put("tasks", "3");
-		
-		double[] trainingInstanceArr = new double[] {0.5, 0.5, 0.5, 0.0, 0.0, 1.0};
-		DoubleVector trainingInstance = new DenseDoubleVector(trainingInstanceArr);
 		try {
-			mlp.trainByInstance(trainingInstance);
-//			mlp.train(dataPath, trainingParams);
+			Random rnd = new Random();
+			for (int i = 0; i < 50; ++i) {
+				mlp.updateWeightMatrices(mlp.trainByInstance(trainingData[rnd.nextInt(4)]));
+			}
+			
+			//	get weight matrices
+			DenseDoubleMatrix[] weightMatrices = mlp.getWeightMatrices();
+			for (int i = 0; i < weightMatrices.length; ++i) {
+				System.out.printf("Matrix [%d]\n%s\n", i, weightMatrices[i]);
+			}
+			
+			for (int i = 0; i < trainingData.length; ++i) {
+				DenseDoubleVector testVec = (DenseDoubleVector)trainingData[i].slice(2);
+				System.out.printf("Input: %s,\tOutput:%s\n", testVec, mlp.output(testVec));
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -289,10 +273,10 @@ public class TestSmallMultiLayerPerceptron {
 		
 		//	generate training data
 		DoubleVector[] trainingData = new DenseDoubleVector[] {
-				new DenseDoubleVector(new double[] {0, 0, 1, 0}),
-				new DenseDoubleVector(new double[] {0, 1, 0, 1}),
-				new DenseDoubleVector(new double[] {1, 0, 0, 1}),
-				new DenseDoubleVector(new double[] {1, 1, 0, 1})
+				new DenseDoubleVector(new double[] {0, 0, 0}),
+				new DenseDoubleVector(new double[] {0, 1, 1}),
+				new DenseDoubleVector(new double[] {1, 0, 1}),
+				new DenseDoubleVector(new double[] {1, 1, 0})
 		};
 		
 		try {
@@ -323,20 +307,37 @@ public class TestSmallMultiLayerPerceptron {
 		double momentum = 0;	//	no momentum
 		String squashingFunctionName = "Sigmoid";
 		String costFunctionName = "SquareError";
-		int[] layerSizeArray = new int[]{2, 2, 2};
-		MultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
+		int[] layerSizeArray = new int[]{2, 2, 1};
+		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
 		Map<String, String> trainingParams = new HashMap<String, String>();
 		trainingParams.put("training.iteration", "5");
 		trainingParams.put("training.mode", "minibatch.gradient.descent");
 		trainingParams.put("training.batch.size", "200");
-		trainingParams.put("tasks", "3");
+		trainingParams.put("tasks", "2");
+		trainingParams.put("modelPath", modelPath);
+		
+		System.out.println("Before training");
+		DenseDoubleMatrix[] matrices = mlp.getWeightMatrices();
+		for (DenseDoubleMatrix m : matrices) {
+			System.out.println();
+			System.out.printf("%s\n", m.toString());
+		}
+		
 		
 		try {
 			mlp.train(dataPath, trainingParams);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		
+		
+		System.out.println("After training");
+		matrices = mlp.getWeightMatrices();
+		for (DenseDoubleMatrix m : matrices) {
+			System.out.println();
+			System.out.printf("%s\n", m.toString());
 		}
 		
 		//	test the model
