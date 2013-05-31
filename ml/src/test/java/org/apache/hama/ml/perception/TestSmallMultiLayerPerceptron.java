@@ -239,7 +239,7 @@ public class TestSmallMultiLayerPerceptron {
 		double learningRate = 0.6;
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
-		String squashingFunctionName = "Sigmoid";
+		String squashingFunctionName = "Tanh";
 		String costFunctionName = "SquareError";
 		int[] layerSizeArray = new int[]{2, 5, 1};
 		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
@@ -270,7 +270,6 @@ public class TestSmallMultiLayerPerceptron {
 		System.out.println("After training");
 		matrices = mlp.getWeightMatrices();
 		for (DenseDoubleMatrix m : matrices) {
-			System.out.println();
 			System.out.printf("%s\n", m.toString());
 		}
 		
