@@ -8,7 +8,7 @@ package org.apache.hama.ml.perception;
 public class Tanh extends SquashingFunction {
 
 	@Override
-	public double calculate(int index, double value) {
+	public double calculate(double value) {
 		return Math.tanh(value);
 	}
 

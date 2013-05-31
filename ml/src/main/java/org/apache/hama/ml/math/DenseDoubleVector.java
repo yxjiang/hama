@@ -109,7 +109,7 @@ public final class DenseDoubleVector implements DoubleVector {
   public DoubleVector apply(DoubleVectorFunction func) {
     DenseDoubleVector newV = new DenseDoubleVector(this.vector);
     for (int i = 0; i < vector.length; i++) {
-      newV.vector[i] = func.calculate(i, vector[i]);
+      newV.vector[i] = func.calculate(vector[i]);
     }
     return newV;
   }

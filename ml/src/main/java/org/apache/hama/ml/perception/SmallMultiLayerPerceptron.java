@@ -168,7 +168,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 				results[neuronIdx + offset] += this.weightMatrice[fromLayer].get(prevNeuronIdx, neuronIdx) * intermediateResult[prevNeuronIdx];
 			}
 //			System.out.printf("=%f\n", results[neuronIdx + offset]);
-			results[neuronIdx + offset] = this.squashingFunction.calculate(0, results[neuronIdx + offset]);	//	calculate via squashing function
+			results[neuronIdx + offset] = this.squashingFunction.calculate(results[neuronIdx + offset]);	//	calculate via squashing function
 		}
 //		System.out.printf("Result of layer: %d, %s\n", toLayer, Arrays.toString(results));
 		

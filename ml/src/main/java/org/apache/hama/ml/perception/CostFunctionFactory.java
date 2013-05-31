@@ -18,6 +18,9 @@ public class CostFunctionFactory {
 		if (name.equalsIgnoreCase("SquaredError")) {
 			return new SquaredError();
 		}
+		else if (name.equalsIgnoreCase("LogisticError")) {
+			return new LogisticCostFunction();
+		}
 		return new SquaredError();
 	}
 }
