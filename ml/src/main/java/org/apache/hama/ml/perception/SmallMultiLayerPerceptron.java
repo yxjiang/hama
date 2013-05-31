@@ -93,6 +93,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			for (int row = 0; row < rowCount; ++row) {
 				for (int col = 0; col < colCount; ++col) {
 					this.weightMatrice[i].set(row, col, rnd.nextDouble() - 0.5);
+//					this.weightMatrice[i].set(row, col, 0.5);
 				}
 			}
 		}
@@ -191,15 +192,23 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 			return weightUpdateMatrices;
 		}
 		
-		double[] trainingFeature = new double[this.layerSizeArray[0]];
-		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
+//		double[] trainingFeature = new double[this.layerSizeArray[0]];
+//		double[] trainingLabels = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
 		
 		double[] trainingVec = trainingInstance.toArray();
-		Arrays.copyOfRange(trainingVec, 0, this.layerSizeArray[0]);
-		Arrays.copyOfRange(trainingVec, this.layerSizeArray[0], trainingVec.length);
+//		System.out.printf("Training vec: %s\n", Arrays.toString(trainingVec));
+		double[] trainingFeature = Arrays.copyOfRange(trainingVec, 0, this.layerSizeArray[0]);
+		double[] trainingLabels = Arrays.copyOfRange(trainingVec, this.layerSizeArray[0], trainingVec.length);
+		
+//		System.out.printf("Training feature %s\n", Arrays.toString(trainingFeature));
+//		System.out.printf("Training labels %s\n", Arrays.toString(trainingLabels));
 		
 		DoubleVector trainingFeatureVec = new DenseDoubleVector(trainingFeature);
 		List<double[]> outputCache = this.outputInternal(trainingFeatureVec);
+		
+//		for (double[] dou : outputCache) {
+//			System.out.printf("Cache %s\n", Arrays.toString(dou));
+//		}
 		
 		//	calculate the delta of output layer
 		double[] delta = new double[this.layerSizeArray[this.layerSizeArray.length - 1]];
@@ -211,8 +220,9 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 					this.costFunction.getPartialDerivative(trainingLabels[j], outputLayerOutput[j]);
 			
 			//	calculate the weight update matrix between the last hidden layer and the output layer
-			for (int i = 0; i < this.layerSizeArray[this.layerSizeArray.length - 2]; ++i) {
+			for (int i = 0; i < this.layerSizeArray[this.layerSizeArray.length - 2] + 1; ++i) {
 				double updatedValue = this.learningRate * delta[j] * lastHiddenLayerOutput[i];
+//				System.out.printf("Set update matrix %d: [%d, %d] as %f * %f * %f = %f\n", weightUpdateMatrices.length - 1, i, j, this.learningRate, delta[j], lastHiddenLayerOutput[i], updatedValue);
 				weightUpdateMatrices[weightUpdateMatrices.length - 1].set(i, j, updatedValue);
 			}
 		}
@@ -221,6 +231,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		for (int l = this.layerSizeArray.length - 2; l >= 1; --l) {
 			delta = backpropagate(l, delta, outputCache, weightUpdateMatrices);
 		}
+		
+//		System.out.printf("Weight updates: %s\n", weightsToString(weightUpdateMatrices));
 		
 		return weightUpdateMatrices;
 	}
@@ -241,6 +253,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		int prevLayerIdx = curLayerIdx - 1;
 		double[] delta = new double[this.layerSizeArray[curLayerIdx]];
 		double[] curLayerOutput = outputCache.get(curLayerIdx);
+//		System.out.printf("Curlayer %d, output: %s\n", curLayerIdx, Arrays.toString(curLayerOutput));
 		double[] prevLayerOutput = outputCache.get(prevLayerIdx);
 		
 		//	for each neuron j in nextLayer, calculate the delta
@@ -250,11 +263,13 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 				double weight = this.weightMatrice[curLayerIdx].get(j, k);
 				delta[j] += weight * nextLayerDelta[k];
 			}
-			delta[j] *= this.squashingFunction.getDerivative(curLayerOutput[j]);
+//			System.out.printf("delta[j] = delta[%d] = %f\n", j, delta[j]);
+			delta[j] *= this.squashingFunction.getDerivative(curLayerOutput[j + 1]);
 			
 			//		calculate the weight update matrix between the previous layer and the current layer
 			for (int i = 0; i < weightUpdateMatrices[prevLayerIdx].getRowCount(); ++i) {
 				double updatedValue = this.learningRate * delta[j] * prevLayerOutput[i];
+//				System.out.printf("Set matrix %d: [%d, %d] as %f * %f * %f = %f\n", prevLayerIdx, i, j, this.learningRate, delta[j], prevLayerOutput[i], updatedValue);
 				weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
 			}
 		}
@@ -403,6 +418,26 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		for (int m = 0; m < this.weightMatrice.length; ++m) {
 			this.weightMatrice[m] = (DenseDoubleMatrix)this.weightMatrice[m].add(updateMatrices[m]);
 		}
+	}
+	
+	/**
+	 * Print out the weights.
+	 * @param mat
+	 * @return
+	 */
+	static String weightsToString(DenseDoubleMatrix[] mat) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (int i = 0; i < mat.length; ++i) {
+			sb.append(String.format("Matrix [%d]\n", i));
+			double[][] values = mat[i].getValues();
+			for (int d = 0; d < values.length; ++d) {
+				sb.append(Arrays.toString(values[d]));
+				sb.append('\n');
+			}
+			sb.append('\n');
+		}
+		return sb.toString();
 	}
 	
 }

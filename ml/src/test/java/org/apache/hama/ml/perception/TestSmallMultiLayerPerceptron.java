@@ -160,8 +160,7 @@ public class TestSmallMultiLayerPerceptron {
 	 * Test the trainByInstance method.
 	 */
 	@Test
-	@Ignore
-	public void testSingleMachineTraining() {
+	public void testSingleInstanceTraining() {
 		//	generate training data
 		DoubleVector[] trainingData = new DenseDoubleVector[] {
 				new DenseDoubleVector(new double[] {0, 0, 0}),
@@ -172,30 +171,29 @@ public class TestSmallMultiLayerPerceptron {
 		
 		//	begin training by one instance
 		String modelPath = "sampleModel.data";
-		double learningRate = 0.2;
+		double learningRate = 0.6;
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
 		String squashingFunctionName = "Sigmoid";
 		String costFunctionName = "SquaredError";
-		int[] layerSizeArray = new int[]{2, 2, 1};
+		int[] layerSizeArray = new int[]{2, 6, 1};
 		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
 		try {
+			//	train by multiple instances
+			CostFunction costFunction = new SquaredError();
 			Random rnd = new Random();
-			for (int i = 0; i < 50; ++i) {
-				mlp.updateWeightMatrices(mlp.trainByInstance(trainingData[rnd.nextInt(4)]));
-			}
-			
-			//	get weight matrices
-			DenseDoubleMatrix[] weightMatrices = mlp.getWeightMatrices();
-			for (int i = 0; i < weightMatrices.length; ++i) {
-				System.out.printf("Matrix [%d]\n%s\n", i, weightMatrices[i]);
+			for (int i = 0; i < 10000; ++i) {
+				DenseDoubleMatrix[] weightUpdates = mlp.trainByInstance(trainingData[rnd.nextInt(4)]);
+				mlp.updateWeightMatrices(weightUpdates);
 			}
 			
 			for (int i = 0; i < trainingData.length; ++i) {
 				DenseDoubleVector testVec = (DenseDoubleVector)trainingData[i].slice(2);
-				System.out.printf("Input: %s,\tOutput:%s\n", testVec, mlp.output(testVec));
+				assertEquals(trainingData[i].toArray()[2], mlp.output(testVec).toArray()[0], 0.1);
+				System.out.printf("Input: %s,\t Expected: %s,\t Output:%s\n", 
+						testVec,  (DenseDoubleVector)trainingData[i].slice(2, 3), mlp.output(testVec));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -265,6 +263,7 @@ public class TestSmallMultiLayerPerceptron {
 	 * Test the XOR problem.
 	 */
 	@Test
+	@Ignore
 	public void testTrainingByXOR() {
 		//	write in some training instances
 		Configuration conf = new Configuration();
@@ -289,8 +288,8 @@ public class TestSmallMultiLayerPerceptron {
 																					LongWritable.class, VectorWritable.class);
 				
 				Random rnd = new Random();
-				for (int i = 0; i < 100; ++i) {
-					VectorWritable vecWritable = new VectorWritable(trainingData[rnd.nextInt(4)]);
+				for (int i = 0; i < 10; ++i) {
+					VectorWritable vecWritable = new VectorWritable(trainingData[i % 4]);
 					writer.append(new LongWritable(i), vecWritable);
 				}
 				writer.close();
@@ -302,7 +301,7 @@ public class TestSmallMultiLayerPerceptron {
 		
 		//	begin training
 		String modelPath = "xorModel.data";
-		double learningRate = 0.2;
+		double learningRate = 0.6;
 		boolean regularization = false;	//	no regularization
 		double momentum = 0;	//	no momentum
 		String squashingFunctionName = "Sigmoid";
@@ -312,10 +311,10 @@ public class TestSmallMultiLayerPerceptron {
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
 		Map<String, String> trainingParams = new HashMap<String, String>();
-		trainingParams.put("training.iteration", "1000");
+		trainingParams.put("training.iteration", "500");
 		trainingParams.put("training.mode", "minibatch.gradient.descent");
-		trainingParams.put("training.batch.size", "10");
-		trainingParams.put("tasks", "2");
+		trainingParams.put("training.batch.size", "200");
+		trainingParams.put("tasks", "1");
 		trainingParams.put("modelPath", modelPath);
 		
 		System.out.println("Before training");

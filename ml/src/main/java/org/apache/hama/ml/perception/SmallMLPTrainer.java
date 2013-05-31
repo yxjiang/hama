@@ -115,7 +115,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 					throws IOException, SyncException, InterruptedException {
 		
 		int maxIteration = conf.getInt("training.iteration", 1);
-		LOG.info("Training Iteration: " + maxIteration);
+		LOG.info("# of Training Iteration: " + maxIteration);
 		
 		for (int i = 0; i < maxIteration; ++i) {
 			LOG.info(String.format("Iteration [%d] begins...", i));
@@ -128,14 +128,14 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			peer.sync();
 				
 			while (true) {
+				//	each slate task updates weights according to training data
+				boolean terminate = updateWeights(peer);
+				peer.sync();
+				
 				//	master merges the updates
 				if (peer.getPeerIndex() == 0) {
 					mergeUpdate(peer);
 				}
-				peer.sync();
-				
-				//	each slate task updates weights according to training data
-				boolean terminate = updateWeights(peer);
 				peer.sync();
 				
 				if (terminate) {
@@ -185,11 +185,11 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			
 			LOG.info("Master: Weight update finishes.");
 			
-//			System.out.printf("Before merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
+			System.out.printf("Before merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 			//	update the weight matrices
 			this.inMemoryPerceptron.updateWeightMatrices(weightUpdateCache);
 			
-//			System.out.printf("After merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
+			System.out.printf("After merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 		}
 		
 		

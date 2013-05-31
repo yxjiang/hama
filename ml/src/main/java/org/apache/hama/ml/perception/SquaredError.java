@@ -21,6 +21,7 @@ public class SquaredError extends CostFunction {
 	 */
 	public double getPartialDerivative(double target, double actual) {
 		return target - actual;
+//		return actual - target;
 	}
 
 }
