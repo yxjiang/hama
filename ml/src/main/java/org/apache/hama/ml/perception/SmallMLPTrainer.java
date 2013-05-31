@@ -126,7 +126,6 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			}
 			this.terminateTraining = false;
 			peer.sync();
-				
 			while (true) {
 				//	each slate task updates weights according to training data
 				boolean terminate = updateWeights(peer);
@@ -156,43 +155,44 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 			BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) 
 			throws IOException {
 		//	initialize the cache
-		DenseDoubleMatrix[] weightUpdateCache = this.initWeightMatrices();
+		DenseDoubleMatrix[] mergedUpdates = this.getZeroWeightMatrices();
 		
 		int numOfPartitions = peer.getNumCurrentMessages();
 		
+		//	aggregates the weights update
 		while (peer.getNumCurrentMessages() > 0) {
 			SmallMLPMessage message = (SmallMLPMessage)peer.getCurrentMessage();
 			if (message.isTerminated()) {
 				this.statusSet.set(message.getOwner());
 			}
-			//	aggregates the weights
-			DenseDoubleMatrix[] weightUpdates = message.getWeightsUpdatedMatrices();
-			for (int m = 0; m < weightUpdateCache.length; ++m) {
-				weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].add(weightUpdates[m]);
+			
+				DenseDoubleMatrix[] weightUpdates = message.getWeightsUpdatedMatrices();
+				for (int m = 0; m < mergedUpdates.length; ++m) {
+					mergedUpdates[m] = (DenseDoubleMatrix)mergedUpdates[m].add(weightUpdates[m]);
 			}
 		}
 		
 		if (numOfPartitions != 0) {
 			//		calculate the global mean (the mean of batches from all slave tasks) of the weight updates
-			for (int m = 0; m < weightUpdateCache.length; ++m) {
-				weightUpdateCache[m] = (DenseDoubleMatrix)weightUpdateCache[m].divide(numOfPartitions);
+			for (int m = 0; m < mergedUpdates.length; ++m) {
+				mergedUpdates[m] = (DenseDoubleMatrix)mergedUpdates[m].divide(numOfPartitions);
 			}
+			
+//			System.out.printf("Weight updates: %s\n", this.weightsToString(mergedUpdates));
 			
 			//	check if all tasks finishes reading data
 			if (this.statusSet.cardinality() == conf.getInt("tasks", 1)) {
 				this.terminateTraining = true;
 			}
 			
-			LOG.info("Master: Weight update finishes.");
-			
-			System.out.printf("Before merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
+//			System.out.printf("Before merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 			//	update the weight matrices
-			this.inMemoryPerceptron.updateWeightMatrices(weightUpdateCache);
+			this.inMemoryPerceptron.updateWeightMatrices(mergedUpdates);
 			
-			System.out.printf("After merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
+//			System.out.printf("After merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 		}
 		
-		
+		//	broadcast updated weight matrices
 		for (String peerName : peer.getAllPeerNames()) {
 			SmallMLPMessage msg = new SmallMLPMessage(peer.getPeerIndex(), this.terminateTraining, 
 					this.inMemoryPerceptron.getWeightMatrices());
@@ -223,7 +223,8 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		}
 		
 		//	update weight according to training data
-		DenseDoubleMatrix[] weightUpdates = this.initWeightMatrices();
+		DenseDoubleMatrix[] weightUpdates = this.getZeroWeightMatrices();
+		
 		
 		int count = 0;
 		LongWritable recordId = new LongWritable();
@@ -265,7 +266,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 	/**
 	 * Initialize the weight matrices.
 	 */
-	private DenseDoubleMatrix[] initWeightMatrices() {
+	private DenseDoubleMatrix[] getZeroWeightMatrices() {
 		DenseDoubleMatrix[] weightUpdateCache = new DenseDoubleMatrix[this.layerSizeArray.length - 1];
 		//	initialize weight matrix each layer
 		for (int i = 0; i < weightUpdateCache.length; ++i) {

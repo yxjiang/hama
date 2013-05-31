@@ -199,7 +199,6 @@ public class TestSmallMultiLayerPerceptron {
 	 * Test the XOR problem.
 	 */
 	@Test
-	@Ignore
 	public void testTrainingByXOR() {
 		//	write in some training instances
 		Configuration conf = new Configuration();
@@ -224,7 +223,7 @@ public class TestSmallMultiLayerPerceptron {
 																					LongWritable.class, VectorWritable.class);
 				
 				Random rnd = new Random();
-				for (int i = 0; i < 10; ++i) {
+				for (int i = 0; i < 1000; ++i) {
 					VectorWritable vecWritable = new VectorWritable(trainingData[i % 4]);
 					writer.append(new LongWritable(i), vecWritable);
 				}
@@ -247,94 +246,7 @@ public class TestSmallMultiLayerPerceptron {
 				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
 		
 		Map<String, String> trainingParams = new HashMap<String, String>();
-		trainingParams.put("training.iteration", "5000");
-		trainingParams.put("training.mode", "minibatch.gradient.descent");
-		trainingParams.put("training.batch.size", "100");
-		trainingParams.put("tasks", "3");
-		trainingParams.put("modelPath", modelPath);
-		
-//		System.out.println("Before training");
-//		DenseDoubleMatrix[] matrices = mlp.getWeightMatrices();
-//		for (DenseDoubleMatrix m : matrices) {
-//			System.out.println();
-//			System.out.printf("%s\n", m.toString());
-//		}
-		
-		
-		try {
-			mlp.train(dataPath, trainingParams);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		
-//		System.out.println("After training");
-//		matrices = mlp.getWeightMatrices();
-//		for (DenseDoubleMatrix m : matrices) {
-//			System.out.println();
-//			System.out.printf("%s\n", m.toString());
-//		}
-		
-		//	test the model
-		for (int i = 0; i < trainingData.length; ++i) {
-			DenseDoubleVector testVec = (DenseDoubleVector)trainingData[i].slice(2);
-			try {
-				assertEquals(trainingData[i].toArray()[2], mlp.output(testVec).toArray()[0], 0.1);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	@Test
-	public void testMergeUpdate() {
-		//	write in some training instances
-		Configuration conf = new Configuration();
-		String strDataPath = "hdfs://localhost:9000/tmp/xor";
-		Path dataPath = new Path(strDataPath);
-		
-		//	generate training data
-		DoubleVector[] trainingData = new DenseDoubleVector[] {
-				new DenseDoubleVector(new double[] {0, 0, 0}),
-				new DenseDoubleVector(new double[] {0, 1, 1}),
-				new DenseDoubleVector(new double[] {1, 0, 1}),
-				new DenseDoubleVector(new double[] {1, 1, 0})
-		};
-		
-		try {
-			URI uri = new URI(strDataPath);
-			FileSystem hdfs = FileSystem.get(uri, conf);
-			hdfs.delete(dataPath, true);
-			if (!hdfs.exists(dataPath)) {
-				hdfs.createNewFile(dataPath);
-				SequenceFile.Writer writer = new SequenceFile.Writer(hdfs, conf, dataPath, 
-																					LongWritable.class, VectorWritable.class);
-				
-				Random rnd = new Random();
-				for (int i = 0; i < 10; ++i) {
-					VectorWritable vecWritable = new VectorWritable(trainingData[i % 4]);
-					writer.append(new LongWritable(i), vecWritable);
-				}
-				writer.close();
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		//	begin training
-		String modelPath = "xorModel.data";
-		double learningRate = 0.2;
-		boolean regularization = false;	//	no regularization
-		double momentum = 0;	//	no momentum
-		String squashingFunctionName = "Sigmoid";
-		String costFunctionName = "SquareError";
-		int[] layerSizeArray = new int[]{2, 5, 1};
-		SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate, regularization, 
-				momentum, squashingFunctionName, costFunctionName, layerSizeArray);
-		
-		Map<String, String> trainingParams = new HashMap<String, String>();
-		trainingParams.put("training.iteration", "5000");
+		trainingParams.put("training.iteration", "10000");
 		trainingParams.put("training.mode", "minibatch.gradient.descent");
 		trainingParams.put("training.batch.size", "100");
 		trainingParams.put("tasks", "3");
@@ -346,6 +258,7 @@ public class TestSmallMultiLayerPerceptron {
 			System.out.println();
 			System.out.printf("%s\n", m.toString());
 		}
+		
 		
 		try {
 			mlp.train(dataPath, trainingParams);
@@ -367,10 +280,12 @@ public class TestSmallMultiLayerPerceptron {
 			DenseDoubleVector expectedVec = (DenseDoubleVector)trainingData[i].slice(2, 3);
 			try {
 				DenseDoubleVector actual = (DenseDoubleVector)mlp.output(testVec);
+				assertEquals(trainingData[i].toArray()[2], actual.get(0), 0.1);
 				System.out.printf("Input: %s,\tExpected: %s,\tTest: %s\n", testVec, expectedVec, actual);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
+	
 }
