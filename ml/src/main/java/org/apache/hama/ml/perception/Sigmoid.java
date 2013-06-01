@@ -11,7 +11,7 @@ import org.apache.hama.ml.math.DoubleVector;
 public class Sigmoid extends SquashingFunction {
 
 	@Override
-	public double calculate(double value) {
+	public double calculate(int index, double value) {
 		return 1.0 / (1 + Math.exp(-value));
 	}
 

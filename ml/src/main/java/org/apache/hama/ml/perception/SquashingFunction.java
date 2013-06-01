@@ -11,7 +11,7 @@ public abstract class SquashingFunction implements DoubleVectorFunction {
 	/**
    * Calculates the result with a given index and value of a vector.
    */
-	public abstract double calculate(double value);
+	public abstract double calculate(int index, double value);
 	
 	/**
 	 * Apply the gradient descent to each of the elements in vector.

@@ -162,7 +162,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 						* intermediateResult[prevNeuronIdx];
 			}
 			//		calculate via squashing function
-			results[neuronIdx + offset] = this.squashingFunction.calculate(results[neuronIdx + offset]);	
+			results[neuronIdx + offset] = this.squashingFunction.calculate(0, results[neuronIdx + offset]);	
 		}
 		
 		return results;
