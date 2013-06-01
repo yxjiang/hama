@@ -252,24 +252,10 @@ public class TestSmallMultiLayerPerceptron {
 		trainingParams.put("tasks", "3");
 		trainingParams.put("modelPath", modelPath);
 		
-		System.out.println("Before training");
-		DenseDoubleMatrix[] matrices = mlp.getWeightMatrices();
-		for (DenseDoubleMatrix m : matrices) {
-			System.out.println();
-			System.out.printf("%s\n", m.toString());
-		}
-		
 		try {
 			mlp.train(dataPath, trainingParams);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		
-		
-		System.out.println("After training");
-		matrices = mlp.getWeightMatrices();
-		for (DenseDoubleMatrix m : matrices) {
-			System.out.printf("%s\n", m.toString());
 		}
 		
 		//	test the model

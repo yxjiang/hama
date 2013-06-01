@@ -159,9 +159,11 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implem
 		for (int neuronIdx = 0; neuronIdx < this.layerSizeArray[toLayer]; ++neuronIdx) {
 			//	aggregate the results from previous layer
 			for (int prevNeuronIdx = 0; prevNeuronIdx < this.layerSizeArray[fromLayer] + 1; ++prevNeuronIdx) {
-				results[neuronIdx + offset] += this.weightMatrice[fromLayer].get(prevNeuronIdx, neuronIdx) * intermediateResult[prevNeuronIdx];
+				results[neuronIdx + offset] += this.weightMatrice[fromLayer].get(prevNeuronIdx, neuronIdx) 
+						* intermediateResult[prevNeuronIdx];
 			}
-			results[neuronIdx + offset] = this.squashingFunction.calculate(results[neuronIdx + offset]);	//	calculate via squashing function
+			//		calculate via squashing function
+			results[neuronIdx + offset] = this.squashingFunction.calculate(results[neuronIdx + offset]);	
 		}
 		
 		return results;
