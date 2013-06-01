@@ -14,7 +14,6 @@ import org.apache.hama.ml.writable.MatrixWritable;
  * SmallMLPMessage is used to exchange information for the
  * {@link SmallMultiLayerPerceptron}.
  * It send the whole parameter matrix from one task to another.
- * 
  */
 public class SmallMLPMessage extends MLPMessage {
 	

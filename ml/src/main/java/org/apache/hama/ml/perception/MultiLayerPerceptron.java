@@ -8,7 +8,6 @@ import org.apache.hama.ml.math.DoubleVector;
 
 /**
  *	PerceptronBase defines the common behavior of all the concrete perceptrons. 
- *	
  */
 public abstract class MultiLayerPerceptron {
 	

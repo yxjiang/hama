@@ -4,6 +4,7 @@ import org.apache.hama.ml.math.DoubleVectorFunction;
 
 /**
  * The squashing function to activate the neurons.
+ * 
  */
 public abstract class SquashingFunction implements DoubleVectorFunction {
 	

@@ -13,6 +13,7 @@ import org.apache.hama.ml.writable.VectorWritable;
 /**
  * The trainer that is used to train the perceptron with BSP.
  * The trainer would read the training data and obtain the trained parameters of the model.
+ * 
  */
 public abstract class PerceptronTrainer 
 	extends BSP<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> {

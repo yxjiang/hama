@@ -17,7 +17,6 @@ import org.apache.hama.ml.writable.VectorWritable;
 
 /**
  * The perceptron trainer for small scale MLP.
- *
  */
 public class SmallMLPTrainer extends PerceptronTrainer {
 	

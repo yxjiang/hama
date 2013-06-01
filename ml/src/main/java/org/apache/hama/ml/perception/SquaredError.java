@@ -2,7 +2,9 @@ package org.apache.hama.ml.perception;
 
 /**
  * Square error cost function.
- *
+ * <pre>
+ * cost(t, y) = 0.5 * (t - y)^2 
+ * </pre>
  */
 public class SquaredError extends CostFunction {
 
@@ -21,7 +23,6 @@ public class SquaredError extends CostFunction {
 	 */
 	public double getPartialDerivative(double target, double actual) {
 		return target - actual;
-//		return actual - target;
 	}
 
 }

@@ -3,7 +3,6 @@ package org.apache.hama.ml.perception;
 /**
  * The cost function factory that generates the cost function
  * by name.
- *
  */
 public class CostFunctionFactory {
 

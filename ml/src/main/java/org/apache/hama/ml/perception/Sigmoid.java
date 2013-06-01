@@ -4,7 +4,9 @@ import org.apache.hama.ml.math.DoubleVector;
 
 /**
  * The Sigmoid function 
- *
+ * <pre>
+ * f(z) = 1 / (1 + e^{-z})
+ * </pre>
  */
 public class Sigmoid extends SquashingFunction {
 

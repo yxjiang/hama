@@ -1,5 +1,13 @@
 package org.apache.hama.ml.perception;
 
+/**
+ * The logistic cost function.
+ * 
+ * <pre>
+ * cost(t, y) = - t * log(y) - (1 - t) * log(1 - y),
+ * where t denotes the target value, y denotes the estimated value.
+ * </pre>
+ */
 public class LogisticCostFunction extends CostFunction {
 	
 	@Override

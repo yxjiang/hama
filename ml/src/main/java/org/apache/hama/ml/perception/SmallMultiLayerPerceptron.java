@@ -45,7 +45,6 @@ import org.mortbay.log.Log;
  * The number of neurons in the input layer should be consistent with the
  * number of features in the training instance.
  * The number of neurons in the output layer
- *
  */
 public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron implements Writable {
 	

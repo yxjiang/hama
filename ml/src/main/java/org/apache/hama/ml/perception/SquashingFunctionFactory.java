@@ -2,7 +2,6 @@ package org.apache.hama.ml.perception;
 
 /**
  * Get the squashing function according to the name.
- *
  */
 public class SquashingFunctionFactory {
 	
