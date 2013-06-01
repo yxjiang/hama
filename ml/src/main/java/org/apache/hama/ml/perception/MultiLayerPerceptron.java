@@ -48,7 +48,6 @@ public abstract class MultiLayerPerceptron {
 		this.layerSizeArray = layerSizeArray;
 		this.numberOfLayers = this.layerSizeArray.length;
 		
-		//	hard-coded
 		this.costFunction = CostFunctionFactory.getCostFunction(this.costFunctionName);
 		this.squashingFunction = SquashingFunctionFactory.getSquashingFunction(this.squashingFunctionName);
 	}

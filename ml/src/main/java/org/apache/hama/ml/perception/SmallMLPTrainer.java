@@ -177,18 +177,13 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 				mergedUpdates[m] = (DenseDoubleMatrix)mergedUpdates[m].divide(numOfPartitions);
 			}
 			
-//			System.out.printf("Weight updates: %s\n", this.weightsToString(mergedUpdates));
-			
 			//	check if all tasks finishes reading data
 			if (this.statusSet.cardinality() == conf.getInt("tasks", 1)) {
 				this.terminateTraining = true;
 			}
 			
-//			System.out.printf("Before merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 			//	update the weight matrices
 			this.inMemoryPerceptron.updateWeightMatrices(mergedUpdates);
-			
-//			System.out.printf("After merge..\n%s\n", this.weightsToString(this.inMemoryPerceptron.getWeightMatrices()));
 		}
 		
 		//	broadcast updated weight matrices
@@ -223,7 +218,6 @@ public class SmallMLPTrainer extends PerceptronTrainer {
 		
 		//	update weight according to training data
 		DenseDoubleMatrix[] weightUpdates = this.getZeroWeightMatrices();
-		
 		
 		int count = 0;
 		LongWritable recordId = new LongWritable();

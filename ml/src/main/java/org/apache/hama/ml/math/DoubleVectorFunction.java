@@ -25,7 +25,6 @@ public interface DoubleVectorFunction {
 
   /**
    * Calculates the result with a given index and value of a vector.
-   * @param index TODO
    */
   public double calculate(int index, double value);
 

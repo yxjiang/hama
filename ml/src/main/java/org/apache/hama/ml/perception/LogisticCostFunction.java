@@ -12,7 +12,7 @@ public class LogisticCostFunction extends CostFunction {
 	
 	@Override
 	public double getCost(double target, double actual) {
-		return - target * Math.log(actual) - (1 - target) * Math.log(1 - actual);
+		return -target * Math.log(actual) - (1 - target) * Math.log(1 - actual);
 	}
 
 	@Override
@@ -29,7 +29,7 @@ public class LogisticCostFunction extends CostFunction {
 		else if (target == 0) {
 			target = 0.001;
 		}
-		return - target / actual + (1 - target) / (1 - actual);
+		return -target / actual + (1 - target) / (1 - actual);
 	}
 
 }
