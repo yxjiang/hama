@@ -88,23 +88,6 @@ public abstract class MultiLayerPerceptron {
 	 * @throws IOException
 	 */
 	public abstract void writeModelToFile(String modelPath) throws IOException;
-	
-//	/**
-//	 * Feed the training instance to the perceptron to update the weights.
-//	 * The calss label for the training data is represented in form of 
-//	 * {@link org.apache.hama.ml.math.DoubleVector}. 
-//	 * The interpretation of the vector is depend on the user. 
-//	 * Taking a 2-class classification task for example, the user can use one output
-//	 * neuron to represent the class label, where the value of the neural 0 and 1 
-//	 * indicate different class label. Also, the user can use two output neurons to 
-//	 * represent the output, where the vector [1, 0] and [0, 1] are used to indicate 
-//	 * these two classes.
-//	 * 
-//	 * @param trainingInstance	The training instance in vector format.
-//	 * @param	classLabel		The class label in form of {@link org.apache.hama.ml.math.DoubleVector}.
-//	 * The dimension of vector should be the same as the number of neurons in the output layer.
-//	 */
-//	protected abstract void train(DoubleVector trainingInstance, DoubleVector classLabel);
 
 	public String getModelPath() {
 		return modelPath;
