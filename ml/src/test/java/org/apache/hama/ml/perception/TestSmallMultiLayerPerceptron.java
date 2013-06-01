@@ -155,7 +155,7 @@ public class TestSmallMultiLayerPerceptron {
 	}
 	
 	/**
-	 * Test the trainByInstance method.
+	 * Test the MLP on XOR problem.
 	 */
 	@Test
 	public void testSingleInstanceTraining() {
@@ -188,7 +188,7 @@ public class TestSmallMultiLayerPerceptron {
 //			System.out.printf("Weight matrices: %s\n", mlp.weightsToString(mlp.getWeightMatrices()));
 			for (int i = 0; i < trainingData.length; ++i) {
 				DenseDoubleVector testVec = (DenseDoubleVector)trainingData[i].slice(2);
-				assertEquals(trainingData[i].toArray()[2], mlp.output(testVec).toArray()[0], 0.1);
+				assertEquals(trainingData[i].toArray()[2], mlp.output(testVec).toArray()[0], 0.15);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -259,7 +259,6 @@ public class TestSmallMultiLayerPerceptron {
 			System.out.printf("%s\n", m.toString());
 		}
 		
-		
 		try {
 			mlp.train(dataPath, trainingParams);
 		} catch (Exception e) {
@@ -279,7 +278,7 @@ public class TestSmallMultiLayerPerceptron {
 			DenseDoubleVector expectedVec = (DenseDoubleVector)trainingData[i].slice(2, 3);
 			try {
 				DenseDoubleVector actual = (DenseDoubleVector)mlp.output(testVec);
-//				assertEquals(trainingData[i].toArray()[2], actual.get(0), 0.1);
+				assertEquals(trainingData[i].toArray()[2], actual.get(0), 0.15);
 				System.out.printf("Input: %s,\tExpected: %s,\tTest: %s\n", testVec, expectedVec, actual);
 			} catch (Exception e) {
 				e.printStackTrace();
