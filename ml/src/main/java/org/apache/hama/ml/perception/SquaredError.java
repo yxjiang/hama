@@ -30,7 +30,7 @@ public class SquaredError extends CostFunction {
   /**
    * {@inheritDoc}
    */
-  public double getCost(double target, double actual) {
+  public double calculate(double target, double actual) {
     double diff = target - actual;
     return 0.5 * diff * diff;
   }
@@ -39,7 +39,7 @@ public class SquaredError extends CostFunction {
   /**
    * {@inheritDoc}
    */
-  public double getPartialDerivative(double target, double actual) {
+  public double calculateDerivative(double target, double actual) {
     return target - actual;
   }
 

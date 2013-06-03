@@ -34,7 +34,7 @@ public class Sigmoid extends SquashingFunction {
   }
 
   @Override
-  public double getDerivative(double value) {
+  public double calculateDerivative(double value) {
     return value * (1 - value);
   }
 }

@@ -36,5 +36,5 @@ public abstract class SquashingFunction implements DoubleVectorFunction {
    * @param vector
    * @return
    */
-  public abstract double getDerivative(double value);
+  public abstract double calculateDerivative(double value);
 }

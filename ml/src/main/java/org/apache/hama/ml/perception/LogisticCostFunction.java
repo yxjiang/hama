@@ -28,12 +28,12 @@ package org.apache.hama.ml.perception;
 public class LogisticCostFunction extends CostFunction {
 
   @Override
-  public double getCost(double target, double actual) {
+  public double calculate(double target, double actual) {
     return -target * Math.log(actual) - (1 - target) * Math.log(1 - actual);
   }
 
   @Override
-  public double getPartialDerivative(double target, double actual) {
+  public double calculateDerivative(double target, double actual) {
     if (actual == 1) {
       actual = 0.999;
     } else if (actual == 0) {

@@ -30,7 +30,7 @@ public abstract class CostFunction {
    * @param actual The actual value.
    * @return
    */
-  public abstract double getCost(double target, double actual);
+  public abstract double calculate(double target, double actual);
 
   /**
    * Get the partial derivative of squared error.
@@ -39,6 +39,6 @@ public abstract class CostFunction {
    * @param actual
    * @return
    */
-  public abstract double getPartialDerivative(double target, double actual);
+  public abstract double calculateDerivative(double target, double actual);
 
 }
