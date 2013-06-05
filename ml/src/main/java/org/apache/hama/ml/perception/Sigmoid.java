@@ -17,7 +17,6 @@
  */
 package org.apache.hama.ml.perception;
 
-import org.apache.hama.ml.math.DoubleVector;
 
 /**
  * The Sigmoid function

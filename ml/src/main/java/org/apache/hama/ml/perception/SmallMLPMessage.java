@@ -20,11 +20,8 @@ package org.apache.hama.ml.perception;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
-import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.writable.MatrixWritable;
 
 /**

@@ -20,8 +20,6 @@ package org.apache.hama.ml.perception;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,9 +63,8 @@ public class SmallMLPTrainer extends PerceptronTrainer {
     }
 
     String modelPath = conf.get("existingModelPath");
-    if (modelPath == null || modelPath.trim().length() == 0) { // build model
-                                                               // from scratch
-      String MLPType = conf.get("MLPType");
+    // build model from scratch
+    if (modelPath == null || modelPath.trim().length() == 0) {
       double learningRate = Double.parseDouble(conf.get("learningRate"));
       boolean regularization = Boolean.parseBoolean(conf.get("regularization"));
       double momentum = Double.parseDouble(conf.get("momentum"));
@@ -111,14 +108,13 @@ public class SmallMLPTrainer extends PerceptronTrainer {
   public void bsp(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
       throws IOException, SyncException, InterruptedException {
-    // TODO Auto-generated method stub
     LOG.info("Start training...");
     if (trainingMode.equalsIgnoreCase("minibatch.gradient.descent")) {
       LOG.info("Training Mode: minibatch.gradient.descent");
       trainByMinibatch(peer);
     }
 
-    LOG.info("Finished.");
+    LOG.info(String.format("Task %d finished.", peer.getPeerIndex()));
   }
 
   /**
@@ -137,7 +133,9 @@ public class SmallMLPTrainer extends PerceptronTrainer {
     LOG.info("# of Training Iteration: " + maxIteration);
 
     for (int i = 0; i < maxIteration; ++i) {
-      LOG.info(String.format("Iteration [%d] begins...", i));
+      if (peer.getPeerIndex() == 0) {
+        LOG.info(String.format("Iteration [%d] begins...", i));
+      }
       peer.reopenInput();
       // reset status
       if (peer.getPeerIndex() == 0) {
@@ -216,7 +214,6 @@ public class SmallMLPTrainer extends PerceptronTrainer {
           this.terminateTraining, this.inMemoryPerceptron.getWeightMatrices());
       peer.send(peerName, msg);
     }
-    LOG.info("Master: Broadcast updated weight matrix finishes.");
 
   }
 
@@ -275,7 +272,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
       weightUpdates[m] = (DenseDoubleMatrix) weightUpdates[m].divide(count);
     }
 
-    LOG.info(String.format("Task %d has read %d records.\n",
+    LOG.info(String.format("Task %d has read %d records.",
         peer.getPeerIndex(), this.numTrainingInstanceRead));
 
     // send the weight updates to master task
@@ -305,7 +302,7 @@ public class SmallMLPTrainer extends PerceptronTrainer {
    * @param mat
    * @return
    */
-  private static String weightsToString(DenseDoubleMatrix[] mat) {
+  protected static String weightsToString(DenseDoubleMatrix[] mat) {
     StringBuilder sb = new StringBuilder();
 
     for (int i = 0; i < mat.length; ++i) {

@@ -49,7 +49,7 @@ public class TestSmallMultiLayerPerceptron {
    */
   @Test
   public void testWriteReadMLP() {
-    String modelPath = "/tmp/sampleModel.data";
+    String modelPath = "/tmp/sampleModel-testWriteReadMLP.data";
     double learningRate = 0.5;
     boolean regularization = false; // no regularization
     double momentum = 0; // no momentum
@@ -65,10 +65,10 @@ public class TestSmallMultiLayerPerceptron {
       e.printStackTrace();
     }
 
-//    try {
+    try {
       // read the meta-data
       Configuration conf = new Configuration();
-//      FileSystem fs = FileSystem.get(conf);
+      FileSystem fs = FileSystem.get(conf);
       mlp = new SmallMultiLayerPerceptron(modelPath);
       assertEquals("SmallMLP", mlp.getMLPType());
       assertEquals(learningRate, mlp.getLearningRate(), 0.001);
@@ -79,24 +79,23 @@ public class TestSmallMultiLayerPerceptron {
       assertEquals(costFunctionName, mlp.getCostFunctionName());
       assertArrayEquals(layerSizeArray, mlp.getLayerSizeArray());
       // delete test file
-//      fs.delete(new Path(modelPath), true);
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
+      fs.delete(new Path(modelPath), true);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
    * Test the output of an example MLP.
    */
   @Test
-  @Ignore
   public void testOutput() {
     // write the MLP meta-data manually
-    String modelPath = "/tmp/sampleModel.data";
+    String modelPath = "/tmp/sampleModel-testOutput.data";
     Configuration conf = new Configuration();
     try {
       FileSystem fs = FileSystem.get(conf);
-      FSDataOutputStream output = fs.create(new Path(modelPath));
+      FSDataOutputStream output = fs.create(new Path(modelPath), true);
 
       String MLPType = "SmallMLP";
       double learningRate = 0.5;
@@ -157,7 +156,6 @@ public class TestSmallMultiLayerPerceptron {
       FileSystem fs = FileSystem.get(conf);
       fs.delete(new Path(modelPath), true);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
 
@@ -167,7 +165,6 @@ public class TestSmallMultiLayerPerceptron {
    * Test the MLP on XOR problem.
    */
   @Test
-  @Ignore
   public void testSingleInstanceTraining() {
     // generate training data
     DoubleVector[] trainingData = new DenseDoubleVector[] {
@@ -213,11 +210,10 @@ public class TestSmallMultiLayerPerceptron {
    * Test the XOR problem.
    */
   @Test
-  @Ignore
   public void testTrainingByXOR() {
     // write in some training instances
     Configuration conf = new Configuration();
-    String strDataPath = "/tmp/xor";
+    String strDataPath = "/tmp/xor-training-by-xor";
     Path dataPath = new Path(strDataPath);
 
     // generate training data
@@ -248,7 +244,7 @@ public class TestSmallMultiLayerPerceptron {
     }
 
     // begin training
-    String modelPath = "/tmp/xorModel.data";
+    String modelPath = "/tmp/xorModel-training-by-xor.data";
     double learningRate = 0.6;
     boolean regularization = false; // no regularization
     double momentum = 0; // no momentum
