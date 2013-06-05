@@ -55,7 +55,7 @@ public class TestSmallMLPMessage {
     SmallMLPMessage message = new SmallMLPMessage(owner, true, matrices);
 
     Configuration conf = new Configuration();
-    String strPath = "testSmallMLPMessage";
+    String strPath = "/tmp/testSmallMLPMessage";
     Path path = new Path(strPath);
     try {
       FileSystem fs = FileSystem.get(new URI(strPath), conf);
