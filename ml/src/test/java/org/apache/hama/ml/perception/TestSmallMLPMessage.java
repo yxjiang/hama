@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.junit.Test;
 
+
 /**
  * Test the functionalities of SmallMLPMessage
  * 
