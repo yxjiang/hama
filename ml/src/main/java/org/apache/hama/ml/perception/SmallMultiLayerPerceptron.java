@@ -228,7 +228,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
     double[] lastHiddenLayerOutput = outputCache.get(outputCache.size() - 2);
 
     for (int j = 0; j < delta.length; ++j) {
-      delta[j] = this.squashingFunction.calculateDerivative(outputLayerOutput[j])
+      delta[j] = this.squashingFunction
+          .calculateDerivative(outputLayerOutput[j])
           * this.costFunction.calculateDerivative(trainingLabels[j],
               outputLayerOutput[j]);
 
@@ -276,7 +277,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
         double weight = this.weightMatrice[curLayerIdx].get(j, k);
         delta[j] += weight * nextLayerDelta[k];
       }
-      delta[j] *= this.squashingFunction.calculateDerivative(curLayerOutput[j + 1]);
+      delta[j] *= this.squashingFunction
+          .calculateDerivative(curLayerOutput[j + 1]);
 
       // calculate the weight update matrix between the previous layer and the
       // current layer

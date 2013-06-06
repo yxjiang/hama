@@ -28,6 +28,7 @@ public abstract class SquashingFunction implements DoubleVectorFunction {
   /**
    * Calculates the result with a given index and value of a vector.
    */
+  @Override
   public abstract double calculate(int index, double value);
 
   /**

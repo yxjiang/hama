@@ -34,17 +34,20 @@ public class LogisticCostFunction extends CostFunction {
 
   @Override
   public double calculateDerivative(double target, double actual) {
-    if (actual == 1) {
-      actual = 0.999;
+    double adjustedTarget = target;
+    double adjustedActual = actual;
+    if (adjustedActual == 1) {
+      adjustedActual = 0.999;
     } else if (actual == 0) {
-      actual = 0.001;
+      adjustedActual = 0.001;
     }
-    if (target == 1) {
-      target = 0.999;
-    } else if (target == 0) {
-      target = 0.001;
+    if (adjustedTarget == 1) {
+      adjustedTarget = 0.999;
+    } else if (adjustedTarget == 0) {
+      adjustedTarget = 0.001;
     }
-    return -target / actual + (1 - target) / (1 - actual);
+    return -adjustedTarget / adjustedActual + (1 - adjustedTarget)
+        / (1 - adjustedActual);
   }
 
 }
