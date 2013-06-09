@@ -64,10 +64,10 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
 
   /* The in-memory weight matrix */
   private DenseDoubleMatrix[] weightMatrice;
-  
+
   /* Previous weight updates, used for momentum */
   private DenseDoubleMatrix[] prevWeightUpdateMatrices;
-  
+
   /**
    * {@inheritDoc}
    */
@@ -128,21 +128,19 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       this.prevWeightUpdateMatrices[i] = new DenseDoubleMatrix(row, col);
     }
   }
-  
+
   @Override
   /**
    * {@inheritDoc}
    * The model meta-data is stored in memory.
    */
-  public DoubleVector output(DoubleVector featureVector) throws Exception {
+  public DoubleVector output(DoubleVector featureVector) {
     List<double[]> outputCache = this.outputInternal(featureVector);
     // the output of the last layer is the output of the MLP
     return new DenseDoubleVector(outputCache.get(outputCache.size() - 1));
   }
 
-  private List<double[]> outputInternal(DoubleVector featureVector)
-      throws Exception {
-
+  private List<double[]> outputInternal(DoubleVector featureVector) {
     // store the output of the hidden layers and output layer, each array store
     // one layer
     List<double[]> outputCache = new ArrayList<double[]>();
@@ -243,7 +241,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
     double[] outputLayerOutput = outputCache.get(outputCache.size() - 1);
     double[] lastHiddenLayerOutput = outputCache.get(outputCache.size() - 2);
 
-    
     DenseDoubleMatrix prevWeightUpdateMatrix = this.prevWeightUpdateMatrices[this.prevWeightUpdateMatrices.length - 1];
     for (int j = 0; j < delta.length; ++j) {
       delta[j] = this.costFunction.calculateDerivative(trainingLabels[j],
@@ -317,7 +314,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       for (int i = 0; i < weightUpdateMatrices[prevLayerIdx].getRowCount(); ++i) {
         double updatedValue = -this.learningRate * delta[j]
             * prevLayerOutput[i];
-        //  add momemtum
+        // add momemtum
         updatedValue += this.momentum * prevWeightUpdateMatrix.get(i, j);
         weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
       }
@@ -468,12 +465,13 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
   DenseDoubleMatrix[] getPrevWeightUpdateMatrices() {
     return this.prevWeightUpdateMatrices;
   }
-  
+
   void setWeightMatrices(DenseDoubleMatrix[] newMatrices) {
     this.weightMatrice = newMatrices;
   }
-  
-  void setPrevWeightUpdateMatrices(DenseDoubleMatrix[] newPrevWeightUpdateMatrices) {
+
+  void setPrevWeightUpdateMatrices(
+      DenseDoubleMatrix[] newPrevWeightUpdateMatrices) {
     this.prevWeightUpdateMatrices = newPrevWeightUpdateMatrices;
   }
 

@@ -160,7 +160,7 @@ public class TestSmallMultiLayerPerceptron {
     }
 
   }
-  
+
   /**
    * Test training with squared error on the XOR problem.
    */
@@ -205,7 +205,7 @@ public class TestSmallMultiLayerPerceptron {
       e.printStackTrace();
     }
   }
-  
+
   /**
    * Test training with cross entropy on the XOR problem.
    */
@@ -250,13 +250,13 @@ public class TestSmallMultiLayerPerceptron {
       e.printStackTrace();
     }
   }
-  
+
   /**
    * Test training with regularizatiion.
    */
   @Test
   public void testWithRegularization() {
- // generate training data
+    // generate training data
     DoubleVector[] trainingData = new DenseDoubleVector[] {
         new DenseDoubleVector(new double[] { 0, 0, 0 }),
         new DenseDoubleVector(new double[] { 0, 1, 1 }),

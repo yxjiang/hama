@@ -17,7 +17,6 @@
  */
 package org.apache.hama.ml.perception;
 
-
 /**
  * The Sigmoid function
  * 

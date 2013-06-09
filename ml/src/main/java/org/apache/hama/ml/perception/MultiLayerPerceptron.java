@@ -102,9 +102,8 @@ public abstract class MultiLayerPerceptron {
    * @param featureVector The feature of an instance to feed the perceptron.
    * @return The results.
    */
-  public abstract DoubleVector output(DoubleVector featureVector)
-      throws Exception;
-  
+  public abstract DoubleVector output(DoubleVector featureVector);
+
   /**
    * Use the class name as the type name.
    */

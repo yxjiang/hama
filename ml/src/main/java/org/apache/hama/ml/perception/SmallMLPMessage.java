@@ -89,7 +89,7 @@ class SmallMLPMessage extends MLPMessage {
   public DenseDoubleMatrix[] getWeightUpdatedMatrices() {
     return this.weightUpdatedMatrices;
   }
-  
+
   public DenseDoubleMatrix[] getPrevWeightsUpdatedMatrices() {
     return this.prevWeightUpdatedMatrices;
   }

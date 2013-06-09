@@ -67,8 +67,7 @@ public class TestSmallMLPMessage {
       DenseDoubleMatrix[] outMatrices = outMessage.getWeightUpdatedMatrices();
       // check each matrix
       for (int i = 0; i < outMatrices.length; ++i) {
-        double[][] outMat = outMatrices[i]
-            .getValues();
+        double[][] outMat = outMatrices[i].getValues();
         for (int j = 0; j < outMat.length; ++j) {
           assertArrayEquals(mats[i][j], outMat[j], 0.0001);
         }
@@ -122,18 +121,17 @@ public class TestSmallMLPMessage {
       DenseDoubleMatrix[] outMatrices = outMessage.getWeightUpdatedMatrices();
       // check each matrix
       for (int i = 0; i < outMatrices.length; ++i) {
-        double[][] outMat = outMatrices[i]
-            .getValues();
+        double[][] outMat = outMatrices[i].getValues();
         for (int j = 0; j < outMat.length; ++j) {
           assertArrayEquals(mats[i][j], outMat[j], 0.0001);
         }
       }
-      
-      DenseDoubleMatrix[] outPrevMatrices = outMessage.getPrevWeightsUpdatedMatrices();
+
+      DenseDoubleMatrix[] outPrevMatrices = outMessage
+          .getPrevWeightsUpdatedMatrices();
       // check each matrix
       for (int i = 0; i < outPrevMatrices.length; ++i) {
-        double[][] outMat = outPrevMatrices[i]
-            .getValues();
+        double[][] outMat = outPrevMatrices[i].getValues();
         for (int j = 0; j < outMat.length; ++j) {
           assertArrayEquals(prevMats[i][j], outMat[j], 0.0001);
         }
