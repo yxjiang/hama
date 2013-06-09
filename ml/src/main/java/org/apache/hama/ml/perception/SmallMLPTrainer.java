@@ -66,7 +66,7 @@ class SmallMLPTrainer extends PerceptronTrainer {
     // build model from scratch
     if (modelPath == null || modelPath.trim().length() == 0) {
       double learningRate = Double.parseDouble(conf.get("learningRate"));
-      boolean regularization = Boolean.parseBoolean(conf.get("regularization"));
+      double regularization = Double.parseDouble(conf.get("regularization"));
       double momentum = Double.parseDouble(conf.get("momentum"));
       String squashingFunctionName = conf.get("squashingFunctionName");
       String costFunctionName = conf.get("costFunctionName");

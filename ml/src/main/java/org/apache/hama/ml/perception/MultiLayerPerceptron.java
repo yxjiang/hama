@@ -36,7 +36,7 @@ public abstract class MultiLayerPerceptron {
   /* Model meta-data */
   protected String MLPType;
   protected double learningRate;
-  protected boolean regularization;
+  protected double regularization;
   protected double momentum;
   protected int numberOfLayers;
   protected String squashingFunctionName;
@@ -59,7 +59,7 @@ public abstract class MultiLayerPerceptron {
    * @param layerSizeArray The number of neurons for each layer. Note that the
    *          actual size of each layer is one more than the input size.
    */
-  public MultiLayerPerceptron(double learningRate, boolean regularization,
+  public MultiLayerPerceptron(double learningRate, double regularization,
       double momentum, String squashingFunctionName, String costFunctionName,
       int[] layerSizeArray) {
     this.learningRate = learningRate;
@@ -131,7 +131,7 @@ public abstract class MultiLayerPerceptron {
     return learningRate;
   }
 
-  public boolean isRegularization() {
+  public double isRegularization() {
     return regularization;
   }
 

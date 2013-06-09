@@ -68,7 +68,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
   /**
    * {@inheritDoc}
    */
-  public SmallMultiLayerPerceptron(double learningRate, boolean regularization,
+  public SmallMultiLayerPerceptron(double learningRate, double regularization,
       double momentum, String squashingFunctionName, String costFunctionName,
       int[] layerSizeArray) {
     super(learningRate, regularization, momentum, squashingFunctionName,
@@ -349,7 +349,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
   public void readFields(DataInput input) throws IOException {
     this.MLPType = WritableUtils.readString(input);
     this.learningRate = input.readDouble();
-    this.regularization = input.readBoolean();
+    this.regularization = input.readDouble();
     this.momentum = input.readDouble();
     this.numberOfLayers = input.readInt();
     this.squashingFunctionName = WritableUtils.readString(input);
@@ -373,7 +373,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
   public void write(DataOutput output) throws IOException {
     WritableUtils.writeString(output, MLPType);
     output.writeDouble(learningRate);
-    output.writeBoolean(regularization);
+    output.writeDouble(regularization);
     output.writeDouble(momentum);
     output.writeInt(numberOfLayers);
     WritableUtils.writeString(output, squashingFunctionName);
