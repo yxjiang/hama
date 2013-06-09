@@ -64,7 +64,10 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
 
   /* The in-memory weight matrix */
   private DenseDoubleMatrix[] weightMatrice;
-
+  
+  /* Previous weight updates, used for momentum */
+  private DenseDoubleMatrix[] prevWeightUpdate;
+  
   /**
    * {@inheritDoc}
    */
@@ -248,6 +251,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       for (int i = 0; i < this.layerSizeArray[this.layerSizeArray.length - 2] + 1; ++i) {
         double updatedValue = -this.learningRate * delta[j]
             * lastHiddenLayerOutput[i];
+        
         weightUpdateMatrices[weightUpdateMatrices.length - 1].set(i, j,
             updatedValue);
       }

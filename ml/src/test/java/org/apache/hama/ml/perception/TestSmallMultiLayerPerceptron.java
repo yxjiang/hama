@@ -300,7 +300,6 @@ public class TestSmallMultiLayerPerceptron {
    * Test the XOR problem.
    */
   @Test
-  @Ignore
   public void testTrainingByXOR() {
     // write in some training instances
     Configuration conf = new Configuration();
@@ -337,7 +336,7 @@ public class TestSmallMultiLayerPerceptron {
     // begin training
     String modelPath = "/tmp/xorModel-training-by-xor.data";
     double learningRate = 0.6;
-    double regularization = 0.0; // no regularization
+    double regularization = 0.02; // no regularization
     double momentum = 0; // no momentum
     String squashingFunctionName = "Tanh";
     String costFunctionName = "SquaredError";

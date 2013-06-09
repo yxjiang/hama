@@ -184,7 +184,7 @@ class SmallMLPTrainer extends PerceptronTrainer {
         this.statusSet.set(message.getOwner());
       }
 
-      DenseDoubleMatrix[] weightUpdates = message.getWeightsUpdatedMatrices();
+      DenseDoubleMatrix[] weightUpdates = message.getWeightUpdatedMatrices();
       for (int m = 0; m < mergedUpdates.length; ++m) {
         mergedUpdates[m] = (DenseDoubleMatrix) mergedUpdates[m]
             .add(weightUpdates[m]);
@@ -233,7 +233,7 @@ class SmallMLPTrainer extends PerceptronTrainer {
       this.terminateTraining = message.isTerminated();
       // each slave renew its weight matrices
       this.inMemoryPerceptron.setWeightMatrices(message
-          .getWeightsUpdatedMatrices());
+          .getWeightUpdatedMatrices());
       if (this.terminateTraining) {
         return true;
       }
