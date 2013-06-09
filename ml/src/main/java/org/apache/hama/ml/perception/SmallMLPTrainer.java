@@ -33,7 +33,7 @@ import org.apache.hama.ml.writable.VectorWritable;
 /**
  * The perceptron trainer for small scale MLP.
  */
-public class SmallMLPTrainer extends PerceptronTrainer {
+class SmallMLPTrainer extends PerceptronTrainer {
 
   private static final Log LOG = LogFactory.getLog(SmallMLPTrainer.class);
   /* used by master only, check whether all slaves finishes reading */
