@@ -50,10 +50,12 @@ public abstract class MultiLayerPerceptron {
    * Initialize the MLP.
    * 
    * @param learningRate Larger learningRate makes MLP learn more aggressive.
-   * @param regularization Turn on regularization make MLP less likely to
-   *          overfit.
+   *          Learning rate cannot be negative.
+   * @param regularization Regularization makes MLP less likely to overfit. The
+   *          value of regularization cannot be negative or be too large,
+   *          otherwise it will affect the precision.
    * @param momentum The momentum makes the historical adjust have affect to
-   *          current adjust.
+   *          current adjust. The weight of momentum cannot be negative.
    * @param squashingFunctionName The name of squashing function.
    * @param costFunctionName The name of the cost function.
    * @param layerSizeArray The number of neurons for each layer. Note that the
@@ -63,8 +65,18 @@ public abstract class MultiLayerPerceptron {
       double momentum, String squashingFunctionName, String costFunctionName,
       int[] layerSizeArray) {
     this.MLPType = getTypeName();
+    if (learningRate <= 0) {
+      throw new IllegalStateException("learning rate cannot be negative.");
+    }
     this.learningRate = learningRate;
+    if (regularization <= 0 || regularization >= 0.5) {
+      throw new IllegalStateException(
+          "regularization weight must be in range (0, 0.5).");
+    }
     this.regularization = regularization; // no regularization
+    if (momentum <= 0) {
+      throw new IllegalStateException("momentum weight cannot be negative.");
+    }
     this.momentum = momentum; // no momentum
     this.squashingFunctionName = squashingFunctionName;
     this.costFunctionName = costFunctionName;
