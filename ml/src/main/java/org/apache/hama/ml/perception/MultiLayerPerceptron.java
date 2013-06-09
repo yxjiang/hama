@@ -69,12 +69,12 @@ public abstract class MultiLayerPerceptron {
       throw new IllegalStateException("learning rate cannot be negative.");
     }
     this.learningRate = learningRate;
-    if (regularization <= 0 || regularization >= 0.5) {
+    if (regularization < 0 || regularization >= 0.5) {
       throw new IllegalStateException(
           "regularization weight must be in range (0, 0.5).");
     }
     this.regularization = regularization; // no regularization
-    if (momentum <= 0) {
+    if (momentum < 0) {
       throw new IllegalStateException("momentum weight cannot be negative.");
     }
     this.momentum = momentum; // no momentum
