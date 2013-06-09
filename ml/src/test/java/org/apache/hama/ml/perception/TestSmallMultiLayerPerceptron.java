@@ -50,7 +50,7 @@ public class TestSmallMultiLayerPerceptron {
   @Test
   public void testWriteReadMLP() {
     String modelPath = "/tmp/sampleModel-testWriteReadMLP.data";
-    double learningRate = 0.5;
+    double learningRate = 0.3;
     double regularization = 0.0; // no regularization
     double momentum = 0; // no momentum
     String squashingFunctionName = "Sigmoid";
@@ -250,11 +250,57 @@ public class TestSmallMultiLayerPerceptron {
       e.printStackTrace();
     }
   }
+  
+  /**
+   * Test training with regularizatiion.
+   */
+  @Test
+  public void testWithRegularization() {
+ // generate training data
+    DoubleVector[] trainingData = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 0, 0, 0 }),
+        new DenseDoubleVector(new double[] { 0, 1, 1 }),
+        new DenseDoubleVector(new double[] { 1, 0, 1 }),
+        new DenseDoubleVector(new double[] { 1, 1, 0 }) };
+
+    // set parameters
+    double learningRate = 0.5;
+    double regularization = 0.02; // regularization should be a tiny number
+    double momentum = 0; // no momentum
+    String squashingFunctionName = "Sigmoid";
+    String costFunctionName = "CrossEntropy";
+    int[] layerSizeArray = new int[] { 2, 7, 1 };
+    SmallMultiLayerPerceptron mlp = new SmallMultiLayerPerceptron(learningRate,
+        regularization, momentum, squashingFunctionName, costFunctionName,
+        layerSizeArray);
+
+    try {
+      // train by multiple instances
+      Random rnd = new Random();
+      for (int i = 0; i < 10000; ++i) {
+        DenseDoubleMatrix[] weightUpdates = mlp
+            .trainByInstance(trainingData[rnd.nextInt(4)]);
+        mlp.updateWeightMatrices(weightUpdates);
+      }
+
+      // System.out.printf("Weight matrices: %s\n",
+      // mlp.weightsToString(mlp.getWeightMatrices()));
+      for (int i = 0; i < trainingData.length; ++i) {
+        DenseDoubleVector testVec = (DenseDoubleVector) trainingData[i]
+            .slice(2);
+        assertEquals(trainingData[i].toArray()[2], mlp.output(testVec)
+            .toArray()[0], 0.2);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
   /**
    * Test the XOR problem.
    */
   @Test
+  @Ignore
   public void testTrainingByXOR() {
     // write in some training instances
     Configuration conf = new Configuration();

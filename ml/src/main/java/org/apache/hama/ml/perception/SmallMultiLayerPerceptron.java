@@ -227,10 +227,21 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
     double[] lastHiddenLayerOutput = outputCache.get(outputCache.size() - 2);
 
     for (int j = 0; j < delta.length; ++j) {
-      delta[j] = this.squashingFunction
-          .calculateDerivative(outputLayerOutput[j])
-          * this.costFunction.calculateDerivative(trainingLabels[j],
-              outputLayerOutput[j]);
+      delta[j] = this.costFunction.calculateDerivative(trainingLabels[j],
+          outputLayerOutput[j]);
+      // add regularization term
+      if (this.regularization != 0.0) {
+        double derivativeRegularization = 0.0;
+        DenseDoubleMatrix weightMatrix = this.weightMatrice[this.weightMatrice.length - 1];
+        for (int k = 0; k < this.layerSizeArray[this.layerSizeArray.length - 1]; ++k) {
+          derivativeRegularization += weightMatrix.get(k, j);
+        }
+        derivativeRegularization /= this.layerSizeArray[this.layerSizeArray.length - 1];
+        delta[j] += this.regularization * derivativeRegularization;
+      }
+
+      delta[j] *= this.squashingFunction
+          .calculateDerivative(outputLayerOutput[j]);
 
       // calculate the weight update matrix between the last hidden layer and
       // the output layer
@@ -282,7 +293,8 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       // calculate the weight update matrix between the previous layer and the
       // current layer
       for (int i = 0; i < weightUpdateMatrices[prevLayerIdx].getRowCount(); ++i) {
-        double updatedValue = -this.learningRate * delta[j] * prevLayerOutput[i];
+        double updatedValue = -this.learningRate * delta[j]
+            * prevLayerOutput[i];
         weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
       }
     }
