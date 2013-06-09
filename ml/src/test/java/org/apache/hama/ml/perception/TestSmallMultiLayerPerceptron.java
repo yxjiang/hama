@@ -70,7 +70,7 @@ public class TestSmallMultiLayerPerceptron {
       Configuration conf = new Configuration();
       FileSystem fs = FileSystem.get(conf);
       mlp = new SmallMultiLayerPerceptron(modelPath);
-      assertEquals("SmallMLP", mlp.getMLPType());
+      assertEquals(mlp.getClass().getName(), mlp.getMLPType());
       assertEquals(learningRate, mlp.getLearningRate(), 0.001);
       assertEquals(regularization, mlp.isRegularization(), 0.001);
       assertEquals(layerSizeArray.length, mlp.getNumberOfLayers());
@@ -97,7 +97,7 @@ public class TestSmallMultiLayerPerceptron {
       FileSystem fs = FileSystem.get(conf);
       FSDataOutputStream output = fs.create(new Path(modelPath), true);
 
-      String MLPType = "SmallMLP";
+      String MLPType = SmallMultiLayerPerceptron.class.getName();
       double learningRate = 0.5;
       double regularization = 0.0;
       double momentum = 0;
@@ -210,7 +210,6 @@ public class TestSmallMultiLayerPerceptron {
    * Test the XOR problem.
    */
   @Test
-  @Ignore
   public void testTrainingByXOR() {
     // write in some training instances
     Configuration conf = new Configuration();

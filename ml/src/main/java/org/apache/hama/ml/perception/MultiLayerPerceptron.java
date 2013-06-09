@@ -62,6 +62,7 @@ public abstract class MultiLayerPerceptron {
   public MultiLayerPerceptron(double learningRate, double regularization,
       double momentum, String squashingFunctionName, String costFunctionName,
       int[] layerSizeArray) {
+    this.MLPType = getTypeName();
     this.learningRate = learningRate;
     this.regularization = regularization; // no regularization
     this.momentum = momentum; // no momentum
@@ -103,6 +104,11 @@ public abstract class MultiLayerPerceptron {
    */
   public abstract DoubleVector output(DoubleVector featureVector)
       throws Exception;
+  
+  /**
+   * Use the class name as the type name.
+   */
+  protected abstract String getTypeName();
 
   /**
    * Read the model meta-data from the specified location.

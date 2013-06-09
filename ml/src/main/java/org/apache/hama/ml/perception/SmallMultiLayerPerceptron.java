@@ -73,7 +73,6 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       int[] layerSizeArray) {
     super(learningRate, regularization, momentum, squashingFunctionName,
         costFunctionName, layerSizeArray);
-    this.MLPType = "SmallMLP";
     initializeWeightMatrix();
   }
 
@@ -402,6 +401,11 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       FileSystem fs = FileSystem.get(uri, conf);
       FSDataInputStream is = new FSDataInputStream(fs.open(new Path(modelPath)));
       this.readFields(is);
+      if (!this.MLPType.equals(this.getClass().getName())) {
+        throw new IllegalStateException(String.format(
+            "Model type incorrect, cannot load model '%s' for '%s'.",
+            this.MLPType, this.getClass().getName()));
+      }
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
@@ -460,6 +464,11 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       sb.append('\n');
     }
     return sb.toString();
+  }
+
+  @Override
+  protected String getTypeName() {
+    return this.getClass().getName();
   }
 
 }
