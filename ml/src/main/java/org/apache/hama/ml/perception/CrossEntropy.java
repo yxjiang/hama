@@ -25,7 +25,7 @@ package org.apache.hama.ml.perception;
  * where t denotes the target value, y denotes the estimated value.
  * </pre>
  */
-public class CrossEntropyCostFunction extends CostFunction {
+public class CrossEntropy extends CostFunction {
 
   @Override
   public double calculate(double target, double actual) {

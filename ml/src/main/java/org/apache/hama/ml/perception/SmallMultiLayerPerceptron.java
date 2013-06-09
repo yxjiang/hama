@@ -133,7 +133,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
     // start from the first hidden layer
     double[] intermediateResults = new double[this.layerSizeArray[0] + 1];
     if (intermediateResults.length - 1 != featureVector.getDimension()) {
-      throw new Exception(
+      throw new IllegalStateException(
           "Input feature dimension incorrect! The dimension of input layer is "
               + (this.layerSizeArray[0] - 1)
               + ", but the dimension of input feature is "
@@ -235,7 +235,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       // calculate the weight update matrix between the last hidden layer and
       // the output layer
       for (int i = 0; i < this.layerSizeArray[this.layerSizeArray.length - 2] + 1; ++i) {
-        double updatedValue = this.learningRate * delta[j]
+        double updatedValue = -this.learningRate * delta[j]
             * lastHiddenLayerOutput[i];
         weightUpdateMatrices[weightUpdateMatrices.length - 1].set(i, j,
             updatedValue);
@@ -282,7 +282,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       // calculate the weight update matrix between the previous layer and the
       // current layer
       for (int i = 0; i < weightUpdateMatrices[prevLayerIdx].getRowCount(); ++i) {
-        double updatedValue = this.learningRate * delta[j] * prevLayerOutput[i];
+        double updatedValue = -this.learningRate * delta[j] * prevLayerOutput[i];
         weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
       }
     }
