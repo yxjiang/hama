@@ -100,11 +100,34 @@ public final class DenseDoubleVector implements DoubleVector {
     vector[index] = value;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public DoubleVector apply(DoubleFunction func) {
+    for (int i = 0; i < vector.length; i++) {
+      this.vector[i] = func.calculate(vector[i]);
+    }
+    return this;
+  }
+
+  /**
+   * {@inheritDoc}}
+   */
+  @Override
+  public DoubleVector apply(DoubleVector other, DoubleDoubleFunction func) {
+    for (int i = 0; i < vector.length; i++) {
+      this.vector[i] = func.calculate(vector[i], other.get(i));
+    }
+    return this;
+  }
+  
   /*
    * (non-Javadoc)
    * @see de.jungblut.math.DoubleVector#apply(de.jungblut.math.function.
    * DoubleVectorFunction)
    */
+  @Deprecated
   @Override
   public DoubleVector apply(DoubleVectorFunction func) {
     DenseDoubleVector newV = new DenseDoubleVector(this.vector);
@@ -119,6 +142,7 @@ public final class DenseDoubleVector implements DoubleVector {
    * @see de.jungblut.math.DoubleVector#apply(de.jungblut.math.DoubleVector,
    * de.jungblut.math.function.DoubleDoubleVectorFunction)
    */
+  @Deprecated
   @Override
   public DoubleVector apply(DoubleVector other, DoubleDoubleVectorFunction func) {
     DenseDoubleVector newV = (DenseDoubleVector) deepCopy();

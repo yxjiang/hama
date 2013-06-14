@@ -15,24 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.ml.perception;
+package org.apache.hama.ml.math;
 
 /**
- * The Sigmoid function
- * 
- * <pre>
- * f(z) = 1 / (1 + e^{-z})
- * </pre>
+ * A double double function takes two arguments.
+ * A vector or matrix can apply the double function to each element.
+ *
  */
-public class Sigmoid extends SquashingFunction {
+public abstract class DoubleDoubleFunction {
+  
+  /**
+   * Apply the function to elements of two given Vector/Matrix.
+   * @param x1  The element in the first Vector/Matrix.
+   * @param x2  The element in the second Vector/Matrix.
+   * @return    The result based on the calculation on two arguments.
+   */
+  public abstract double calculate(double x1, double x2);
 
-  @Override
-  public double calculate(double value) {
-    return 1.0 / (1 + Math.exp(-value));
-  }
-
-  @Override
-  public double calculateDerivative(double value) {
-    return value * (1 - value);
-  }
 }

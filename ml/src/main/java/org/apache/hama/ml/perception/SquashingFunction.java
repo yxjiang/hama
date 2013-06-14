@@ -17,19 +17,20 @@
  */
 package org.apache.hama.ml.perception;
 
-import org.apache.hama.ml.math.DoubleVectorFunction;
+import org.apache.hama.ml.math.DoubleFunction;
+
 
 /**
  * The squashing function to activate the neurons.
  * 
  */
-public abstract class SquashingFunction implements DoubleVectorFunction {
+public abstract class SquashingFunction extends DoubleFunction {
 
   /**
    * Calculates the result with a given index and value of a vector.
    */
   @Override
-  public abstract double calculate(int index, double value);
+  public abstract double calculate(double value);
 
   /**
    * Apply the gradient descent to each of the elements in vector.
