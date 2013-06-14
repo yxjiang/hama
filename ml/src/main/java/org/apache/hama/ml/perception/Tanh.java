@@ -20,6 +20,7 @@ package org.apache.hama.ml.perception;
 /**
  * The hyperbolic tangent function. It is used as a squashing function in
  * multi-layer perceptron.
+ * 
  */
 public class Tanh extends SquashingFunction {
 
