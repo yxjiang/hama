@@ -30,5 +30,12 @@ public abstract class DoubleFunction {
    * @return  The result after applying the function.
    */
   public abstract double calculate(double elem);
+  
+  /**
+   * Apply the gradient of the function.
+   * @param elem
+   * @return
+   */
+  public abstract double calculateDerivative(double elem);
 
 }
