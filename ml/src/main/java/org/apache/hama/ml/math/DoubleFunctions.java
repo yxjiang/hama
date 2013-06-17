@@ -18,26 +18,48 @@
 package org.apache.hama.ml.math;
 
 /**
- * A double double function takes two arguments.
- * A vector or matrix can apply the double function to each element.
- *
+ * DoubleFunctions contains the common used DoubleFunction
+ * 
  */
-public abstract class DoubleDoubleFunction {
-  
-  /**
-   * Apply the function to elements to two given arguments.
-   * @param x1  
-   * @param x2  
-   * @return    The result based on the calculation on two arguments.
-   */
-  public abstract double calculate(double x1, double x2);
-  
-  /**
-   * Apply the derivative of this function to two given arguments.
-   * @param x1
-   * @param x2
-   * @return    The result based on the calculation on two arguments.
-   */
-  public abstract double calculateDerivative(double x1, double x2);
+public final class DoubleFunctions {
 
+  /**
+   * Tanh function.
+   * 
+   */
+  public final static DoubleFunction TANH = new DoubleFunction() {
+
+    @Override
+    public double calculate(double value) {
+      return Math.tanh(value);
+    }
+
+    @Override
+    public double calculateDerivative(double value) {
+      return 1 - value * value;
+    }
+
+  };
+
+  /**
+   * The Sigmoid function
+   * 
+   * <pre>
+   * f(x) = 1 / (1 + e^{-x})
+   * </pre>
+   */
+  public final static DoubleFunction SIGMOID = new DoubleFunction() {
+
+    @Override
+    public double calculate(double value) {
+      return 1.0 / (1 + Math.exp(-value));
+    }
+
+    @Override
+    public double calculateDerivative(double value) {
+      return value * (1 - value);
+    }
+
+  };
+  
 }

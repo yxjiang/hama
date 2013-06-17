@@ -25,17 +25,17 @@ package org.apache.hama.ml.math;
 public abstract class DoubleFunction {
   
   /**
-   * Apply the function to element of given Vector/Matrix.
+   * Apply the function to element.
    * @param elem  The element that the function apply to.
    * @return  The result after applying the function.
    */
-  public abstract double calculate(double elem);
+  public abstract double calculate(double value);
   
   /**
    * Apply the gradient of the function.
    * @param elem
    * @return
    */
-  public abstract double calculateDerivative(double elem);
+  public abstract double calculateDerivative(double value);
 
 }
