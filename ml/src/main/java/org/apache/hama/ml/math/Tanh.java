@@ -15,25 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.ml.perception;
+package org.apache.hama.ml.math;
 
 /**
- * The Sigmoid function
+ * Tanh function.
  * 
- * <pre>
- * f(z) = 1 / (1 + e^{-z})
- * </pre>
  */
-public class Sigmoid extends SquashingFunction {
+public class Tanh extends DoubleFunction {
 
   @Override
   public double calculate(double value) {
-    return 1.0 / (1 + Math.exp(-value));
+    return Math.tanh(value);
   }
 
   @Override
   public double calculateDerivative(double value) {
-    return value * (1 - value);
+    return 1 - value * value;
   }
-
+  
 }

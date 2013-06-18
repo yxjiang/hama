@@ -15,25 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.ml.perception;
+package org.apache.hama.ml.math;
 
 /**
- * The Sigmoid function
+ * A generic function.
  * 
- * <pre>
- * f(z) = 1 / (1 + e^{-z})
- * </pre>
  */
-public class Sigmoid extends SquashingFunction {
-
-  @Override
-  public double calculate(double value) {
-    return 1.0 / (1 + Math.exp(-value));
+public abstract class Function {
+  /**
+   * Get the name of the function.
+   * 
+   * @return The name of the function.
+   */
+  final public String getFunctionName() {
+    return this.getClass().getSimpleName();
   }
-
-  @Override
-  public double calculateDerivative(double value) {
-    return value * (1 - value);
-  }
-
 }

@@ -42,6 +42,7 @@ import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleVector;
+import org.apache.hama.ml.math.FunctionFactory;
 import org.apache.hama.ml.writable.MatrixWritable;
 import org.apache.hama.ml.writable.VectorWritable;
 import org.mortbay.log.Log;
@@ -394,10 +395,10 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
     for (int i = 0; i < numberOfLayers - 1; ++i) {
       this.weightMatrice[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
     }
-    this.squashingFunction = SquashingFunctionFactory
-        .getSquashingFunction(this.squashingFunctionName);
-    this.costFunction = CostFunctionFactory
-        .getCostFunction(this.costFunctionName);
+    this.squashingFunction = FunctionFactory
+        .createDoubleFunction(this.squashingFunctionName);
+    this.costFunction = FunctionFactory
+        .createDoubleDoubleFunction(this.costFunctionName);
   }
 
   @Override

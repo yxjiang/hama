@@ -18,25 +18,27 @@
 package org.apache.hama.ml.math;
 
 /**
- * A double double function takes two arguments.
- * A vector or matrix can apply the double function to each element.
- *
+ * A double double function takes two arguments. A vector or matrix can apply
+ * the double function to each element.
+ * 
  */
-public abstract class DoubleDoubleFunction {
-  
+public abstract class DoubleDoubleFunction extends Function {
+
   /**
    * Apply the function to elements to two given arguments.
-   * @param x1  
-   * @param x2  
-   * @return    The result based on the calculation on two arguments.
-   */
-  public abstract double calculate(double x1, double x2);
-  
-  /**
-   * Apply the derivative of this function to two given arguments.
+   * 
    * @param x1
    * @param x2
-   * @return    The result based on the calculation on two arguments.
+   * @return The result based on the calculation on two arguments.
+   */
+  public abstract double calculate(double x1, double x2);
+
+  /**
+   * Apply the derivative of this function to two given arguments.
+   * 
+   * @param x1
+   * @param x2
+   * @return The result based on the calculation on two arguments.
    */
   public abstract double calculateDerivative(double x1, double x2);
 

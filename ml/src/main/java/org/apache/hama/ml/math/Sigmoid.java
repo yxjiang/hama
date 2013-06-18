@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.ml.perception;
+package org.apache.hama.ml.math;
 
 /**
  * The Sigmoid function
  * 
  * <pre>
- * f(z) = 1 / (1 + e^{-z})
+ * f(x) = 1 / (1 + e^{-x})
  * </pre>
  */
-public class Sigmoid extends SquashingFunction {
+public class Sigmoid extends DoubleFunction {
 
   @Override
   public double calculate(double value) {

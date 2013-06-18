@@ -17,12 +17,17 @@
  */
 package org.apache.hama.ml.math;
 
+import java.lang.reflect.Field;
+
+
+
+
 /**
  * DoubleDoubleFunctions contains the commonly used DoubleDoubleFunction.
  * 
  */
 public class DoubleDoubleFunctions {
-
+  
   /**
    * Square error cost function.
    * 
@@ -79,5 +84,5 @@ public class DoubleDoubleFunctions {
     }
 
   };
-
+  
 }
