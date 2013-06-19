@@ -66,12 +66,12 @@ public class TestDenseDoubleMatrix {
     mat1.apply(mat2, new DoubleDoubleFunction() {
 
       @Override
-      public double calculate(double x1, double x2) {
+      public double apply(double x1, double x2) {
         return x1 + x2;
       }
 
       @Override
-      public double calculateDerivative(double x1, double x2) {
+      public double applyDerivative(double x1, double x2) {
         throw new UnsupportedOperationException();
       }
 

@@ -31,7 +31,7 @@ public abstract class DoubleDoubleFunction extends Function {
    * @param x2
    * @return The result based on the calculation on two arguments.
    */
-  public abstract double calculate(double x1, double x2);
+  public abstract double apply(double x1, double x2);
 
   /**
    * Apply the derivative of this function to two given arguments.
@@ -40,6 +40,6 @@ public abstract class DoubleDoubleFunction extends Function {
    * @param x2
    * @return The result based on the calculation on two arguments.
    */
-  public abstract double calculateDerivative(double x1, double x2);
+  public abstract double applyDerivative(double x1, double x2);
 
 }

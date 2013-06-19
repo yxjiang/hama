@@ -41,6 +41,7 @@ import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
+import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.apache.hama.ml.writable.MatrixWritable;
@@ -108,13 +109,30 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       // add weights for bias
       this.weightMatrice[i] = new DenseDoubleMatrix(this.layerSizeArray[i] + 1,
           this.layerSizeArray[i + 1]);
-      int rowCount = this.weightMatrice[i].getRowCount();
-      int colCount = this.weightMatrice[i].getColumnCount();
-      for (int row = 0; row < rowCount; ++row) {
-        for (int col = 0; col < colCount; ++col) {
-          this.weightMatrice[i].set(row, col, rnd.nextDouble() - 0.5);
+      
+      this.weightMatrice[i].apply(new DoubleFunction() {
+
+        private Random rnd = new Random();
+        
+        @Override
+        public double calculate(double value) {
+          return rnd.nextDouble() - 0.5;
         }
-      }
+
+        @Override
+        public double calculateDerivative(double value) {
+          throw new UnsupportedOperationException("Not supported");
+        }
+        
+      });
+      
+//      int rowCount = this.weightMatrice[i].getRowCount();
+//      int colCount = this.weightMatrice[i].getColumnCount();
+//      for (int row = 0; row < rowCount; ++row) {
+//        for (int col = 0; col < colCount; ++col) {
+//          this.weightMatrice[i].set(row, col, rnd.nextDouble() - 0.5);
+//        }
+//      }
     }
   }
 
@@ -243,7 +261,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
 
     DenseDoubleMatrix prevWeightUpdateMatrix = this.prevWeightUpdateMatrices[this.prevWeightUpdateMatrices.length - 1];
     for (int j = 0; j < delta.length; ++j) {
-      delta[j] = this.costFunction.calculateDerivative(trainingLabels[j],
+      delta[j] = this.costFunction.applyDerivative(trainingLabels[j],
           outputLayerOutput[j]);
       // add regularization term
       if (this.regularization != 0.0) {

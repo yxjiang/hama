@@ -804,7 +804,7 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
     
     for (int r = 0; r < this.numRows; ++r) {
       for (int c = 0; c < this.numColumns; ++c) {
-        this.set(r, c, fun.calculate(this.get(r, c), other.get(r, c)));
+        this.set(r, c, fun.apply(this.get(r, c), other.get(r, c)));
       }
     }
     

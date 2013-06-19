@@ -28,12 +28,12 @@ package org.apache.hama.ml.math;
 public class CrossEntropy extends DoubleDoubleFunction {
 
   @Override
-  public double calculate(double target, double actual) {
+  public double apply(double target, double actual) {
     return -target * Math.log(actual) - (1 - target) * Math.log(1 - actual);
   }
 
   @Override
-  public double calculateDerivative(double target, double actual) {
+  public double applyDerivative(double target, double actual) {
     double adjustedTarget = target;
     double adjustedActual = actual;
     if (adjustedActual == 1) {

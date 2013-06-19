@@ -30,7 +30,7 @@ public class SquaredError extends DoubleDoubleFunction {
   /**
    * {@inheritDoc}
    */
-  public double calculate(double target, double actual) {
+  public double apply(double target, double actual) {
     double diff = target - actual;
     return 0.5 * diff * diff;
   }
@@ -39,7 +39,7 @@ public class SquaredError extends DoubleDoubleFunction {
   /**
    * {@inheritDoc}
    */
-  public double calculateDerivative(double target, double actual) {
+  public double applyDerivative(double target, double actual) {
     // return target - actual;
     return actual - target;
   }
