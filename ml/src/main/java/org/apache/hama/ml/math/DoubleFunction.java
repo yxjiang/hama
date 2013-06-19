@@ -30,7 +30,7 @@ public abstract class DoubleFunction extends Function {
    * @param elem The element that the function apply to.
    * @return The result after applying the function.
    */
-  public abstract double calculate(double value);
+  public abstract double apply(double value);
 
   /**
    * Apply the gradient of the function.
@@ -38,6 +38,6 @@ public abstract class DoubleFunction extends Function {
    * @param elem
    * @return
    */
-  public abstract double calculateDerivative(double value);
+  public abstract double applyDerivative(double value);
 
 }

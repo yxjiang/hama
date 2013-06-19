@@ -24,12 +24,12 @@ package org.apache.hama.ml.math;
 public class Tanh extends DoubleFunction {
 
   @Override
-  public double calculate(double value) {
+  public double apply(double value) {
     return Math.tanh(value);
   }
 
   @Override
-  public double calculateDerivative(double value) {
+  public double applyDerivative(double value) {
     return 1 - value * value;
   }
   

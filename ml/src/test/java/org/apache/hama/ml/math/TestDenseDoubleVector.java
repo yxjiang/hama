@@ -37,12 +37,12 @@ public class TestDenseDoubleVector {
     vec1.apply(new DoubleFunction() {
 
       @Override
-      public double calculate(double value) {
+      public double apply(double value) {
         return value + 1;
       }
 
       @Override
-      public double calculateDerivative(double value) {
+      public double applyDerivative(double value) {
         throw new UnsupportedOperationException("Not supported.");
       }
       

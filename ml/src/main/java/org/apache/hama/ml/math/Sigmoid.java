@@ -27,12 +27,12 @@ package org.apache.hama.ml.math;
 public class Sigmoid extends DoubleFunction {
 
   @Override
-  public double calculate(double value) {
+  public double apply(double value) {
     return 1.0 / (1 + Math.exp(-value));
   }
 
   @Override
-  public double calculateDerivative(double value) {
+  public double applyDerivative(double value) {
     return value * (1 - value);
   }
 

@@ -106,7 +106,7 @@ public final class DenseDoubleVector implements DoubleVector {
   @Override
   public DoubleVector apply(DoubleFunction func) {
     for (int i = 0; i < vector.length; i++) {
-      this.vector[i] = func.calculate(vector[i]);
+      this.vector[i] = func.apply(vector[i]);
     }
     return this;
   }

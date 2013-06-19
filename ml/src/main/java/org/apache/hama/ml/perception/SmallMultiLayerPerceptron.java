@@ -115,12 +115,12 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
         private Random rnd = new Random();
         
         @Override
-        public double calculate(double value) {
+        public double apply(double value) {
           return rnd.nextDouble() - 0.5;
         }
 
         @Override
-        public double calculateDerivative(double value) {
+        public double applyDerivative(double value) {
           throw new UnsupportedOperationException("Not supported");
         }
         
@@ -218,7 +218,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
             prevNeuronIdx, neuronIdx) * intermediateResult[prevNeuronIdx];
       }
       // calculate via squashing function
-      results[neuronIdx + offset] = this.squashingFunction.calculate(results[neuronIdx + offset]);
+      results[neuronIdx + offset] = this.squashingFunction.apply(results[neuronIdx + offset]);
     }
 
     return results;
@@ -275,7 +275,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
       }
 
       delta[j] *= this.squashingFunction
-          .calculateDerivative(outputLayerOutput[j]);
+          .applyDerivative(outputLayerOutput[j]);
 
       // calculate the weight update matrix between the last hidden layer and
       // the output layer
@@ -325,7 +325,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
         delta[j] += weight * nextLayerDelta[k];
       }
       delta[j] *= this.squashingFunction
-          .calculateDerivative(curLayerOutput[j + 1]);
+          .applyDerivative(curLayerOutput[j + 1]);
 
       // calculate the weight update matrix between the previous layer and the
       // current layer
