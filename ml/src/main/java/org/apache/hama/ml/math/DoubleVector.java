@@ -87,7 +87,7 @@ public interface DoubleVector {
    * @param func the function to apply.
    * @return a new vector with the applied function.
    */
-  public DoubleVector apply(DoubleFunction func);
+  public DoubleVector applyToElements(DoubleFunction func);
 
   /**
    * Apply a given {@link DoubleDoubleVectorFunction} to this vector and the
@@ -97,7 +97,7 @@ public interface DoubleVector {
    * @param func the function to apply on this and the other vector.
    * @return a new vector with the result of the function of the two vectors.
    */
-  public DoubleVector apply(DoubleVector other, DoubleDoubleFunction func);
+  public DoubleVector applyToElements(DoubleVector other, DoubleDoubleFunction func);
 
   /**
    * Adds the given {@link DoubleVector} to this vector.

@@ -34,7 +34,7 @@ public class TestDenseDoubleVector {
     
     DoubleVector vec1 = new DenseDoubleVector(values);
     
-    vec1.apply(new DoubleFunction() {
+    vec1.applyToElements(new DoubleFunction() {
 
       @Override
       public double apply(double value) {
@@ -60,7 +60,7 @@ public class TestDenseDoubleVector {
     DoubleVector vec1 = new DenseDoubleVector(values1);
     DoubleVector vec2 = new DenseDoubleVector(values2);
     
-    vec1.apply(vec2, new DoubleDoubleFunction() {
+    vec1.applyToElements(vec2, new DoubleDoubleFunction() {
 
       @Override
       public double apply(double x1, double x2) {
