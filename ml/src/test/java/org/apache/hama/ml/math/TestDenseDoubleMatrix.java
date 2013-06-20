@@ -34,7 +34,7 @@ public class TestDenseDoubleMatrix {
     double[][] result = new double[][] { { 2, 3, 4 }, { 5, 6, 7 }, { 8, 9, 10 } };
 
     DenseDoubleMatrix mat = new DenseDoubleMatrix(values);
-    mat.apply(new DoubleFunction() {
+    mat.applyToElements(new DoubleFunction() {
 
       @Override
       public double apply(double value) {
@@ -63,7 +63,7 @@ public class TestDenseDoubleMatrix {
     DenseDoubleMatrix mat1 = new DenseDoubleMatrix(values1);
     DenseDoubleMatrix mat2 = new DenseDoubleMatrix(values2);
     
-    mat1.apply(mat2, new DoubleDoubleFunction() {
+    mat1.applyToElements(mat2, new DoubleDoubleFunction() {
 
       @Override
       public double apply(double x1, double x2) {

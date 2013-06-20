@@ -104,13 +104,12 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
   private void initializeWeightMatrix() {
     this.weightMatrice = new DenseDoubleMatrix[this.numberOfLayers - 1];
     // each layer contains one bias neuron
-    Random rnd = new Random();
     for (int i = 0; i < this.numberOfLayers - 1; ++i) {
       // add weights for bias
       this.weightMatrice[i] = new DenseDoubleMatrix(this.layerSizeArray[i] + 1,
           this.layerSizeArray[i + 1]);
       
-      this.weightMatrice[i].apply(new DoubleFunction() {
+      this.weightMatrice[i].applyToElements(new DoubleFunction() {
 
         private Random rnd = new Random();
         

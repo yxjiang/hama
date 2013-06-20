@@ -192,7 +192,7 @@ public interface DoubleMatrix {
    * @param fun The function.
    * @return The matrix itself, supply for chain operation.
    */
-  public DoubleMatrix apply(DoubleFunction fun);
+  public DoubleMatrix applyToElements(DoubleFunction fun);
 
   /**
    * Apply a double double function f(x, y) onto each pair of the current matrix
@@ -203,6 +203,6 @@ public interface DoubleMatrix {
    * @param fun The function that takes two arguments.
    * @return The matrix itself, supply for chain operation.
    */
-  public DoubleMatrix apply(DoubleMatrix other, DoubleDoubleFunction fun);
+  public DoubleMatrix applyToElements(DoubleMatrix other, DoubleDoubleFunction fun);
 
 }

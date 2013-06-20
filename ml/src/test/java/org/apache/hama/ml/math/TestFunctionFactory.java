@@ -29,26 +29,43 @@ public class TestFunctionFactory {
 
   @Test
   public void testCreateDoubleFunction() {
+    double input = 0.8;
+    
     String sigmoidName = "Sigmoid";
     DoubleFunction sigmoidFunction = FunctionFactory
         .createDoubleFunction(sigmoidName);
     assertEquals(sigmoidName, sigmoidFunction.getFunctionName());
     
+    double sigmoidExcepted = 0.68997448;
+    assertEquals(sigmoidExcepted, sigmoidFunction.apply(input), 0.000001);
+    
     String tanhName = "Tanh";
     DoubleFunction tanhFunction = FunctionFactory.createDoubleFunction(tanhName);
     assertEquals(tanhName, tanhFunction.getFunctionName());
+    
+    double tanhExpected = 0.66403677;
+    assertEquals(tanhExpected, tanhFunction.apply(input), 0.00001);
   }
   
   @Test
   public void testCreateDoubleDoubleFunction() {
+    double target = 0.5;
+    double output = 0.8;
+    
     String squaredErrorName = "SquaredError";
     DoubleDoubleFunction squaredErrorFunction = FunctionFactory.createDoubleDoubleFunction(squaredErrorName);
     assertEquals(squaredErrorName, squaredErrorFunction.getFunctionName());
+    
+    double squaredErrorExpected = 0.045;
+    
+    assertEquals(squaredErrorExpected, squaredErrorFunction.apply(target, output), 0.000001);
     
     String crossEntropyName = "CrossEntropy";
     DoubleDoubleFunction crossEntropyFunction = FunctionFactory.createDoubleDoubleFunction(crossEntropyName);
     assertEquals(crossEntropyName, crossEntropyFunction.getFunctionName());
     
+    double crossEntropyExpected = 0.91629;
+    assertEquals(crossEntropyExpected, crossEntropyFunction.apply(target, output), 0.000001);
   }
 
 }

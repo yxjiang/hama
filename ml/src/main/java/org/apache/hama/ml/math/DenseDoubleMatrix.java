@@ -782,7 +782,7 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
   /**
    * {@inheritDoc}
    */
-  public DoubleMatrix apply(DoubleFunction fun) {
+  public DoubleMatrix applyToElements(DoubleFunction fun) {
     for (int r = 0; r < this.numRows; ++r) {
       for (int c = 0; c < this.numColumns; ++c) {
         this.set(r, c, fun.apply(this.get(r, c)));
@@ -795,7 +795,7 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
   /**
    * {@inheritDoc}
    */
-  public DoubleMatrix apply(DoubleMatrix other, DoubleDoubleFunction fun) {
+  public DoubleMatrix applyToElements(DoubleMatrix other, DoubleDoubleFunction fun) {
     if (this.numRows != other.getRowCount()
         || this.numColumns != other.getColumnCount()) {
       throw new IllegalArgumentException(
