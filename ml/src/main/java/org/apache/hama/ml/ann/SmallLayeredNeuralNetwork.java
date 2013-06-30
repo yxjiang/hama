@@ -27,16 +27,19 @@ import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.FunctionFactory;
 
 /**
- * LayeredNeuralNetwork defines the general operations for derivative layered
- * models, include Linear Regression, Logistic Regression, Multilayer
- * Perceptron, Autoencoder, and Restricted Boltzmann Machine, etc.
+ * SmallLayeredNeuralNetwork defines the general operations for derivative
+ * layered models, include Linear Regression, Logistic Regression, Multilayer
+ * Perceptron, Autoencoder, and Restricted Boltzmann Machine, etc. For
+ * SmallLayeredNeuralNetwork, the training can be conducted in parallel, but the
+ * parameters of the models are assumes to be stored in a single machine.
  * 
  * In general, these models consist of neurons which are aligned in layers.
  * Between layers, for any two adjacent layers, the neurons are connected to
  * form a bipartite weighted graph.
  * 
  */
-public abstract class LayeredNeuralNetwork extends NeuralNetwork {
+public abstract class SmallLayeredNeuralNetwork extends
+    AbstractLayeredNeuralNetwork {
 
   /* Record the size of each layer */
   protected List<Integer> layerSizeList;
@@ -47,20 +50,15 @@ public abstract class LayeredNeuralNetwork extends NeuralNetwork {
   /* Different layers can have different squashing function */
   protected List<DoubleFunction> squashingFunctionList;
 
-  public LayeredNeuralNetwork() {
+  public SmallLayeredNeuralNetwork() {
     this.layerSizeList = new ArrayList<Integer>();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
     this.squashingFunctionList = new ArrayList<DoubleFunction>();
   }
 
+  @Override
   /**
-   * Add a layer of neurons with specified size. If the added layer is not the
-   * first layer, it will automatically connects the neurons between with the
-   * previous layer.
-   * 
-   * @param size
-   * @param isFinalLayer If false, add a bias neuron.
-   * @return The layer index, starts with 0.
+   * {@inheritDoc}
    */
   protected int addLayer(int size, boolean isFinalLayer) {
     if (size <= 0) {
@@ -69,10 +67,10 @@ public abstract class LayeredNeuralNetwork extends NeuralNetwork {
     if (isFinalLayer) {
       size += 1;
     }
-    
+
     this.layerSizeList.add(size);
     int layerIdx = this.layerSizeList.size() - 1;
-    
+
     if (layerIdx > 0) { // add weights between current layer and previous layer
       int sizePrevLayer = this.layerSizeList.get(layerIdx - 1);
       DoubleMatrix weightMatrix = new DenseDoubleMatrix(sizePrevLayer, size);
@@ -95,12 +93,9 @@ public abstract class LayeredNeuralNetwork extends NeuralNetwork {
     return layerIdx;
   }
 
+  @Override
   /**
-   * Set the squashing function of the specified layer. It will have no effect
-   * if the specified layer is the input layer.
-   * 
-   * @param layerIdx
-   * @param squashingFunctionName The name of the squashing function.
+   * {@inheritDoc}
    */
   protected void setSquashingFunction(int layerIdx, String squashingFunctionName) {
     this.squashingFunctionList.set(layerIdx,

@@ -29,7 +29,7 @@ import org.apache.hama.ml.math.FunctionFactory;
  */
 public abstract class NeuralNetwork {
 
-  protected double learningRate;
+  protected double learningRate = 0.5;
 
   /* The cost function of the model */
   protected DoubleDoubleFunction costFunction;
