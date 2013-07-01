@@ -18,6 +18,7 @@
 package org.apache.hama.ml.ann;
 
 import org.apache.hama.ml.math.DoubleDoubleFunction;
+import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.FunctionFactory;
 
@@ -62,10 +63,16 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * if the specified layer is the input layer.
    * 
    * @param layerIdx
-   * @param squashingFunctionName The name of the squashing function.
+   * @param squashingFunction The  the squashing function.
    */
   protected abstract void setSquashingFunction(int layerIdx,
-      String squashingFunctionName);
+      DoubleFunction squashingFunction);
+  
+  /**
+   * Set the squashing function for all layers.
+   * @param squashingFunction
+   */
+  protected abstract void setSquashingFunction(DoubleFunction squashingFunction);
 
   /**
    * Get the weights between layer layerIdx and layerIdx + 1

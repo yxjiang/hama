@@ -17,6 +17,8 @@
  */
 package org.apache.hama.ml.math;
 
+import java.security.Identity;
+
 /**
  * Factory to create the functions.
  * 
@@ -34,6 +36,8 @@ public class FunctionFactory {
       return new Sigmoid();
     } else if (functionName.equalsIgnoreCase(Tanh.class.getSimpleName())) {
       return new Tanh();
+    } else if (functionName.equalsIgnoreCase(Identity.class.getSimpleName())) {
+      return new IdentityFunction();
     }
 
     throw new IllegalArgumentException(String.format(

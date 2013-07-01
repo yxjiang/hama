@@ -1,3 +1,20 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.hama.ml.regression;
 
 import java.io.IOException;
@@ -24,15 +41,12 @@ public class LinearRegression extends SmallLayeredNeuralNetwork {
     // initialize topology
     this.addLayer(dimension, false);
     this.addLayer(1, true);
+    this.learningRate = 1.0;
     
     // squared error by default
     this.costFunction = FunctionFactory
         .createDoubleDoubleFunction("SquaredError");
-  }
-
-  @Override
-  protected void train(Path dataInputPath, Map<String, String> trainingParams) {
-    // TODO Auto-generated method stub
+    this.setSquashingFunction(FunctionFactory.createDoubleFunction("Identity"));
   }
 
   @Override
@@ -51,6 +65,13 @@ public class LinearRegression extends SmallLayeredNeuralNetwork {
 
   @Override
   public void writeModelToFile(String modelPath) throws IOException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  protected void trainInternal(Path dataInputPath,
+      Map<String, String> trainingParams) {
     // TODO Auto-generated method stub
     
   }

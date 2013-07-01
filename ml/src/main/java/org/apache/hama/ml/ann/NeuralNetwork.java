@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.FunctionFactory;
+import org.mortbay.log.Log;
 
 /**
  * NeuralNetwork defines the general operations for all the derivative models.
@@ -34,6 +35,8 @@ import org.apache.hama.ml.math.FunctionFactory;
 abstract class NeuralNetwork {
 
   protected double learningRate = 0.5;
+
+  protected String modelPath;
 
   protected void setLearningRate(double learningRate) {
     if (learningRate <= 0) {
@@ -47,8 +50,26 @@ abstract class NeuralNetwork {
    * 
    * @param dataInputPath The path of the training data.
    * @param trainingParams The parameters for training.
+   * @throws IOException
    */
-  protected abstract void train(Path dataInputPath,
+  protected void train(Path dataInputPath, Map<String, String> trainingParams)
+      throws IOException {
+    trainInternal(dataInputPath, trainingParams);
+    // reload learned model
+
+    Log.info(String.format("Reload model from %s.",
+        trainingParams.get("modelPath")));
+    this.modelPath = trainingParams.get("modelPath");
+    this.readFromModel();
+  }
+
+  /**
+   * Train the model with the path of given training data and parameters.
+   * 
+   * @param dataInputPath
+   * @param trainingParams
+   */
+  protected abstract void trainInternal(Path dataInputPath,
       Map<String, String> trainingParams);
 
   /**

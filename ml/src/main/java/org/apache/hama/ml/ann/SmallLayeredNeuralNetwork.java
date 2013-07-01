@@ -98,9 +98,18 @@ public abstract class SmallLayeredNeuralNetwork extends
   /**
    * {@inheritDoc}
    */
-  protected void setSquashingFunction(int layerIdx, String squashingFunctionName) {
+  protected void setSquashingFunction(int layerIdx, DoubleFunction squashingFunction) {
     this.squashingFunctionList.set(layerIdx,
-        FunctionFactory.createDoubleFunction(squashingFunctionName));
+        squashingFunction);
+  }
+  
+  /**
+   * {@inheritDoc}
+   */
+  protected void setSquashingFunction(DoubleFunction squashingFunction) {
+    for (int i = 0; i < squashingFunctionList.size(); ++i) {
+      this.setSquashingFunction(i, squashingFunction);
+    }
   }
   
 }
