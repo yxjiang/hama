@@ -17,6 +17,10 @@
  */
 package org.apache.hama.ml.ann;
 
+import java.io.IOException;
+import java.util.Map;
+
+import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.FunctionFactory;
 
@@ -27,12 +31,9 @@ import org.apache.hama.ml.math.FunctionFactory;
  * between neurons.
  * 
  */
-public abstract class NeuralNetwork {
+abstract class NeuralNetwork {
 
   protected double learningRate = 0.5;
-
-  /* The cost function of the model */
-  protected DoubleDoubleFunction costFunction;
 
   protected void setLearningRate(double learningRate) {
     if (learningRate <= 0) {
@@ -42,13 +43,27 @@ public abstract class NeuralNetwork {
   }
 
   /**
-   * Set the cost function for the model.
+   * Train the model with the path of given training data and parameters.
    * 
-   * @param costFunctionName
+   * @param dataInputPath The path of the training data.
+   * @param trainingParams The parameters for training.
    */
-  protected void setCostFunction(String costFunctionName) {
-    this.costFunction = FunctionFactory
-        .createDoubleDoubleFunction(costFunctionName);
-  }
+  protected abstract void train(Path dataInputPath,
+      Map<String, String> trainingParams);
+
+  /**
+   * Read the model meta-data from the specified location.
+   * 
+   * @throws IOException
+   */
+  protected abstract void readFromModel() throws IOException;
+
+  /**
+   * Write the model data to specified location.
+   * 
+   * @param modelPath The location in file system to store the model.
+   * @throws IOException
+   */
+  public abstract void writeModelToFile(String modelPath) throws IOException;
 
 }

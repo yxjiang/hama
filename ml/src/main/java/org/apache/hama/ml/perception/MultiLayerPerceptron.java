@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hama.ml.ann.NeuralNetworkTrainer;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleVector;
@@ -32,7 +33,7 @@ import org.apache.hama.ml.math.FunctionFactory;
 public abstract class MultiLayerPerceptron {
 
   /* The trainer for the model */
-  protected PerceptronTrainer trainer;
+  protected NeuralNetworkTrainer trainer;
   /* The file path that contains the model meta-data */
   protected String modelPath;
 

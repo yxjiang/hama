@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.ml.perception;
+package org.apache.hama.ml.ann;
 
 import java.io.IOException;
 
@@ -25,14 +25,15 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
+import org.apache.hama.ml.perception.MLPMessage;
 import org.apache.hama.ml.writable.VectorWritable;
 
 /**
- * The trainer that is used to train the perceptron with BSP. The trainer would
- * read the training data and obtain the trained parameters of the model.
+ * The trainer that is used to train the neural network with BSP. The trainer
+ * would read the training data and obtain the trained parameters of the model.
  * 
  */
-public abstract class PerceptronTrainer extends
+public abstract class NeuralNetworkTrainer extends
     BSP<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> {
 
   protected Configuration conf;
@@ -45,9 +46,7 @@ public abstract class PerceptronTrainer extends
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
       throws IOException, SyncException, InterruptedException {
     conf = peer.getConfiguration();
-    trainingMode = conf.get("training.mode");
-    batchSize = conf.getInt("training.batch.size", 100); // mini-batch by
-                                                         // default
+    
     this.extraSetup(peer);
   }
 

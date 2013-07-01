@@ -27,13 +27,14 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
+import org.apache.hama.ml.ann.NeuralNetworkTrainer;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.writable.VectorWritable;
 
 /**
  * The perceptron trainer for small scale MLP.
  */
-class SmallMLPTrainer extends PerceptronTrainer {
+class SmallMLPTrainer extends NeuralNetworkTrainer {
 
   private static final Log LOG = LogFactory.getLog(SmallMLPTrainer.class);
   /* used by master only, check whether all slaves finishes reading */
@@ -51,6 +52,10 @@ class SmallMLPTrainer extends PerceptronTrainer {
   protected void extraSetup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) {
 
+    this.trainingMode = conf.get("training.mode");
+    // mini-batch by default
+    this.batchSize = conf.getInt("training.batch.size", 100);
+    
     this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
 
     String outputModelPath = conf.get("modelPath");

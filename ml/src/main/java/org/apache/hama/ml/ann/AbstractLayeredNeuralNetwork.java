@@ -17,6 +17,10 @@
  */
 package org.apache.hama.ml.ann;
 
+import org.apache.hama.ml.math.DoubleDoubleFunction;
+import org.apache.hama.ml.math.DoubleMatrix;
+import org.apache.hama.ml.math.FunctionFactory;
+
 /**
  * AbstractLayeredNeuralNetwork defines the general operations for derivative
  * layered models, include Linear Regression, Logistic Regression, Multilayer
@@ -27,7 +31,20 @@ package org.apache.hama.ml.ann;
  * form a bipartite weighted graph.
  * 
  */
-public abstract class AbstractLayeredNeuralNetwork {
+abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
+
+  /* The cost function of the model */
+  protected DoubleDoubleFunction costFunction;
+  
+  /**
+   * Set the cost function for the model.
+   * 
+   * @param costFunctionName
+   */
+  protected void setCostFunction(String costFunctionName) {
+    this.costFunction = FunctionFactory
+        .createDoubleDoubleFunction(costFunctionName);
+  }
 
   /**
    * Add a layer of neurons with specified size. If the added layer is not the
@@ -49,5 +66,13 @@ public abstract class AbstractLayeredNeuralNetwork {
    */
   protected abstract void setSquashingFunction(int layerIdx,
       String squashingFunctionName);
+
+  /**
+   * Get the weights between layer layerIdx and layerIdx + 1
+   * 
+   * @param layerIdx The index of the layer
+   * @return The weights in form of {@link DoubleMatrix}
+   */
+  public abstract DoubleMatrix getWeightsByLayer(int layerIdx);
 
 }

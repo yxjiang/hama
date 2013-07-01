@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.hama.ml.math.DenseDoubleMatrix;
+import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.FunctionFactory;
@@ -101,5 +102,5 @@ public abstract class SmallLayeredNeuralNetwork extends
     this.squashingFunctionList.set(layerIdx,
         FunctionFactory.createDoubleFunction(squashingFunctionName));
   }
-
+  
 }

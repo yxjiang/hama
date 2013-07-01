@@ -22,7 +22,7 @@ package org.apache.hama.ml.math;
  * 
  */
 public class FunctionFactory {
-
+  
   /**
    * Create a double function with specified name.
    * 
@@ -30,9 +30,9 @@ public class FunctionFactory {
    * @return
    */
   public static DoubleFunction createDoubleFunction(String functionName) {
-    if (functionName.equals(Sigmoid.class.getSimpleName())) {
+    if (functionName.equalsIgnoreCase(Sigmoid.class.getSimpleName())) {
       return new Sigmoid();
-    } else if (functionName.equals(Tanh.class.getSimpleName())) {
+    } else if (functionName.equalsIgnoreCase(Tanh.class.getSimpleName())) {
       return new Tanh();
     }
 
@@ -48,9 +48,10 @@ public class FunctionFactory {
    */
   public static DoubleDoubleFunction createDoubleDoubleFunction(
       String functionName) {
-    if (functionName.equals(SquaredError.class.getSimpleName())) {
+    if (functionName.equalsIgnoreCase(SquaredError.class.getSimpleName())) {
       return new SquaredError();
-    } else if (functionName.equals(CrossEntropy.class.getSimpleName())) {
+    } else if (functionName
+        .equalsIgnoreCase(CrossEntropy.class.getSimpleName())) {
       return new CrossEntropy();
     }
 
