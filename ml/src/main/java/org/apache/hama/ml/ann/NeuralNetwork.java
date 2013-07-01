@@ -18,9 +18,16 @@
 package org.apache.hama.ml.ann;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.mortbay.log.Log;
@@ -32,12 +39,19 @@ import org.mortbay.log.Log;
  * between neurons.
  * 
  */
-abstract class NeuralNetwork {
+abstract class NeuralNetwork implements Writable{
 
   protected double learningRate = 0.5;
 
+  //    the name of the model
+  protected String modelType;
+  
   protected String modelPath;
 
+  public NeuralNetwork() {
+    this.setModelType();
+  }
+  
   protected void setLearningRate(double learningRate) {
     if (learningRate <= 0) {
       throw new IllegalArgumentException("Learning rate must larger than 0.");
@@ -45,6 +59,11 @@ abstract class NeuralNetwork {
     this.learningRate = learningRate;
   }
 
+  /**
+   * Set the modelType variable to specify the model type.
+   */
+  protected abstract void setModelType();
+  
   /**
    * Train the model with the path of given training data and parameters.
    * 
@@ -77,7 +96,22 @@ abstract class NeuralNetwork {
    * 
    * @throws IOException
    */
-  protected abstract void readFromModel() throws IOException;
+  protected void readFromModel() throws IOException {
+    Configuration conf = new Configuration();
+    try {
+      URI uri = new URI(modelPath);
+      FileSystem fs = FileSystem.get(uri, conf);
+      FSDataInputStream is = new FSDataInputStream(fs.open(new Path(modelPath)));
+      this.readFields(is);
+      if (!this.modelType.equals(this.getClass().getName())) {
+        throw new IllegalStateException(String.format(
+            "Model type incorrect, cannot load model '%s' for '%s'.",
+            this.modelType, this.getClass().getName()));
+      }
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
+  }
 
   /**
    * Write the model data to specified location.
@@ -85,6 +119,12 @@ abstract class NeuralNetwork {
    * @param modelPath The location in file system to store the model.
    * @throws IOException
    */
-  public abstract void writeModelToFile(String modelPath) throws IOException;
+  public void writeModelToFile(String modelPath) throws IOException {
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+    FSDataOutputStream stream = fs.create(new Path(modelPath), true);
+    this.write(stream);
+    stream.close();
+  }
 
 }
