@@ -32,6 +32,8 @@ import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.mortbay.log.Log;
 
+import com.google.common.base.Preconditions;
+
 /**
  * NeuralNetwork defines the general operations for all the derivative models.
  * Typically, all derivative models such as Linear Regression, Logistic
@@ -39,23 +41,21 @@ import org.mortbay.log.Log;
  * between neurons.
  * 
  */
-abstract class NeuralNetwork implements Writable{
+abstract class NeuralNetwork implements Writable {
 
   protected double learningRate = 0.5;
 
-  //    the name of the model
+  // the name of the model
   protected String modelType;
-  
+
   protected String modelPath;
 
   public NeuralNetwork() {
     this.setModelType();
   }
-  
-  protected void setLearningRate(double learningRate) {
-    if (learningRate <= 0) {
-      throw new IllegalArgumentException("Learning rate must larger than 0.");
-    }
+
+  public void setLearningRate(double learningRate) {
+    Preconditions.checkArgument(learningRate > 0, "Learning rate must larger than 0.");
     this.learningRate = learningRate;
   }
 
@@ -63,7 +63,7 @@ abstract class NeuralNetwork implements Writable{
    * Set the modelType variable to specify the model type.
    */
   protected abstract void setModelType();
-  
+
   /**
    * Train the model with the path of given training data and parameters.
    * 
@@ -73,9 +73,11 @@ abstract class NeuralNetwork implements Writable{
    */
   protected void train(Path dataInputPath, Map<String, String> trainingParams)
       throws IOException {
+    // set model path
+    trainingParams.put("model.path", this.modelPath);
+    // train with BSP job
     trainInternal(dataInputPath, trainingParams);
     // reload learned model
-
     Log.info(String.format("Reload model from %s.",
         trainingParams.get("modelPath")));
     this.modelPath = trainingParams.get("modelPath");

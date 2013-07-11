@@ -17,10 +17,15 @@
  */
 package org.apache.hama.ml.ann;
 
+import java.util.List;
+
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
+import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  * AbstractLayeredNeuralNetwork defines the general operations for derivative
@@ -34,9 +39,18 @@ import org.apache.hama.ml.math.FunctionFactory;
  */
 abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
+  /* The weight of regularization */
+  protected double regularization;
+
   /* The cost function of the model */
   protected DoubleDoubleFunction costFunction;
-  
+
+  public void setRegularizationWeight(double regularization) {
+    Preconditions.checkArgument(regularization >= 0 && regularization < 1,
+        "Regularization weight must be in range [0, 1.)");
+    this.regularization = regularization;
+  }
+
   /**
    * Set the cost function for the model.
    * 
@@ -63,13 +77,14 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * if the specified layer is the input layer.
    * 
    * @param layerIdx
-   * @param squashingFunction The  the squashing function.
+   * @param squashingFunction The the squashing function.
    */
   protected abstract void setSquashingFunction(int layerIdx,
       DoubleFunction squashingFunction);
-  
+
   /**
    * Set the squashing function for all layers.
+   * 
    * @param squashingFunction
    */
   protected abstract void setSquashingFunction(DoubleFunction squashingFunction);
@@ -81,5 +96,23 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return The weights in form of {@link DoubleMatrix}
    */
   public abstract DoubleMatrix getWeightsByLayer(int layerIdx);
+
+  /**
+   * Get the updated weights using one training instance.
+   * 
+   * @param trainingInstance The trainingInstance is the concatenation of
+   *          feature vector and class label vector.
+   * @return The update of each weight, in form of matrix list.
+   * @throws Exception
+   */
+  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance);
+
+  /**
+   * Get the output calculated by the model.
+   * 
+   * @param instance The feature instance.
+   * @return
+   */
+  public abstract DoubleVector getOutput(DoubleVector instance);
 
 }

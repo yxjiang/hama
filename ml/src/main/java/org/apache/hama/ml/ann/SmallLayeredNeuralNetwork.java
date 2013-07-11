@@ -22,10 +22,14 @@ import java.util.List;
 import java.util.Random;
 
 import org.apache.hama.ml.math.DenseDoubleMatrix;
+import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
+import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  * SmallLayeredNeuralNetwork defines the general operations for derivative
@@ -62,10 +66,8 @@ public abstract class SmallLayeredNeuralNetwork extends
    * {@inheritDoc}
    */
   protected int addLayer(int size, boolean isFinalLayer) {
-    if (size <= 0) {
-      throw new IllegalArgumentException("Size of layer must larger than 0.");
-    }
-    if (isFinalLayer) {
+    Preconditions.checkArgument(size > 0, "Size of layer must larger than 0.");
+    if (!isFinalLayer) {
       size += 1;
     }
 
@@ -74,14 +76,17 @@ public abstract class SmallLayeredNeuralNetwork extends
 
     if (layerIdx > 0) { // add weights between current layer and previous layer
       int sizePrevLayer = this.layerSizeList.get(layerIdx - 1);
-      DoubleMatrix weightMatrix = new DenseDoubleMatrix(sizePrevLayer, size);
+      // row count equals to size of current size and column count equals to
+      // size of previous layer
+      DoubleMatrix weightMatrix = new DenseDoubleMatrix(size, sizePrevLayer);
       // initialize weights
       final Random rnd = new Random();
       weightMatrix.applyToElements(new DoubleFunction() {
 
         @Override
         public double apply(double value) {
-          return rnd.nextDouble() - 0.5;
+          //
+          return 0.5;
         }
 
         @Override
@@ -90,6 +95,8 @@ public abstract class SmallLayeredNeuralNetwork extends
         }
 
       });
+      this.weightMatrixList.add(weightMatrix);
+      this.squashingFunctionList.add(null);
     }
     return layerIdx;
   }
@@ -98,11 +105,11 @@ public abstract class SmallLayeredNeuralNetwork extends
   /**
    * {@inheritDoc}
    */
-  protected void setSquashingFunction(int layerIdx, DoubleFunction squashingFunction) {
-    this.squashingFunctionList.set(layerIdx,
-        squashingFunction);
+  protected void setSquashingFunction(int layerIdx,
+      DoubleFunction squashingFunction) {
+    this.squashingFunctionList.set(layerIdx, squashingFunction);
   }
-  
+
   /**
    * {@inheritDoc}
    */
@@ -111,5 +118,76 @@ public abstract class SmallLayeredNeuralNetwork extends
       this.setSquashingFunction(i, squashingFunction);
     }
   }
-  
+
+  /**
+   * Update the weight matrices with given matrices.
+   * 
+   * @param matrices
+   */
+  public void updateWeightMatrices(DoubleMatrix[] matrices) {
+    for (int i = 0; i < matrices.length; ++i) {
+      DoubleMatrix matrix = this.weightMatrixList.get(i);
+      this.weightMatrixList.set(i, matrix.add(matrices[i]));
+    }
+  }
+
+  /**
+   * Get the output of the model according to given feature instance.
+   */
+  public DoubleVector getOutput(DoubleVector instance) {
+    // add bias feature
+    DoubleVector instanceWithBias = new DenseDoubleVector(
+        instance.getDimension() + 1);
+    instanceWithBias.set(0, 1);
+    for (int i = 1; i < instanceWithBias.getDimension(); ++i) {
+      instanceWithBias.set(i, instance.get(i - 1));
+    }
+
+    List<DoubleVector> outputCache = getOutputInternal(instanceWithBias);
+    // return the output of the last layer
+    return outputCache.get(outputCache.size() - 1);
+  }
+
+  /**
+   * Calculate output internally, the intermediate output of each layer will be
+   * stored.
+   * 
+   * @param instance The instance contains the features.
+   * @return Cached output of each layer.
+   */
+  public List<DoubleVector> getOutputInternal(DoubleVector instance) {
+    List<DoubleVector> outputCache = new ArrayList<DoubleVector>();
+    // fill with instance
+    DoubleVector intermediateOutput = instance;
+    outputCache.add(intermediateOutput);
+    // System.out.println("Input:");
+    // for (int j = 0; j < intermediateOutput.getDimension(); ++j) {
+    // System.out.printf("%f ", intermediateOutput.get(j));
+    // }
+    // System.out.println();
+
+    for (int i = 0; i < this.layerSizeList.size() - 1; ++i) {
+      intermediateOutput = forward(i, intermediateOutput);
+      // System.out.println("For layer i + 1");
+      for (int j = 0; j < intermediateOutput.getDimension(); ++j) {
+        // System.out.printf("%f ", intermediateOutput.get(j));
+      }
+      System.out.println();
+      outputCache.add(intermediateOutput);
+    }
+    return outputCache;
+  }
+
+  /**
+   * Forward the calculation for one layer.
+   * 
+   * @param fromLayer The index of the previous layer.
+   * @param intermediateOutput The intermediateOutput of previous layer.
+   * @return
+   */
+  protected DoubleVector forward(int fromLayer, DoubleVector intermediateOutput) {
+    return this.weightMatrixList.get(fromLayer).multiplyVectorUnsafe(
+        intermediateOutput).applyToElements(this.squashingFunctionList.get(fromLayer));
+  }
+
 }
