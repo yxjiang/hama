@@ -19,7 +19,7 @@ package org.apache.hama.ml.math;
 
 /**
  * The identity function f(x) = x.
- *
+ * 
  */
 public class IdentityFunction extends DoubleFunction {
 
