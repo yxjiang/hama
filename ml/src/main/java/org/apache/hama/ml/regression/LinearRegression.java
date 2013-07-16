@@ -40,6 +40,7 @@ import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.apache.hama.ml.writable.MatrixWritable;
 import org.apache.hama.ml.writable.VectorWritable;
+import org.mortbay.log.Log;
 
 import com.google.common.base.Preconditions;
 
@@ -148,10 +149,15 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
     conf.set("dimension", "" + (this.layerSizeList.get(0) - 1));
     conf.set("learningRate", "" + this.learningRate);
     conf.set("regularizationWeight", "" + this.regularizationWeight);
+
     if (this.modelPath != null) {
-      conf.set("existingModelPath", this.modelPath);
+      conf.set("modelPath", this.modelPath);
+    } else {
+      throw new IllegalArgumentException(
+          "please set the model path via setModelPath() first.");
     }
-    conf.set("squashingFunction", this.squashingFunctionList.get(0).getFunctionName());
+    conf.set("squashingFunction", this.squashingFunctionList.get(0)
+        .getFunctionName());
     conf.set("costFunction", this.costFunction.getFunctionName());
 
     HamaConfiguration hamaConf = new HamaConfiguration(conf);
@@ -170,6 +176,12 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
     int numTasks = conf.getInt("tasks", 1);
     job.setNumBspTask(numTasks);
     job.waitForCompletion(true);
+
+    // reload learned model
+    Log.info(String.format("Reload model from %s.",
+        trainingParams.get("modelPath")));
+    this.modelPath = trainingParams.get("modelPath");
+    this.readFromModel();
   }
 
   @Override
@@ -226,5 +238,5 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
     DoubleMatrix[] matricesUpdate = this.trainByInstance(trainingInstance);
     this.updateWeightMatrices(matricesUpdate);
   }
-
+  
 }

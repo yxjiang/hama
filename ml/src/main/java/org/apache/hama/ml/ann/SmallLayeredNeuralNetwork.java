@@ -147,13 +147,26 @@ public abstract class SmallLayeredNeuralNetwork extends
       destMatrices[i] = destMatrices[i].add(sourceMatrices[i]);
     }
   }
-  
+
   /**
    * Get all the weight matrices.
+   * 
    * @return
    */
   public DoubleMatrix[] getWeightMatrices() {
-    return (DoubleMatrix[])this.weightMatrixList.toArray();
+    return (DoubleMatrix[]) this.weightMatrixList.toArray();
+  }
+
+  /**
+   * Set the weight matrices.
+   * 
+   * @param matrices
+   */
+  public void setWeightMatrices(DoubleMatrix[] matrices) {
+    this.weightMatrixList = new ArrayList<DoubleMatrix>();
+    for (int i = 0; i < matrices.length; ++i) {
+      this.weightMatrixList.add(matrices[i]);
+    }
   }
 
   /**

@@ -151,5 +151,21 @@ abstract class NeuralNetwork implements Writable {
     this.write(stream);
     stream.close();
   }
+  
+  /**
+   * Set the model path.
+   * @param modelPath
+   */
+  public void setModelPath(String modelPath) {
+    this.modelPath = modelPath;
+  }
+  
+  /**
+   * Get the model path.
+   * @return
+   */
+  public String getModelPath() {
+    return this.modelPath;
+  }
 
 }

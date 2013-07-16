@@ -55,9 +55,12 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
     for (int i = 0; i < curMatrices.length; ++i) {
       curMatrices[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
     }
-    // read previous matrices updates
-    for (int i = 0; i < prevMatrices.length; ++i) {
-      prevMatrices[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
+    boolean hasPrevMatrices = input.readBoolean();
+    if (hasPrevMatrices) {
+      // read previous matrices updates
+      for (int i = 0; i < prevMatrices.length; ++i) {
+        prevMatrices[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
+      }
     }
   }
 
@@ -68,8 +71,15 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
     for (int i = 0; i < curMatrices.length; ++i) {
       MatrixWritable.write(curMatrices[i], output);
     }
-    for (int i = 0; i < curMatrices.length; ++i) {
-      MatrixWritable.write(prevMatrices[i], output);
+    if (prevMatrices != null) {
+      output.writeBoolean(true);
+      for (int i = 0; i < prevMatrices.length; ++i) {
+        MatrixWritable.write(prevMatrices[i], output);
+      }
+    }
+    else {
+      // add mark if preMatrices is null
+      output.writeBoolean(false);
     }
   }
 
@@ -81,20 +91,20 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
     return terminated;
   }
 
-  public DoubleMatrix[] getWeightUpdates() {
+  public DoubleMatrix[] getCurMatrices() {
     return curMatrices;
   }
 
-  public void setMatrices(DoubleMatrix[] weightUpdates) {
-    this.curMatrices = weightUpdates;
+  public void setMatrices(DoubleMatrix[] curMatrices) {
+    this.curMatrices = curMatrices;
   }
 
   public DoubleMatrix[] getPrevMatrices() {
     return prevMatrices;
   }
 
-  public void setPrevMatrices(DoubleMatrix[] prevWeightUpdates) {
-    this.prevMatrices = prevWeightUpdates;
+  public void setPrevMatrices(DoubleMatrix[] prevMatrices) {
+    this.prevMatrices = prevMatrices;
   }
   
 }

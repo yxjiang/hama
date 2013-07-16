@@ -25,6 +25,7 @@ import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.ml.ann.SmallLayeredNeuralNetwork;
 import org.apache.hama.ml.ann.SmallLayeredNeuralNetworkMessage;
 import org.apache.hama.ml.ann.SmallLayeredNeuralNetworkTrainer;
+import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.FunctionFactory;
@@ -38,16 +39,19 @@ public final class RegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
 
   private int maxIteration;
   private int curIteration;
+  private int batchSize;
   private boolean terminateTraining;
 
   @Override
   public void extraSetup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
-    maxIteration = conf.getInt("training.iteration", 1000);
-    String existingModelPath = conf.get("existingModelPath");
+    this.maxIteration = conf.getInt("training.iteration", 1000);
+    this.batchSize = conf.getInt("training.batch.size", 100);
+    // if existingModelPath exists, use exisingModel
+    String existingModelPath = conf.get("training.existing.model.path");
     if (existingModelPath != null) {
       this.inMemoryModel = new LinearRegression(existingModelPath);
-    } else {
+    } else { // train model from scratch
       double learningRate = Double.parseDouble(conf.get("learningRate", ""
           + SmallLayeredNeuralNetwork.DEFAULT_LEARNING_RATE));
       double regularizationWeight = Double.parseDouble(conf.get(
@@ -58,6 +62,7 @@ public final class RegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
           .createDoubleDoubleFunction(conf.get("costFunction"));
       this.inMemoryModel = new LinearRegression(Integer.parseInt(conf
           .get("dimension")));
+      this.inMemoryModel.setModelPath(conf.get("modelPath"));
       this.inMemoryModel.setLearningRate(learningRate);
       this.inMemoryModel.setRegularizationWeight(regularizationWeight);
       this.inMemoryModel.setCostFunction(costFunction);
@@ -68,9 +73,48 @@ public final class RegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
 
   @Override
   public void calculateUpdates(
-      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
-    // TODO Auto-generated method stub
+      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer)
+      throws IOException {
+    // receive new matrices from master
+    if (peer.getNumCurrentMessages() == 0) {
+      return;
+    }
 
+    SmallLayeredNeuralNetworkMessage message = peer.getCurrentMessage();
+    DoubleMatrix[] matrices = message.getCurMatrices();
+    this.inMemoryModel.setWeightMatrices(matrices);
+    // if terminated, no need to update
+    if (message.isTerminated()) {
+      return;
+    }
+
+    // read a new batch of training instance and calculate updates
+    int count = 0;
+    LongWritable recordId = new LongWritable();
+    VectorWritable trainingInstance = new VectorWritable();
+    boolean hasMore;
+    DoubleMatrix[] weightUpdates = new DenseDoubleMatrix[1];
+    weightUpdates[0] = new DenseDoubleMatrix(
+        this.inMemoryModel.getLayerSize(1), this.inMemoryModel.getLayerSize(0));
+
+    for (int i = 0; i < this.batchSize; ++i) {
+      hasMore = peer.readNext(recordId, trainingInstance);
+      if (!hasMore) {
+        peer.reopenInput();
+        peer.readNext(recordId, trainingInstance);
+      }
+      DoubleMatrix[] updates = this.inMemoryModel
+          .trainByInstance(trainingInstance.getVector());
+      for (int m = 0; m < updates.length; ++m) {
+        weightUpdates[m].add(updates[m]);
+      }
+    }
+
+    boolean terminateTraining = message.isTerminated();
+    // send to master
+    SmallLayeredNeuralNetworkMessage newMessage = new SmallLayeredNeuralNetworkMessage(
+        peer.getPeerIndex(), terminateTraining, weightUpdates, null);
+    peer.send(peer.getPeerName(0), newMessage);
   }
 
   @Override
@@ -81,7 +125,7 @@ public final class RegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
     int numPartitions = peer.getNumCurrentMessages();
     while (peer.getNumCurrentMessages() > 0) {
       SmallLayeredNeuralNetworkMessage message = peer.getCurrentMessage();
-      DoubleMatrix[] updates = message.getWeightUpdates();
+      DoubleMatrix[] updates = message.getCurMatrices();
       LinearRegression.matricesAdd(matrices, updates);
     }
 
@@ -94,7 +138,8 @@ public final class RegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
     // send updated matrix to all grooms
     for (int i = 0; i < numPartitions; ++i) {
       SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
-          peer.getPeerIndex(), this.terminateTraining, this.inMemoryModel.getWeightMatrices(), null);
+          peer.getPeerIndex(), this.terminateTraining,
+          this.inMemoryModel.getWeightMatrices(), null);
       peer.send(peer.getPeerName(i), message);
     }
   }
@@ -112,8 +157,7 @@ public final class RegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
   protected void extraCleanup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer)
       throws IOException {
-    // TODO Auto-generated method stub
-
+    // nothing more need to be done
   }
 
 }

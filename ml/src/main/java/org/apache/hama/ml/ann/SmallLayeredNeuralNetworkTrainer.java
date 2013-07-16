@@ -55,7 +55,7 @@ public abstract class SmallLayeredNeuralNetworkTrainer
   protected SmallLayeredNeuralNetwork inMemoryModel;
   protected int batchSize;
   /* indicate where to store the trained model */
-  protected String outputModelPath;
+  protected String modelPath;
 
   @Override
   /**
@@ -68,10 +68,10 @@ public abstract class SmallLayeredNeuralNetworkTrainer
     conf = peer.getConfiguration();
     this.batchSize = conf.getInt("training.batch.size", 100);
     this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
-    this.outputModelPath = conf.get("training.output.path");
+    this.modelPath = conf.get("modelPath");
     Preconditions
-        .checkArgument(outputModelPath != null,
-            "Please specify path to store the model with 'outputModelPath' property name.");
+        .checkArgument(modelPath != null,
+            "Please specify path to store the model with 'modelPath' property name.");
     // read model specific parameters
     this.extraSetup(peer);
   }
@@ -140,7 +140,8 @@ public abstract class SmallLayeredNeuralNetworkTrainer
       throws IOException {
     this.extraCleanup(peer);
     // write model to modelPath
-    this.inMemoryModel.writeModelToFile(this.outputModelPath);
+    LOG.info(String.format("Write model back to %s\n", this.modelPath));
+    this.inMemoryModel.writeModelToFile(this.modelPath);
   }
 
   /**
