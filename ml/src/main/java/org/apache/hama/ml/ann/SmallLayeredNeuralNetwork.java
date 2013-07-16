@@ -23,11 +23,9 @@ import java.util.Random;
 
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
-import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
-import org.apache.hama.ml.math.FunctionFactory;
 
 import com.google.common.base.Preconditions;
 
@@ -46,9 +44,6 @@ import com.google.common.base.Preconditions;
 public abstract class SmallLayeredNeuralNetwork extends
     AbstractLayeredNeuralNetwork {
 
-  /* Record the size of each layer */
-  protected List<Integer> layerSizeList;
-
   /* Weights between neurons at adjacent layers */
   protected List<DoubleMatrix> weightMatrixList;
 
@@ -59,6 +54,10 @@ public abstract class SmallLayeredNeuralNetwork extends
     this.layerSizeList = new ArrayList<Integer>();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
     this.squashingFunctionList = new ArrayList<DoubleFunction>();
+  }
+
+  public SmallLayeredNeuralNetwork(String modelPath) {
+    super(modelPath);
   }
 
   @Override
@@ -105,7 +104,7 @@ public abstract class SmallLayeredNeuralNetwork extends
   /**
    * {@inheritDoc}
    */
-  protected void setSquashingFunction(int layerIdx,
+  public void setSquashingFunction(int layerIdx,
       DoubleFunction squashingFunction) {
     this.squashingFunctionList.set(layerIdx, squashingFunction);
   }
@@ -113,7 +112,7 @@ public abstract class SmallLayeredNeuralNetwork extends
   /**
    * {@inheritDoc}
    */
-  protected void setSquashingFunction(DoubleFunction squashingFunction) {
+  public void setSquashingFunction(DoubleFunction squashingFunction) {
     for (int i = 0; i < squashingFunctionList.size(); ++i) {
       this.setSquashingFunction(i, squashingFunction);
     }
@@ -129,6 +128,32 @@ public abstract class SmallLayeredNeuralNetwork extends
       DoubleMatrix matrix = this.weightMatrixList.get(i);
       this.weightMatrixList.set(i, matrix.add(matrices[i]));
     }
+  }
+
+  /**
+   * Add a batch of matrices onto the given destination matrices.
+   * 
+   * @param destMatrices
+   * @param sourceMatrices
+   */
+  public static void matricesAdd(DoubleMatrix[] destMatrices,
+      DoubleMatrix[] sourceMatrices) {
+    Preconditions
+        .checkArgument(
+            destMatrices != null && sourceMatrices != null
+                && destMatrices.length == sourceMatrices.length,
+            "Number of matrices should be equal for both destination matrices and source matrices.");
+    for (int i = 0; i < destMatrices.length; ++i) {
+      destMatrices[i] = destMatrices[i].add(sourceMatrices[i]);
+    }
+  }
+  
+  /**
+   * Get all the weight matrices.
+   * @return
+   */
+  public DoubleMatrix[] getWeightMatrices() {
+    return (DoubleMatrix[])this.weightMatrixList.toArray();
   }
 
   /**
@@ -186,8 +211,9 @@ public abstract class SmallLayeredNeuralNetwork extends
    * @return
    */
   protected DoubleVector forward(int fromLayer, DoubleVector intermediateOutput) {
-    return this.weightMatrixList.get(fromLayer).multiplyVectorUnsafe(
-        intermediateOutput).applyToElements(this.squashingFunctionList.get(fromLayer));
+    return this.weightMatrixList.get(fromLayer)
+        .multiplyVectorUnsafe(intermediateOutput)
+        .applyToElements(this.squashingFunctionList.get(fromLayer));
   }
 
 }

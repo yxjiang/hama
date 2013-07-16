@@ -17,31 +17,26 @@
  */
 package org.apache.hama.ml.regression;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hama.bsp.BSPPeer;
-import org.apache.hama.bsp.sync.SyncException;
-import org.apache.hama.ml.ann.SmallLayeredNeuralNetworkTrainer;
-import org.apache.hama.ml.perception.MLPMessage;
-import org.apache.hama.ml.writable.VectorWritable;
+import org.apache.hadoop.io.Writable;
+import org.apache.hama.bsp.message.type.BSPMessage;
 
-/**
- * 
- *
- */
-public final class LinearRegressionTrainer extends SmallLayeredNeuralNetworkTrainer {
-  
-  // the in-memory model maintained in each groom task
-  private LinearRegression inMemoryLinearRegressionModel;
+public class LinearRegressionMessage implements Writable {
 
   @Override
-  public void bsp(
-      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-      throws IOException, SyncException, InterruptedException {
+  public void readFields(DataInput input) throws IOException {
     // TODO Auto-generated method stub
     
   }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    // TODO Auto-generated method stub
+    
+  }
+
 
 }

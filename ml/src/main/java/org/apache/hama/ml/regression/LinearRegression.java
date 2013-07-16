@@ -23,18 +23,23 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
+import org.apache.hama.HamaConfiguration;
+import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.ml.ann.SmallLayeredNeuralNetwork;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
-import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.apache.hama.ml.writable.MatrixWritable;
+import org.apache.hama.ml.writable.VectorWritable;
 
 import com.google.common.base.Preconditions;
 
@@ -52,17 +57,22 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
    * @param dimension
    */
   public LinearRegression(int dimension) {
+    super();
     // initialize topology
     this.addLayer(dimension, false);
     this.addLayer(1, true);
     this.learningRate = 0.5;
-    this.regularization = 0;
+    this.regularizationWeight = 0;
 
     // squared error by default
     this.costFunction = FunctionFactory
         .createDoubleDoubleFunction("SquaredError");
     this.setSquashingFunction(FunctionFactory
         .createDoubleFunction("IdentityFunction"));
+  }
+
+  public LinearRegression(String modelPath) {
+    super(modelPath);
   }
 
   @Override
@@ -97,7 +107,8 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
       double delta = this.costFunction.applyDerivative(expected, actual)
           * featureVector.get(i);
       // partial derivative of regularization
-      delta += this.regularization * 2 * this.weightMatrixList.get(0).get(0, i);
+      delta += this.regularizationWeight * 2
+          * this.weightMatrixList.get(0).get(0, i);
       weightUpdateMatrices[0].set(0, i, -this.learningRate * delta);
     }
 
@@ -123,48 +134,75 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
 
   @Override
   protected void trainInternal(Path dataInputPath,
-      Map<String, String> trainingParams) {
-    // TODO Auto-generated method stub
+      Map<String, String> trainingParams) throws IOException,
+      InterruptedException, ClassNotFoundException {
     // train model with model trainer
+    Configuration conf = new Configuration();
+    // add training related parameters
+    for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
+      conf.set(entry.getKey(), entry.getValue());
+    }
+    // add model related parameters, including learningRate,
+    // regularizationWeight, existingModelPath, squashing function per layer,
+    // cost function
+    conf.set("dimension", "" + (this.layerSizeList.get(0) - 1));
+    conf.set("learningRate", "" + this.learningRate);
+    conf.set("regularizationWeight", "" + this.regularizationWeight);
+    if (this.modelPath != null) {
+      conf.set("existingModelPath", this.modelPath);
+    }
+    conf.set("squashingFunction", this.squashingFunctionList.get(0).getFunctionName());
+    conf.set("costFunction", this.costFunction.getFunctionName());
+
+    HamaConfiguration hamaConf = new HamaConfiguration(conf);
+    BSPJob job = new BSPJob(hamaConf, RegressionTrainer.class);
+    job.setJobName("Small scale linear regression");
+    job.setJarByClass(RegressionTrainer.class);
+    job.setBspClass(RegressionTrainer.class);
+    job.setInputPath(dataInputPath);
+    job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+    job.setInputKeyClass(LongWritable.class);
+    job.setInputValueClass(VectorWritable.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(NullWritable.class);
+    job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
+
+    int numTasks = conf.getInt("tasks", 1);
+    job.setNumBspTask(numTasks);
+    job.waitForCompletion(true);
   }
 
   @Override
   public void readFields(DataInput input) throws IOException {
     this.modelType = WritableUtils.readString(input);
-    this.regularization = input.readDouble();
+    this.learningRate = input.readDouble();
+    this.regularizationWeight = input.readDouble();
     this.costFunction = FunctionFactory
         .createDoubleDoubleFunction(WritableUtils.readString(input));
 
     // read input dimension size
-    if (this.layerSizeList == null) {
-      this.layerSizeList = new ArrayList<Integer>(2);
-    }
-    this.layerSizeList.set(0, input.readInt());
+    this.layerSizeList = new ArrayList<Integer>(2);
+    this.layerSizeList.add(input.readInt());
 
     // read weights
-    if (this.weightMatrixList == null) {
-      this.weightMatrixList = new ArrayList<DoubleMatrix>(1);
-    }
-    this.weightMatrixList
-        .set(0, (DenseDoubleMatrix) MatrixWritable.read(input));
+    this.weightMatrixList = new ArrayList<DoubleMatrix>(1);
+    this.weightMatrixList.add((DenseDoubleMatrix) MatrixWritable.read(input));
 
     // set default fields
-    this.learningRate = 1.0;
-    this.layerSizeList.set(1, 1);
+    this.layerSizeList.add(1);
 
     if (this.squashingFunctionList == null) {
       this.squashingFunctionList = new ArrayList<DoubleFunction>(1);
     }
-    this.squashingFunctionList.set(0,
-        FunctionFactory.createDoubleFunction("Identity"));
-
+    this.squashingFunctionList.add(FunctionFactory
+        .createDoubleFunction("IdentityFunction"));
   }
 
   @Override
   public void write(DataOutput output) throws IOException {
-    // TODO Auto-generated method stub
     WritableUtils.writeString(output, modelType);
-    output.writeDouble(regularization);
+    output.writeDouble(learningRate);
+    output.writeDouble(regularizationWeight);
     WritableUtils.writeString(output, costFunction.getFunctionName());
     // add size of input dimensions
     output.writeInt(this.layerSizeList.get(0));
@@ -176,7 +214,17 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
 
   @Override
   protected void setModelType() {
-    this.modelType = "LocalLinearRegression";
+    this.modelType = this.getClass().getSimpleName();
+  }
+
+  /**
+   * Train the model incrementally.
+   * 
+   * @param trainingInstance
+   */
+  public void trainOnline(DoubleVector trainingInstance) {
+    DoubleMatrix[] matricesUpdate = this.trainByInstance(trainingInstance);
+    this.updateWeightMatrices(matricesUpdate);
   }
 
 }

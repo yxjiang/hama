@@ -43,7 +43,9 @@ import com.google.common.base.Preconditions;
  */
 abstract class NeuralNetwork implements Writable {
 
-  protected double learningRate = 0.5;
+  public static final double DEFAULT_LEARNING_RATE = 0.5;
+  
+  protected double learningRate = DEFAULT_LEARNING_RATE;
 
   // the name of the model
   protected String modelType;
@@ -54,9 +56,30 @@ abstract class NeuralNetwork implements Writable {
     this.setModelType();
   }
 
+  public NeuralNetwork(String modelPath) {
+    try {
+      this.modelPath = modelPath;
+      this.readFromModel();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Set the degree of aggression during model training, a large learning rate
+   * can increase the training speed, but it also decrease the chance of model
+   * converge. Recommend in range (0, 0.3).
+   * 
+   * @param learningRate
+   */
   public void setLearningRate(double learningRate) {
-    Preconditions.checkArgument(learningRate > 0, "Learning rate must larger than 0.");
+    Preconditions.checkArgument(learningRate > 0,
+        "Learning rate must larger than 0.");
     this.learningRate = learningRate;
+  }
+
+  public double getLearningRate() {
+    return this.learningRate;
   }
 
   /**
@@ -71,8 +94,8 @@ abstract class NeuralNetwork implements Writable {
    * @param trainingParams The parameters for training.
    * @throws IOException
    */
-  protected void train(Path dataInputPath, Map<String, String> trainingParams)
-      throws IOException {
+  public void train(Path dataInputPath, Map<String, String> trainingParams)
+      throws IOException, InterruptedException, ClassNotFoundException {
     // set model path
     trainingParams.put("model.path", this.modelPath);
     // train with BSP job
@@ -91,7 +114,8 @@ abstract class NeuralNetwork implements Writable {
    * @param trainingParams
    */
   protected abstract void trainInternal(Path dataInputPath,
-      Map<String, String> trainingParams);
+      Map<String, String> trainingParams) throws IOException,
+      InterruptedException, ClassNotFoundException;
 
   /**
    * Read the model meta-data from the specified location.
@@ -105,11 +129,10 @@ abstract class NeuralNetwork implements Writable {
       FileSystem fs = FileSystem.get(uri, conf);
       FSDataInputStream is = new FSDataInputStream(fs.open(new Path(modelPath)));
       this.readFields(is);
-      if (!this.modelType.equals(this.getClass().getName())) {
-        throw new IllegalStateException(String.format(
-            "Model type incorrect, cannot load model '%s' for '%s'.",
-            this.modelType, this.getClass().getName()));
-      }
+      Preconditions.checkArgument(this.modelType.equals(this.getClass()
+          .getSimpleName()), String.format(
+          "Model type incorrect, cannot load model '%s' for '%s'.",
+          this.modelType, this.getClass().getSimpleName()));
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }

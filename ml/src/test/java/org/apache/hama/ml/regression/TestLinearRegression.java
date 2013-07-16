@@ -17,15 +17,28 @@
  */
 package org.apache.hama.ml.regression;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
+import org.apache.hama.ml.writable.VectorWritable;
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.assertArrayEquals;
 
 /**
  * Test linear regression.
@@ -33,47 +46,45 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class TestLinearRegression {
 
-  @Ignore
   @Test
-  public void trainByOneInstance() {
-    int featureDimension = 3;
-    LinearRegression regression = new LinearRegression(featureDimension);
-    regression.setLearningRate(0.1);
-    double[] trainingInstance = { 2, 3, 5, 4.6 };
+  public void testReadWriteLinearRegression() {
+    String modelPath = "/tmp/testWriteReadLinearRegression.data";
+    double learningRate = 0.2;
+    double regularization = 0.1; // no regularization
+    int dimension = 5;
+    LinearRegression model = new LinearRegression(dimension);
+    model.setLearningRate(learningRate);
+    model.setRegularizationWeight(regularization);
+    DoubleMatrix weights = model.getWeightsByLayer(0);
+    try {
+      model.writeModelToFile(modelPath);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
-    DoubleMatrix[] delta = regression.trainByInstance(new DenseDoubleVector(
-        trainingInstance));
-    double[] expectedUpdates = new double[] { -0.45, -0.90, -1.35, -2.25 };
-    DoubleVector vec = delta[0].getRowVector(0);
-    // assertArrayEquals(expectedUpdates, vec.toArray(), 0.001);
-
-    regression.updateWeightMatrices(delta);
-    DoubleMatrix firstLayer = regression.getWeightsByLayer(0);
-    DoubleVector firstLayerVec = firstLayer.getRowVector(0);
-    double[] expectedNewWeights = new double[] { 0.05, -0.40, -0.85, -1.75 };
-    // assertArrayEquals(expectedNewWeights, firstLayerVec.toArray(), 0.001);
-
-    DoubleMatrix[] delta2 = regression.trainByInstance(new DenseDoubleVector(
-        trainingInstance));
-    DoubleVector vec2 = delta2[0].getRowVector(0);
-    System.out.printf("Iteration 2: %s\n", vec2.toString());
-    regression.updateWeightMatrices(delta2);
-
-    DoubleMatrix[] delta3 = regression.trainByInstance(new DenseDoubleVector(
-        trainingInstance));
-    DoubleVector vec3 = delta3[0].getRowVector(0);
-    System.out.printf("Iteration 3: %s\n", vec3.toString());
-    regression.updateWeightMatrices(delta3);
-
-    DoubleMatrix[] delta4 = regression.trainByInstance(new DenseDoubleVector(
-        trainingInstance));
-    DoubleVector vec4 = delta4[0].getRowVector(0);
-    System.out.printf("Iteration 4: %s\n", vec4.toString());
-    regression.updateWeightMatrices(delta4);
-
+    try {
+      // read the meta-data
+      Configuration conf = new Configuration();
+      FileSystem fs = FileSystem.get(conf);
+      model = new LinearRegression(modelPath);
+      assertEquals(learningRate, model.getLearningRate(), 0.001);
+      assertEquals(regularization, model.getRegularizationWeight(), 0.001);
+      DoubleMatrix readWeights = model.getWeightsByLayer(0);
+      assertEquals(weights.getRowCount(), readWeights.getRowCount());
+      assertEquals(weights.getColumnCount(), readWeights.getColumnCount());
+      assertEquals(dimension + 1, model.getLayerSize(0));
+      for (int i = 0; i < weights.getRowCount(); ++i) {
+        assertArrayEquals(weights.getRowVector(i).toArray(), readWeights
+            .getRowVector(i).toArray(), 0.001);
+      }
+      // delete test file
+      fs.delete(new Path(modelPath), true);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
-  // @Ignore
+  @Ignore
   @Test
   public void testSimpleTraining() {
     int featureDimension = 3;
@@ -99,17 +110,70 @@ public class TestLinearRegression {
       }
       updateMatrices[0] = updateMatrices[0].divide(trainingData.length);
       regression.updateWeightMatrices(updateMatrices);
-      DoubleMatrix wMat = regression.getWeightsByLayer(0);
-      for (int r = 0; r < wMat.getRowCount(); ++r) {
-        for (int c = 0; c < wMat.getColumnCount(); ++c) {
-          System.out.print(wMat.get(r, c) + " ");
-        }
-        System.out.println();
-      }
     }
+
+    // within 5% of error
     DoubleVector instance = new DenseDoubleVector(new double[] { 10, 10, 10 });
-    DoubleVector result = regression.getOutput(instance);
-    System.out.printf("Final output:%f\n", result.get(0));
+    assertEquals(13, regression.getOutput(instance).get(0), 13 * 0.05);
+  }
+
+  @Ignore
+  @Test
+  public void testDistributedTraining() {
+    // write some data to input path
+    Configuration conf = new Configuration();
+    String strDataPath = "/tmp/sampleModel-testWriteReadMLP.data";
+    Path dataPath = new Path(strDataPath);
+    Random rnd = new Random();
+    // y = 0.3 * x1 + 0.5 * x2 + 0.5 * x3
+    DoubleVector[] trainingInstance = new DoubleVector[] {
+        new DenseDoubleVector(new double[] { 1, 1, 1,
+            1.3 + rnd.nextDouble() / 10 }),
+        new DenseDoubleVector(new double[] { 2, 3, 5,
+            4.6 + rnd.nextDouble() / 10 }),
+        new DenseDoubleVector(new double[] { 3, 5, 2,
+            4.4 + rnd.nextDouble() / 10 }),
+        new DenseDoubleVector(
+            new double[] { 5, 2, 1, 3 + rnd.nextDouble() / 10 }),
+        new DenseDoubleVector(new double[] { 3, 1, 2,
+            2.4 + rnd.nextDouble() / 10 }) };
+
+    FileSystem fs = null;
+    try {
+      URI uri = new URI(strDataPath);
+      fs = FileSystem.get(uri, conf);
+      fs.delete(dataPath, true); // delete if exists
+      SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf, dataPath,
+          LongWritable.class, VectorWritable.class);
+
+      for (int i = 0; i < 1000; ++i) {
+        VectorWritable vecWritable = new VectorWritable(trainingInstance[i % 4]);
+        writer.append(new LongWritable(i), vecWritable);
+      }
+      writer.close();
+
+      // train model
+      int dimension = 3;
+      LinearRegression regression = new LinearRegression(dimension);
+      Map<String, String> trainingParams = new HashMap<String, String>();
+      // initialize training parameter
+      trainingParams.put("training.mode", "minibatch");
+      trainingParams.put("training.batchsize", "" + 1000);
+      regression.train(dataPath, trainingParams);
+
+      // delete data
+      fs.delete(dataPath, true);
+
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+
   }
 
 }

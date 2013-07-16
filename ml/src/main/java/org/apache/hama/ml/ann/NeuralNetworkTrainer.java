@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Writable;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
@@ -42,7 +43,7 @@ public abstract class NeuralNetworkTrainer extends
   protected String trainingMode;
 
   @Override
-  public void setup(
+  final public void setup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
       throws IOException, SyncException, InterruptedException {
     conf = peer.getConfiguration();
@@ -58,10 +59,9 @@ public abstract class NeuralNetworkTrainer extends
    * @throws SyncException
    * @throws InterruptedException
    */
-  protected void extraSetup(
+  protected abstract void extraSetup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-      throws IOException, SyncException, InterruptedException {
-  }
+      throws IOException, SyncException, InterruptedException;
 
   /**
    * {@inheritDoc}
@@ -75,21 +75,21 @@ public abstract class NeuralNetworkTrainer extends
   public void cleanup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
       throws IOException {
-
     this.extraCleanup(peer);
+    //  write model to modelPath
+    
   }
 
   /**
-   * Handle extra cleanup for sub-classes.
-   * 
+   * Handle cleanup for sub-classes.
+   * Write the trained model back.
    * @param peer
    * @throws IOException
    * @throws SyncException
    * @throws InterruptedException
    */
-  protected void extraCleanup(
+  protected abstract void extraCleanup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-      throws IOException {
-  }
+      throws IOException;
 
 }
