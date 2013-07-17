@@ -44,16 +44,15 @@ import com.google.common.base.Preconditions;
 abstract class NeuralNetwork implements Writable {
 
   public static final double DEFAULT_LEARNING_RATE = 0.5;
-  
+
   protected double learningRate = DEFAULT_LEARNING_RATE;
 
   // the name of the model
   protected String modelType;
-
+  // the path to store the model
   protected String modelPath;
 
   public NeuralNetwork() {
-    this.setModelType();
   }
 
   public NeuralNetwork(String modelPath) {
@@ -84,8 +83,12 @@ abstract class NeuralNetwork implements Writable {
 
   /**
    * Set the modelType variable to specify the model type.
+   * 
+   * @param modelType TODO
    */
-  protected abstract void setModelType();
+  protected void setModelType(String modelType) {
+    this.modelType = modelType;
+  }
 
   /**
    * Train the model with the path of given training data and parameters.
@@ -96,14 +99,10 @@ abstract class NeuralNetwork implements Writable {
    */
   public void train(Path dataInputPath, Map<String, String> trainingParams)
       throws IOException, InterruptedException, ClassNotFoundException {
-    // set model path
-    trainingParams.put("model.path", this.modelPath);
+    Preconditions.checkArgument(this.modelPath != null, "Please set the model path before training.");
     // train with BSP job
     trainInternal(dataInputPath, trainingParams);
-    // reload learned model
-    Log.info(String.format("Reload model from %s.",
-        trainingParams.get("modelPath")));
-    this.modelPath = trainingParams.get("modelPath");
+    // write the trained model back to model path
     this.readFromModel();
   }
 
@@ -123,16 +122,14 @@ abstract class NeuralNetwork implements Writable {
    * @throws IOException
    */
   protected void readFromModel() throws IOException {
+    Preconditions.checkArgument(this.modelPath != null,
+        "Model path has not be set.");
     Configuration conf = new Configuration();
     try {
-      URI uri = new URI(modelPath);
+      URI uri = new URI(this.modelPath);
       FileSystem fs = FileSystem.get(uri, conf);
       FSDataInputStream is = new FSDataInputStream(fs.open(new Path(modelPath)));
       this.readFields(is);
-      Preconditions.checkArgument(this.modelType.equals(this.getClass()
-          .getSimpleName()), String.format(
-          "Model type incorrect, cannot load model '%s' for '%s'.",
-          this.modelType, this.getClass().getSimpleName()));
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
@@ -144,24 +141,27 @@ abstract class NeuralNetwork implements Writable {
    * @param modelPath The location in file system to store the model.
    * @throws IOException
    */
-  public void writeModelToFile(String modelPath) throws IOException {
+  public void writeModelToFile() throws IOException {
+    Preconditions.checkArgument(this.modelPath != null, "Model path has not been set.");
     Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
-    FSDataOutputStream stream = fs.create(new Path(modelPath), true);
+    FSDataOutputStream stream = fs.create(new Path(this.modelPath), true);
     this.write(stream);
     stream.close();
   }
-  
+
   /**
    * Set the model path.
+   * 
    * @param modelPath
    */
   public void setModelPath(String modelPath) {
     this.modelPath = modelPath;
   }
-  
+
   /**
    * Get the model path.
+   * 
    * @return
    */
   public String getModelPath() {

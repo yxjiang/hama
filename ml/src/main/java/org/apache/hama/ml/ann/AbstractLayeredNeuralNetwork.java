@@ -42,12 +42,16 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   public static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
   /* Record the size of each layer */
   protected List<Integer> layerSizeList;
-  
+
   /* The weight of regularization */
-  protected double regularizationWeight;
+  protected double regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
 
   /* The cost function of the model */
   protected DoubleDoubleFunction costFunction;
+  
+  public static enum TrainingMethod {
+    GRADIATE_DESCENT
+  }
 
   public AbstractLayeredNeuralNetwork() {
   }
@@ -63,7 +67,8 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @param regularization
    */
   public void setRegularizationWeight(double regularizationWeight) {
-    Preconditions.checkArgument(regularizationWeight >= 0 && regularizationWeight < 1,
+    Preconditions.checkArgument(regularizationWeight >= 0
+        && regularizationWeight < 1,
         "Regularization weight must be in range [0, 1.)");
     this.regularizationWeight = regularizationWeight;
   }
@@ -91,9 +96,10 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return The layer index, starts with 0.
    */
   protected abstract int addLayer(int size, boolean isFinalLayer);
-  
+
   /**
    * Get the size of a particular layer.
+   * 
    * @param layer
    * @return
    */
@@ -104,9 +110,10 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
             this.layerSizeList.size() - 1));
     return this.layerSizeList.get(layer);
   }
-  
+
   /**
    * Get the layer size list.
+   * 
    * @return
    */
   List<Integer> getLayerSizeList() {
@@ -115,7 +122,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
   /**
    * Set the squashing function of the specified layer. It will have no effect
-   * if the specified layer is the input layer.
+   * if the specified layer is the output layer.
    * 
    * @param layerIdx
    * @param squashingFunction The the squashing function.
@@ -146,7 +153,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return The update of each weight, in form of matrix list.
    * @throws Exception
    */
-  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance);
+  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance, TrainingMethod method);
 
   /**
    * Get the output calculated by the model.
