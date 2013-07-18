@@ -225,7 +225,7 @@ public final class LinearRegression extends SmallLayeredNeuralNetwork implements
   }
 
   @Override
-  protected void setModelType() {
+  protected void setModelType(String modelType) {
     this.modelType = this.getClass().getSimpleName();
   }
 

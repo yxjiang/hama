@@ -49,14 +49,15 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
   public void readFields(DataInput input) throws IOException {
     terminated = input.readBoolean();
     int numMatrices = input.readInt();
+    boolean hasPrevMatrices = input.readBoolean();
     curMatrices = new DenseDoubleMatrix[numMatrices];
-    prevMatrices = new DenseDoubleMatrix[numMatrices];
     // read matrice updates
     for (int i = 0; i < curMatrices.length; ++i) {
       curMatrices[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
     }
-    boolean hasPrevMatrices = input.readBoolean();
+    
     if (hasPrevMatrices) {
+      prevMatrices = new DenseDoubleMatrix[numMatrices];
       // read previous matrices updates
       for (int i = 0; i < prevMatrices.length; ++i) {
         prevMatrices[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
@@ -68,18 +69,19 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
   public void write(DataOutput output) throws IOException {
     output.writeBoolean(terminated);
     output.writeInt(curMatrices.length);
+    if (prevMatrices == null) {
+      output.writeBoolean(false);
+    }
+    else {
+      output.writeBoolean(true);
+    }
     for (int i = 0; i < curMatrices.length; ++i) {
       MatrixWritable.write(curMatrices[i], output);
     }
     if (prevMatrices != null) {
-      output.writeBoolean(true);
       for (int i = 0; i < prevMatrices.length; ++i) {
         MatrixWritable.write(prevMatrices[i], output);
       }
-    }
-    else {
-      // add mark if preMatrices is null
-      output.writeBoolean(false);
     }
   }
 

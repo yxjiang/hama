@@ -95,7 +95,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       weightMatrix.applyToElements(new DoubleFunction() {
         @Override
         public double apply(double value) {
-          //
+          // 
           return 0.5;
         }
 
@@ -246,8 +246,6 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     this.costFunction = FunctionFactory
         .createDoubleDoubleFunction(WritableUtils.readString(input));
 
-    // read number of layers
-    int numOfLayers = input.readInt();
     this.layerSizeList = new ArrayList<Integer>();
 
     // read weights
@@ -258,7 +256,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     }
 
     // reconstruct layerSizeList
-    for (int i = 0; i < this.weightMatrixList.size() - 1; ++i) {
+    for (int i = 0; i < this.weightMatrixList.size(); ++i) {
       this.layerSizeList.add(this.weightMatrixList.get(i).getColumnCount());
     }
     this.layerSizeList.add(this.weightMatrixList.get(
@@ -278,8 +276,6 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     }
     // write cost function
     WritableUtils.writeString(output, costFunction.getFunctionName());
-    // write number of layers
-    output.writeInt(this.layerSizeList.size()); // number of layers
     // write weight matrices
     for (int i = 0; i < this.weightMatrixList.size(); ++i) {
       MatrixWritable.write(this.weightMatrixList.get(i), output);

@@ -20,6 +20,7 @@ package org.apache.hama.ml.ann;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.net.URI;
@@ -77,6 +78,83 @@ public class TestSmallLayeredNeuralNetworkMessage {
           assertArrayEquals(doubleExpected[r], doubleMatrices[r], 0.000001);
         }
       }
+      
+      DoubleMatrix[] readPrevMatrices = readMessage.getPrevMatrices();
+      assertNull(readPrevMatrices);
+      
+      // delete
+      fs.delete(path, true);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void testReadWriteWithPrev() {
+    boolean isTerminated = false;
+    int ownerIdx = 11;
+    double[][] matrix1 = new double[][] { { 0.1, 0.2, 0.8, 0.5 },
+        { 0.3, 0.4, 0.6, 0.2 }, { 0.5, 0.6, 0.1, 0.5 } };
+    double[][] matrix2 = new double[][] { { 0.8, 1.2, 0.5 } };
+    DoubleMatrix[] matrices = new DoubleMatrix[2];
+    matrices[0] = new DenseDoubleMatrix(matrix1);
+    matrices[1] = new DenseDoubleMatrix(matrix2);
+    
+    double[][] prevMatrix1 = new double[][]{
+        {0.1, 0.1, 0.2, 0.3},
+        {0.2, 0.4, 0.1, 0.5},
+        {0.5, 0.1, 0.5, 0.2}
+    };
+    double[][] prevMatrix2 = new double[][] {
+        {0.1, 0.2, 0.5, 0.9},
+        {0.3, 0.5, 0.2, 0.6},
+        {0.6, 0.8, 0.7, 0.5}
+    };
+    
+    DoubleMatrix[] prevMatrices = new DoubleMatrix[2];
+    prevMatrices[0] = new DenseDoubleMatrix(prevMatrix1);
+    prevMatrices[1] = new DenseDoubleMatrix(prevMatrix2);
+
+    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
+        ownerIdx, isTerminated, matrices, prevMatrices);
+    Configuration conf = new Configuration();
+    String strPath = "tmp/testReadWrite-SmallLayeredNeuralNetworkMessage";
+    Path path = new Path(strPath);
+    try {
+      FileSystem fs = FileSystem.get(new URI(strPath), conf);
+      FSDataOutputStream out = fs.create(path);
+      message.write(out);
+      out.close();
+
+      FSDataInputStream in = fs.open(path);
+      SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(
+          0, false, null, null);
+      readMessage.readFields(in);
+      in.close();
+      assertFalse(readMessage.isTerminated());
+      
+      DoubleMatrix[] readMatrices = readMessage.getCurMatrices();
+      assertEquals(2, readMatrices.length);
+      for (int i = 0; i < readMatrices.length; ++i) {
+        double[][] doubleMatrices = ((DenseDoubleMatrix)readMatrices[i]).getValues();
+        double[][] doubleExpected = ((DenseDoubleMatrix)matrices[i]).getValues();
+        for (int r = 0; r < doubleMatrices.length; ++r) {
+          assertArrayEquals(doubleExpected[r], doubleMatrices[r], 0.000001);
+        }
+      }
+      
+      DoubleMatrix[] readPrevMatrices = readMessage.getPrevMatrices();
+      assertEquals(2, readPrevMatrices.length);
+      for (int i = 0; i < readPrevMatrices.length; ++i) {
+        double[][] doubleMatrices = ((DenseDoubleMatrix)readPrevMatrices[i]).getValues();
+        double[][] doubleExpected = ((DenseDoubleMatrix)prevMatrices[i]).getValues();
+        for (int r = 0; r < doubleMatrices.length; ++r) {
+          assertArrayEquals(doubleExpected[r], doubleMatrices[r], 0.000001);
+        }
+      }
+      
       // delete
       fs.delete(path, true);
     } catch (IOException e) {
