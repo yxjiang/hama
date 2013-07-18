@@ -89,13 +89,15 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       int sizePrevLayer = this.layerSizeList.get(layerIdx - 1);
       // row count equals to size of current size and column count equals to
       // size of previous layer
-      DoubleMatrix weightMatrix = new DenseDoubleMatrix(size, sizePrevLayer);
+      int row = isFinalLayer ? size : size - 1;
+      int col = sizePrevLayer;
+      DoubleMatrix weightMatrix = new DenseDoubleMatrix(row, col);
       // initialize weights
       final Random rnd = new Random();
       weightMatrix.applyToElements(new DoubleFunction() {
         @Override
         public double apply(double value) {
-          // 
+          //
           return 0.5;
         }
 
@@ -125,7 +127,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * {@inheritDoc}
    */
   public void setSquashingFunction(DoubleFunction squashingFunction) {
-    for (int i = 0; i < squashingFunctionList.size() - 1; ++i) {
+    for (int i = 0; i < squashingFunctionList.size(); ++i) {
       this.setSquashingFunction(i, squashingFunction);
     }
   }
@@ -185,6 +187,8 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * Get the output of the model according to given feature instance.
    */
   public DoubleVector getOutput(DoubleVector instance) {
+    Preconditions.checkArgument(this.layerSizeList.get(0) == instance
+        .getDimension() + 1);
     // add bias feature
     DoubleVector instanceWithBias = new DenseDoubleVector(
         instance.getDimension() + 1);
@@ -192,10 +196,13 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     for (int i = 1; i < instanceWithBias.getDimension(); ++i) {
       instanceWithBias.set(i, instance.get(i - 1));
     }
+    System.out.printf("Training instance: %s\n", instanceWithBias.toString());
 
     List<DoubleVector> outputCache = getOutputInternal(instanceWithBias);
     // return the output of the last layer
-    return outputCache.get(outputCache.size() - 1);
+    DoubleVector result = outputCache.get(outputCache.size() - 1);
+    // remove bias
+    return result.slice(1, result.getDimension());
   }
 
   /**
@@ -226,9 +233,18 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * @return
    */
   protected DoubleVector forward(int fromLayer, DoubleVector intermediateOutput) {
-    return this.weightMatrixList.get(fromLayer)
-        .multiplyVectorUnsafe(intermediateOutput)
+    DoubleMatrix weightMatrix = this.weightMatrixList.get(fromLayer);
+
+    DoubleVector vec = weightMatrix.multiplyVectorUnsafe(intermediateOutput)
         .applyToElements(this.squashingFunctionList.get(fromLayer));
+    
+    // add bias
+    DoubleVector vecWithBias = new DenseDoubleVector(vec.getDimension() + 1);
+    vecWithBias.set(0, 1);
+    for (int i = 0; i < vec.getDimension(); ++i) {
+      vecWithBias.set(i + 1, vec.get(i));
+    }
+    return vecWithBias;
   }
 
   @Override
@@ -304,6 +320,10 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    */
   private DoubleMatrix[] trainByInstanceGradientDescent(
       DoubleVector trainingInstance) {
+
+    List<DoubleVector> internalResults = this
+        .getOutputInternal(trainingInstance);
+
     return null;
   }
 
