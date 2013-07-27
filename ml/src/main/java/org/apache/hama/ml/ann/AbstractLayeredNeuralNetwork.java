@@ -48,7 +48,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
   /* The cost function of the model */
   protected DoubleDoubleFunction costFunction;
-  
+
   public static enum TrainingMethod {
     GRADIATE_DESCENT
   }
@@ -93,9 +93,12 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * 
    * @param size
    * @param isFinalLayer If false, add a bias neuron.
+   * @param squashingFunction The squashing function for this layer, input layer
+   *          is f(x) = x by default.
    * @return The layer index, starts with 0.
    */
-  protected abstract int addLayer(int size, boolean isFinalLayer);
+  protected abstract int addLayer(int size, boolean isFinalLayer,
+      DoubleFunction squashingFunction);
 
   /**
    * Get the size of a particular layer.
@@ -105,7 +108,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    */
   public int getLayerSize(int layer) {
     Preconditions.checkArgument(
-        layer >= 0 && layer < this.layerSizeList.size() - 1,
+        layer >= 0 && layer < this.layerSizeList.size(),
         String.format("Input must be in range [0, %d]\n",
             this.layerSizeList.size() - 1));
     return this.layerSizeList.get(layer);
@@ -119,23 +122,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   List<Integer> getLayerSizeList() {
     return this.layerSizeList;
   }
-
-  /**
-   * Set the squashing function of the specified layer. It will have no effect
-   * if the specified layer is the output layer.
-   * 
-   * @param layerIdx
-   * @param squashingFunction The the squashing function.
-   */
-  protected abstract void setSquashingFunction(int layerIdx,
-      DoubleFunction squashingFunction);
-
-  /**
-   * Set the squashing function for all layers.
-   * 
-   * @param squashingFunction
-   */
-  public abstract void setSquashingFunction(DoubleFunction squashingFunction);
 
   /**
    * Get the weights between layer layerIdx and layerIdx + 1
@@ -153,7 +139,8 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return The update of each weight, in form of matrix list.
    * @throws Exception
    */
-  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance, TrainingMethod method);
+  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance,
+      TrainingMethod method);
 
   /**
    * Get the output calculated by the model.
