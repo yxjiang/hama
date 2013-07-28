@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.ann.SmallLayeredNeuralNetwork;
+import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 
@@ -49,8 +50,60 @@ public class LinearRegression {
     ann = new SmallLayeredNeuralNetwork(modelPath);
   }
 
+  /**
+   * Set the learning rate, recommend in range (0, 0.01]. Note that linear
+   * regression are easy to get diverge if the learning rate is not small
+   * enough.
+   * 
+   * @param learningRate
+   */
   public void setLearningRate(double learningRate) {
     ann.setLearningRate(learningRate);
+  }
+
+  /**
+   * Get the learning rate.
+   */
+  public double getLearningRate() {
+    return ann.getLearningRate();
+  }
+
+  /**
+   * Set the weight of the momemtum. Recommend in range [0, 1.0]. Too large
+   * momemtum weight may make model hard to converge.
+   * 
+   * @param momemtumWeight
+   */
+  public void setMomemtumWeight(double momemtumWeight) {
+    ann.setMomentumWeight(momemtumWeight);
+  }
+
+  /**
+   * Get the weight of momemtum.
+   * 
+   * @return
+   */
+  public double getMomemtumWeight() {
+    return ann.getMomemtumWeight();
+  }
+
+  /**
+   * Set the weight of regularization, recommend in range [0, 0.1]. Too large
+   * regularization will mislead the model.
+   * 
+   * @param regularizationWeight
+   */
+  public void setRegularizationWeight(double regularizationWeight) {
+    ann.setRegularizationWeight(regularizationWeight);
+  }
+
+  /**
+   * Get the weight of regularization.
+   * 
+   * @return
+   */
+  public double getRegularizationWeight() {
+    return ann.getRegularizationWeight();
   }
 
   /**
@@ -59,7 +112,10 @@ public class LinearRegression {
    * @param trainingInstance
    */
   public void trainOnline(DoubleVector trainingInstance) {
-    ann.trainOnline(trainingInstance);
+    // ann.trainOnline(trainingInstance);
+    DoubleMatrix[] updates = ann.trainByInstance(trainingInstance);
+//    System.out.printf("%s\n", updates[0]);
+    ann.updateWeightMatrices(updates);
   }
 
   /**
@@ -113,9 +169,10 @@ public class LinearRegression {
       e.printStackTrace();
     }
   }
-  
+
   /**
    * Get the weights of the model.
+   * 
    * @return
    */
   public DoubleVector getWeights() {

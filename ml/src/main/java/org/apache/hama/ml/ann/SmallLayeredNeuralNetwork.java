@@ -125,7 +125,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * 
    * @param matrices
    */
-  void updateWeightMatrices(DoubleMatrix[] matrices) {
+  public void updateWeightMatrices(DoubleMatrix[] matrices) {
     for (int i = 0; i < matrices.length; ++i) {
       DoubleMatrix matrix = this.weightMatrixList.get(i);
       this.weightMatrixList.set(i, matrix.add(matrices[i]));
