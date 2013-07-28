@@ -218,11 +218,8 @@ public class TestSmallLayeredNeuralNetwork {
     int iterations = 500; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
-      DoubleMatrix[] matrices = null;
       for (int j = 0; j < instances.length; ++j) {
-        matrices = ann.trainByInstance(
-            new DenseDoubleVector(instances[j % instances.length]));
-        ann.updateWeightMatrices(matrices);
+        ann.trainOnline(new DenseDoubleVector(instances[j % instances.length]));
       }
     }
 
@@ -266,11 +263,8 @@ public class TestSmallLayeredNeuralNetwork {
     int iterations = 3000; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
-      DoubleMatrix[] matrices = null;
       for (int j = 0; j < instances.length; ++j) {
-        matrices = ann.trainByInstance(
-            new DenseDoubleVector(instances[j % instances.length]));
-        ann.updateWeightMatrices(matrices);
+        ann.trainOnline(new DenseDoubleVector(instances[j % instances.length]));
       }
     }
 

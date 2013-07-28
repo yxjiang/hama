@@ -42,7 +42,7 @@ import com.google.common.base.Preconditions;
  * form a bipartite weighted graph.
  * 
  */
-public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
+abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
   private static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
   private static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
