@@ -17,6 +17,8 @@
  */
 package org.apache.hama.ml.ann;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,9 +30,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
-import org.apache.hama.ml.math.DoubleDoubleFunction;
-import org.apache.hama.ml.math.FunctionFactory;
-import org.mortbay.log.Log;
+import org.apache.hadoop.io.WritableUtils;
 
 import com.google.common.base.Preconditions;
 
@@ -166,6 +166,16 @@ abstract class NeuralNetwork implements Writable {
    */
   public String getModelPath() {
     return this.modelPath;
+  }
+  
+  public void readFields(DataInput input) throws IOException {
+    this.modelType = WritableUtils.readString(input);
+    this.learningRate = input.readDouble();
+  }
+  
+  public void write(DataOutput output) throws IOException {
+    WritableUtils.writeString(output, modelType);
+    output.writeDouble(learningRate);
   }
 
 }
