@@ -58,6 +58,8 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   
   /* Record the size of each layer */
   protected List<Integer> layerSizeList;
+  
+  protected TrainingMethod trainingMethod;
 
   public static enum TrainingMethod {
     GRADIATE_DESCENT
@@ -66,6 +68,7 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   public AbstractLayeredNeuralNetwork() {
     this.regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
     this.momentumWeight = DEFAULT_MOMENTUM_WEIGHT;
+    this.trainingMethod = TrainingMethod.GRADIATE_DESCENT;
   }
 
   public AbstractLayeredNeuralNetwork(String modelPath) {
@@ -104,6 +107,14 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
     return this.momentumWeight;
   }
 
+  public void setTrainingMethod(TrainingMethod method) {
+    this.trainingMethod = method;
+  }
+  
+  public TrainingMethod getTrainingMethod() {
+    return this.trainingMethod;
+  }
+  
   /**
    * Set the cost function for the model.
    * 
@@ -166,8 +177,7 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return The update of each weight, in form of matrix list.
    * @throws Exception
    */
-  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance,
-      TrainingMethod method);
+  public abstract DoubleMatrix[] trainByInstance(DoubleVector trainingInstance);
 
   /**
    * Get the output calculated by the model.
@@ -195,6 +205,8 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
     for (int i = 0; i < numLayers; ++i) {
       this.layerSizeList.add(input.readInt());
     }
+    
+    this.trainingMethod = WritableUtils.readEnum(input, TrainingMethod.class);
   }
   
   @Override
@@ -214,6 +226,7 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
       output.writeInt(this.layerSizeList.get(i));
     }
     
+    WritableUtils.writeEnum(output, this.trainingMethod);
   }
 
 }

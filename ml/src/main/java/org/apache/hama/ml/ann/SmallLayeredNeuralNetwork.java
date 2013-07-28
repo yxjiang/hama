@@ -289,10 +289,17 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     }
     return vecWithBias;
   }
+  
+  /**
+   * Train the model online.
+   * @param trainingInstance
+   */
+  public void trainOnline(DoubleVector trainingInstance) {
+    this.updateWeightMatrices(this.trainByInstance(trainingInstance));
+  }
 
   @Override
-  public DoubleMatrix[] trainByInstance(DoubleVector trainingInstance,
-      TrainingMethod method) {
+  public DoubleMatrix[] trainByInstance(DoubleVector trainingInstance) {
     // validate training instance
     int inputDimension = this.layerSizeList.get(0) - 1;
     int outputDimension = this.layerSizeList.get(this.layerSizeList.size() - 1);
@@ -301,12 +308,16 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
             inputDimension + outputDimension == trainingInstance.getDimension(),
             "The dimension of training instance does not equals to the dimension of input layer plus dimension of output layer.");
 
-    if (method.equals(TrainingMethod.GRADIATE_DESCENT)) {
+    if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
       return this.trainByInstanceGradientDescent(trainingInstance);
     }
     throw new IllegalArgumentException(
         String.format("Training method is not supported."));
   }
+//  
+//  public void trainOnline(DoubleVector trainingInstance) {
+//    
+//  }
 
   /**
    * Train by gradient descent. Get the updated weights using one training

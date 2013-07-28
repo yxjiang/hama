@@ -76,6 +76,7 @@ public class TestSmallLayeredNeuralNetwork {
     assertEquals(learningRate, annCopy.getLearningRate(), 0.000001);
     assertEquals(momentumWeight, annCopy.getMomemtumWeight(), 0.000001);
     assertEquals(regularizationWeight, annCopy.getRegularizationWeight(), 0.000001);
+    assertEquals(TrainingMethod.GRADIATE_DESCENT, annCopy.getTrainingMethod());
     
     // compare weights
     DoubleMatrix[] weightsMatrices = annCopy.getWeightMatrices();
@@ -173,7 +174,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleMatrix[] matrices = null;
       for (int j = 0; j < instances.length; ++j) {
         matrices = ann.trainByInstance(
-            new DenseDoubleVector(instances[j % instances.length]), TrainingMethod.GRADIATE_DESCENT);
+            new DenseDoubleVector(instances[j % instances.length]));
         ann.updateWeightMatrices(matrices);
       }
     }
@@ -220,7 +221,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleMatrix[] matrices = null;
       for (int j = 0; j < instances.length; ++j) {
         matrices = ann.trainByInstance(
-            new DenseDoubleVector(instances[j % instances.length]), TrainingMethod.GRADIATE_DESCENT);
+            new DenseDoubleVector(instances[j % instances.length]));
         ann.updateWeightMatrices(matrices);
       }
     }
@@ -268,7 +269,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleMatrix[] matrices = null;
       for (int j = 0; j < instances.length; ++j) {
         matrices = ann.trainByInstance(
-            new DenseDoubleVector(instances[j % instances.length]), TrainingMethod.GRADIATE_DESCENT);
+            new DenseDoubleVector(instances[j % instances.length]));
         ann.updateWeightMatrices(matrices);
       }
     }
