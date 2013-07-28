@@ -185,6 +185,22 @@ public class TestSmallLayeredNeuralNetwork {
       assertEquals(result, ann.getOutput(input).get(0), 0.05);
     }
 
+    // write model into file and read out
+    String modelPath = "tmp/testXORLocal";
+    ann.setModelPath(modelPath);
+    try {
+      ann.writeModelToFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    SmallLayeredNeuralNetwork annCopy = new SmallLayeredNeuralNetwork(modelPath);
+    // test on instances
+    for (int i = 0; i < instances.length; ++i) {
+      DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
+      // the expected output is the last element in array
+      double result = instances[i][2];
+      assertEquals(result, annCopy.getOutput(input).get(0), 0.05);
+    }
   }
 
 }
