@@ -332,7 +332,7 @@ public final class SmallMultiLayerPerceptron extends MultiLayerPerceptron
         double updatedValue = -this.learningRate * delta[j]
             * prevLayerOutput[i];
         // add momemtum
-        updatedValue += this.momentum * prevWeightUpdateMatrix.get(i, j);
+//        updatedValue += this.momentum * prevWeightUpdateMatrix.get(i, j);
         weightUpdateMatrices[prevLayerIdx].set(i, j, updatedValue);
       }
     }

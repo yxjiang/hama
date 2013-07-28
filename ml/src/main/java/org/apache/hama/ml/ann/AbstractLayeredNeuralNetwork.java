@@ -44,8 +44,8 @@ import com.google.common.base.Preconditions;
  */
 public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
-  public static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
-  public static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
+  private static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
+  private static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
   
   /* The weight of regularization */
   protected double regularizationWeight;
@@ -124,7 +124,7 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    *          is f(x) = x by default.
    * @return The layer index, starts with 0.
    */
-  protected abstract int addLayer(int size, boolean isFinalLayer,
+  public abstract int addLayer(int size, boolean isFinalLayer,
       DoubleFunction squashingFunction);
 
   /**
@@ -146,7 +146,7 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * 
    * @return
    */
-  List<Integer> getLayerSizeList() {
+  protected List<Integer> getLayerSizeList() {
     return this.layerSizeList;
   }
 

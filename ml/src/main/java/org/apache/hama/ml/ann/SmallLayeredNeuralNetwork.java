@@ -21,6 +21,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -55,7 +56,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   protected List<DoubleMatrix> weightMatrixList;
   
   /* Previous weight updates between neurons at adjacent layers */
-  protected List<DoubleMatrix> prevWeightUpdatesList;
+  protected List<DenseDoubleMatrix> prevWeightUpdatesList;
 
   /* Different layers can have different squashing function */
   protected List<DoubleFunction> squashingFunctionList;
@@ -65,7 +66,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   public SmallLayeredNeuralNetwork() {
     this.layerSizeList = new ArrayList<Integer>();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
-    this.prevWeightUpdatesList = new ArrayList<DoubleMatrix>();
+    this.prevWeightUpdatesList = new ArrayList<DenseDoubleMatrix>();
     this.squashingFunctionList = new ArrayList<DoubleFunction>();
   }
 
@@ -124,7 +125,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * 
    * @param matrices
    */
-  public void updateWeightMatrices(DoubleMatrix[] matrices) {
+  void updateWeightMatrices(DoubleMatrix[] matrices) {
     for (int i = 0; i < matrices.length; ++i) {
       DoubleMatrix matrix = this.weightMatrixList.get(i);
       this.weightMatrixList.set(i, matrix.add(matrices[i]));
@@ -154,7 +155,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * 
    * @return
    */
-  public DoubleMatrix[] getWeightMatrices() {
+  DoubleMatrix[] getWeightMatrices() {
     DoubleMatrix[] matrices = new DoubleMatrix[this.weightMatrixList.size()];
     this.weightMatrixList.toArray(matrices);
     return matrices;
@@ -165,7 +166,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * 
    * @param matrices
    */
-  public void setWeightMatrices(DoubleMatrix[] matrices) {
+  void setWeightMatrices(DoubleMatrix[] matrices) {
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
     for (int i = 0; i < matrices.length; ++i) {
       this.weightMatrixList.add(matrices[i]);
@@ -187,7 +188,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     // read weights and construct matrices of previous updates
     int numOfMatrices = input.readInt();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
-    this.prevWeightUpdatesList = new ArrayList<DoubleMatrix>();
+    this.prevWeightUpdatesList = new ArrayList<DenseDoubleMatrix>();
     for (int i = 0; i < numOfMatrices; ++i) {
       DoubleMatrix matrix = MatrixWritable.read(input);
       this.weightMatrixList.add(matrix);
@@ -312,12 +313,11 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * instance.
    * 
    * @param trainingInstance
-   * @return
+   * @return The weight update matrices.
    */
   private DoubleMatrix[] trainByInstanceGradientDescent(
       DoubleVector trainingInstance) {
     int inputDimension = this.layerSizeList.get(0) - 1;
-    int outputDimension = this.layerSizeList.get(this.layerSizeList.size() - 1);
 
     DoubleVector inputInstance = new DenseDoubleVector(
         this.layerSizeList.get(0));
@@ -361,6 +361,8 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       deltaVec = backpropagate(layer, deltaVec, internalResults,
           weightUpdateMatrices[layer]);
     }
+    
+    this.prevWeightUpdatesList = Arrays.asList(weightUpdateMatrices);
 
     return weightUpdateMatrices;
   }
@@ -383,6 +385,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     DoubleFunction squashingFunction = this.squashingFunctionList.get(curLayerIdx);
     DoubleVector curLayerOutput = outputCache.get(curLayerIdx);
     DoubleMatrix weightMatrix = this.weightMatrixList.get(curLayerIdx);
+    DoubleMatrix prevWeightMatrix = this.prevWeightUpdatesList.get(curLayerIdx);
     
     // next layer is not output layer, remove the delta of bias neuron
     if (curLayerIdx != this.layerSizeList.size() - 2) {
@@ -400,7 +403,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     for (int i = 0; i < weightUpdateMatrix.getRowCount(); ++i) {
       for (int j = 0; j < weightUpdateMatrix.getColumnCount(); ++j) {
         weightUpdateMatrix.set(i, j, -learningRate * nextLayerDelta.get(i)
-            * curLayerOutput.get(j));
+            * curLayerOutput.get(j) + this.momentumWeight * prevWeightMatrix.get(i, j));
       }
     }
 

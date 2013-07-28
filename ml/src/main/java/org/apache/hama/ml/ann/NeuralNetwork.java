@@ -43,7 +43,7 @@ import com.google.common.base.Preconditions;
  */
 abstract class NeuralNetwork implements Writable {
 
-  public static final double DEFAULT_LEARNING_RATE = 0.5;
+  private static final double DEFAULT_LEARNING_RATE = 0.5;
 
   protected double learningRate;
 
