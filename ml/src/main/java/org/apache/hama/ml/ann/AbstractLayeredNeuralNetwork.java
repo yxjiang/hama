@@ -73,14 +73,14 @@ public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   }
 
   /**
-   * Set the regularization weight. Recommend in the range [0, 0.5), More
+   * Set the regularization weight. Recommend in the range [0, 0.1), More
    * complex the model is, less weight the regularization is.
    * 
    * @param regularization
    */
   public void setRegularizationWeight(double regularizationWeight) {
     Preconditions.checkArgument(regularizationWeight >= 0
-        && regularizationWeight < 1,
+        && regularizationWeight < 0.1,
         "Regularization weight must be in range [0, 1.)");
     this.regularizationWeight = regularizationWeight;
   }

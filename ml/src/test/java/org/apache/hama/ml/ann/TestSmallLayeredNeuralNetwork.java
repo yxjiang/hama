@@ -204,7 +204,7 @@ public class TestSmallLayeredNeuralNetwork {
   }
   
   @Test
-  public void testXORwithMomentum() {
+  public void testXORWithMomentum() {
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
     ann.addLayer(2, false, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.addLayer(3, false, FunctionFactory.createDoubleFunction("Sigmoid"));
@@ -215,6 +215,54 @@ public class TestSmallLayeredNeuralNetwork {
     ann.setMomentumWeight(0.5);
 
     int iterations = 500; // iteration should be set to a very large number
+    double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
+    for (int i = 0; i < iterations; ++i) {
+      DoubleMatrix[] matrices = null;
+      for (int j = 0; j < instances.length; ++j) {
+        matrices = ann.trainByInstance(
+            new DenseDoubleVector(instances[j % instances.length]), TrainingMethod.GRADIATE_DESCENT);
+        ann.updateWeightMatrices(matrices);
+      }
+    }
+
+    for (int i = 0; i < instances.length; ++i) {
+      DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
+      // the expected output is the last element in array
+      double result = instances[i][2];
+      assertEquals(result, ann.getOutput(input).get(0), 0.05);
+    }
+
+    // write model into file and read out
+    String modelPath = "tmp/testXORLocal";
+    ann.setModelPath(modelPath);
+    try {
+      ann.writeModelToFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    SmallLayeredNeuralNetwork annCopy = new SmallLayeredNeuralNetwork(modelPath);
+    // test on instances
+    for (int i = 0; i < instances.length; ++i) {
+      DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
+      // the expected output is the last element in array
+      double result = instances[i][2];
+      assertEquals(result, annCopy.getOutput(input).get(0), 0.05);
+    }
+  }
+  
+  @Test
+  public void testXORLocalWithRegularization() {
+    SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
+    ann.addLayer(2, false, FunctionFactory.createDoubleFunction("Sigmoid"));
+    ann.addLayer(3, false, FunctionFactory.createDoubleFunction("Sigmoid"));
+    ann.addLayer(1, true, FunctionFactory.createDoubleFunction("Sigmoid"));
+    ann.setCostFunction(FunctionFactory
+        .createDoubleDoubleFunction("SquaredError"));
+    ann.setLearningRate(0.8);
+    ann.setMomentumWeight(0.5);
+    ann.setRegularizationWeight(0.005);
+
+    int iterations = 3000; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
       DoubleMatrix[] matrices = null;
