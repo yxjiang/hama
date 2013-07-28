@@ -167,7 +167,7 @@ public class TestSmallLayeredNeuralNetwork {
     ann.setLearningRate(0.8);
     ann.setMomentumWeight(0.0);
 
-    int iterations = 15000; // iteration should be set to a very large number
+    int iterations = 20000; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
       DoubleMatrix[] matrices = null;

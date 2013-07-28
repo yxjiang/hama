@@ -349,12 +349,11 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
         .get(this.squashingFunctionList.size() - 1);
 
     DoubleMatrix lastWeightMatrix = this.weightMatrixList.get(this.weightMatrixList.size() - 1);
-    
     for (int i = 0; i < deltaVec.getDimension(); ++i) {
       double costFuncDerivative = this.costFunction.applyDerivative(labels.get(i), output.get(i + 1));
       // add regularization
-      double regularizationDerivative = this.regularizationWeight * lastWeightMatrix.getRowVector(i).sum();
-      deltaVec.set(i, costFuncDerivative + regularizationDerivative);
+      costFuncDerivative += this.regularizationWeight * lastWeightMatrix.getRowVector(i).sum();
+      deltaVec.set(i, costFuncDerivative);
 //      deltaVec.set(i, deltaVec.get(i) * squashingFunction.applyDerivative(output.get(i + 1)));
     }
 
