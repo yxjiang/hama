@@ -20,7 +20,7 @@ package org.apache.hama.ml.ann;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
+import java.io.IOException;
 
 import org.apache.hama.ml.ann.AbstractLayeredNeuralNetwork.TrainingMethod;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
@@ -36,6 +36,59 @@ import org.junit.Test;
  * 
  */
 public class TestSmallLayeredNeuralNetwork {
+  
+  @Test
+  public void testReadWrite() {
+    SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
+    ann.addLayer(2, false,
+        FunctionFactory.createDoubleFunction("IdentityFunction"));
+    ann.addLayer(5, false,
+        FunctionFactory.createDoubleFunction("IdentityFunction"));
+    ann.addLayer(1, true,
+        FunctionFactory.createDoubleFunction("IdentityFunction"));
+    ann.setCostFunction(FunctionFactory
+        .createDoubleDoubleFunction("SquaredError"));
+    double learningRate = 0.2;
+    ann.setLearningRate(learningRate);
+    double momentumWeight = 0.5;
+    ann.setMomentumWeight(momentumWeight);
+    double regularizationWeight = 0.05;
+    ann.setRegularizationWeight(regularizationWeight);
+    // intentionally initialize all weights to 0.5
+    DoubleMatrix[] matrices = new DenseDoubleMatrix[2];
+    matrices[0] = new DenseDoubleMatrix(5, 3, 0.2);
+    matrices[1] = new DenseDoubleMatrix(1, 6, 0.8);
+    ann.setWeightMatrices(matrices);
+    
+    //  write to file
+    String modelPath = "tmp/testReadWrite";
+    ann.setModelPath(modelPath);
+    try {
+      ann.writeModelToFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    
+    // read from file
+    SmallLayeredNeuralNetwork annCopy = new SmallLayeredNeuralNetwork(modelPath);
+    assertEquals(annCopy.getClass().getSimpleName(), annCopy.getModelType());
+    assertEquals(modelPath, annCopy.getModelPath());
+    assertEquals(learningRate, annCopy.getLearningRate(), 0.000001);
+    assertEquals(momentumWeight, annCopy.getMomemtumWeight(), 0.000001);
+    assertEquals(regularizationWeight, annCopy.getRegularizationWeight(), 0.000001);
+    
+    // compare weights
+    DoubleMatrix[] weightsMatrices = annCopy.getWeightMatrices();
+    for (int i = 0; i < weightsMatrices.length; ++i) {
+      DoubleMatrix expectMat = matrices[i];
+      DoubleMatrix actualMat = weightsMatrices[i];
+      for (int j = 0; j < expectMat.getRowCount(); ++j) {
+        for (int k = 0; k < expectMat.getColumnCount(); ++k) {
+          assertEquals(expectMat.get(j, k), actualMat.get(j, k), 0.000001);
+        }
+      }
+    }
+  }
 
   @Ignore
   @Test
@@ -108,13 +161,13 @@ public class TestSmallLayeredNeuralNetwork {
   public void testXORlocal() {
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
     ann.addLayer(2, false, FunctionFactory.createDoubleFunction("Sigmoid"));
-    ann.addLayer(2, false, FunctionFactory.createDoubleFunction("Sigmoid"));
+    ann.addLayer(3, false, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.addLayer(1, true, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.setCostFunction(FunctionFactory
         .createDoubleDoubleFunction("SquaredError"));
-    ann.setLearningRate(0.9);
+    ann.setLearningRate(0.8);
 
-    int iterations = 5000; // iteration should be set to a very large number
+    int iterations = 10000; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
       DoubleMatrix[] matrices = null;

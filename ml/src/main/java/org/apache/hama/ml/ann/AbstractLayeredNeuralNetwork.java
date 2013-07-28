@@ -17,8 +17,13 @@
  */
 package org.apache.hama.ml.ann;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
@@ -37,23 +42,30 @@ import com.google.common.base.Preconditions;
  * form a bipartite weighted graph.
  * 
  */
-abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
+public abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
   public static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
-  /* Record the size of each layer */
-  protected List<Integer> layerSizeList;
-
+  public static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
+  
   /* The weight of regularization */
-  protected double regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
+  protected double regularizationWeight;
+  
+  /* The momentumWeight */
+  protected double momentumWeight;
 
   /* The cost function of the model */
   protected DoubleDoubleFunction costFunction;
+  
+  /* Record the size of each layer */
+  protected List<Integer> layerSizeList;
 
   public static enum TrainingMethod {
     GRADIATE_DESCENT
   }
 
   public AbstractLayeredNeuralNetwork() {
+    this.regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
+    this.momentumWeight = DEFAULT_MOMENTUM_WEIGHT;
   }
 
   public AbstractLayeredNeuralNetwork(String modelPath) {
@@ -75,6 +87,21 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
   public double getRegularizationWeight() {
     return this.regularizationWeight;
+  }
+  
+  /**
+   * Set the momemtum weight for the model. Recommend in range [0, 0.5].
+   * 
+   * @param momentumWeight
+   */
+  public void setMomentumWeight(double momentumWeight) {
+    Preconditions.checkArgument(momentumWeight >= 0 && momentumWeight <= 1.0,
+        "Momentum weight must be in range [0, 1.0]");
+    this.momentumWeight = momentumWeight;
+  }
+  
+  public double getMomemtumWeight() {
+    return this.momentumWeight;
   }
 
   /**
@@ -149,5 +176,44 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return
    */
   public abstract DoubleVector getOutput(DoubleVector instance);
+  
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+    // read regularization weight
+    this.regularizationWeight = input.readDouble();
+    // read momentum weight
+    this.momentumWeight = input.readDouble();
+    
+    // read cost function
+    this.costFunction = FunctionFactory
+        .createDoubleDoubleFunction(WritableUtils.readString(input));
+    
+    // read layer size list
+    int numLayers = input.readInt();
+    this.layerSizeList = new ArrayList<Integer>();
+    for (int i = 0; i < numLayers; ++i) {
+      this.layerSizeList.add(input.readInt());
+    }
+  }
+  
+  @Override
+  public void write(DataOutput output) throws IOException {
+    super.write(output);
+    // write regularization weight
+    output.writeDouble(this.regularizationWeight);
+    // write momentum weight
+    output.writeDouble(this.momentumWeight);
+    
+    // write cost function
+    WritableUtils.writeString(output, costFunction.getFunctionName());
+    
+    // write layer size list
+    output.writeInt(this.layerSizeList.size());
+    for (int i = 0; i < this.layerSizeList.size(); ++i) {
+      output.writeInt(this.layerSizeList.get(i));
+    }
+    
+  }
 
 }

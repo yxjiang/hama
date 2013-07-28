@@ -45,7 +45,7 @@ abstract class NeuralNetwork implements Writable {
 
   public static final double DEFAULT_LEARNING_RATE = 0.5;
 
-  protected double learningRate = DEFAULT_LEARNING_RATE;
+  protected double learningRate;
 
   // the name of the model
   protected String modelType;
@@ -53,6 +53,8 @@ abstract class NeuralNetwork implements Writable {
   protected String modelPath;
 
   public NeuralNetwork() {
+    this.learningRate = DEFAULT_LEARNING_RATE;
+    this.modelType = this.getClass().getSimpleName();
   }
 
   public NeuralNetwork(String modelPath) {
@@ -80,14 +82,9 @@ abstract class NeuralNetwork implements Writable {
   public double getLearningRate() {
     return this.learningRate;
   }
-
-  /**
-   * Set the modelType variable to specify the model type.
-   * 
-   * @param modelType TODO
-   */
-  protected void setModelType(String modelType) {
-    this.modelType = modelType;
+  
+  public String getModelType() {
+    return this.modelType;
   }
 
   /**
@@ -169,8 +166,11 @@ abstract class NeuralNetwork implements Writable {
   }
   
   public void readFields(DataInput input) throws IOException {
+    // read model type
     this.modelType = WritableUtils.readString(input);
+    // read learning rate
     this.learningRate = input.readDouble();
+    // read model path
     this.modelPath = WritableUtils.readString(input);
     if (this.modelPath.equals("null")) {
       this.modelPath = null;
@@ -178,8 +178,11 @@ abstract class NeuralNetwork implements Writable {
   }
   
   public void write(DataOutput output) throws IOException {
+    // write model type
     WritableUtils.writeString(output, modelType);
+    // write learning rate
     output.writeDouble(learningRate);
+    // write model path
     if (this.modelPath != null) {
       WritableUtils.writeString(output, modelPath);
     }
