@@ -171,11 +171,21 @@ abstract class NeuralNetwork implements Writable {
   public void readFields(DataInput input) throws IOException {
     this.modelType = WritableUtils.readString(input);
     this.learningRate = input.readDouble();
+    this.modelPath = WritableUtils.readString(input);
+    if (this.modelPath.equals("null")) {
+      this.modelPath = null;
+    }
   }
   
   public void write(DataOutput output) throws IOException {
     WritableUtils.writeString(output, modelType);
     output.writeDouble(learningRate);
+    if (this.modelPath != null) {
+      WritableUtils.writeString(output, modelPath);
+    }
+    else {
+      WritableUtils.writeString(output, "null");
+    }
   }
 
 }
