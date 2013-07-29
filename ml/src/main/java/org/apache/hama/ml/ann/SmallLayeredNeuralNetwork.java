@@ -219,6 +219,24 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   public DoubleMatrix getWeightsByLayer(int layerIdx) {
     return this.weightMatrixList.get(layerIdx);
   }
+  
+  /**
+   * Check whether the model converges.
+   * @return
+   */
+  public boolean isConverge() {
+    // check whether prev matrix updates is small enough
+    for (int i = 0; i < this.prevWeightUpdatesList.size(); ++i) {
+      DoubleMatrix updateMatrix = this.prevWeightUpdatesList.get(i);
+      DoubleMatrix weightMatrix = this.weightMatrixList.get(i);
+      double updateSum = updateMatrix.sum();
+      double weightSum = weightMatrix.sum();
+      if (updateSum != 0 && Math.abs(updateSum / weightSum)  > 0.1) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   /**
    * Get the output of the model according to given feature instance.

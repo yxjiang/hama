@@ -28,7 +28,7 @@ import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 
 /**
- * 
+ * Linear regression model.
  *
  */
 public class LinearRegression {
@@ -108,7 +108,7 @@ public class LinearRegression {
 
   /**
    * Train the linear regression model with one instance.
-   * 
+   * It is HIGHLY RECOMMENDED to normalize the data first.
    * @param trainingInstance
    */
   public void trainOnline(DoubleVector trainingInstance) {
@@ -120,6 +120,7 @@ public class LinearRegression {
 
   /**
    * Train the model with given data.
+   * It is HIGHLY RECOMMENDED to normalize the data first.
    * 
    * @param dataInputPath The file path that contains the training instance.
    * @param trainingParams The training parameters.
