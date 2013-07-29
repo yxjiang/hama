@@ -18,10 +18,164 @@
 
 package org.apache.hama.ml.regression;
 
+import java.io.IOException;
+import java.util.Map;
+
+import org.apache.hadoop.fs.Path;
+import org.apache.hama.ml.ann.SmallLayeredNeuralNetwork;
+import org.apache.hama.ml.math.DoubleMatrix;
+import org.apache.hama.ml.math.DoubleVector;
+import org.apache.hama.ml.math.FunctionFactory;
+
 /**
+ * The logistic regression model. It can be used to conduct 2-class
+ * classification.
  * 
- *
  */
 public class LogisticRegression {
+  
+  private SmallLayeredNeuralNetwork ann;
+  
+  public LogisticRegression(int dimension) {
+    this.ann = new SmallLayeredNeuralNetwork();
+    this.ann.addLayer(dimension, false, FunctionFactory.createDoubleFunction("Sigmoid"));
+    this.ann.addLayer(1, true, FunctionFactory.createDoubleFunction("Sigmoid"));
+    this.ann.setCostFunction(FunctionFactory.createDoubleDoubleFunction("CrossEntropy"));
+  }
+  
+  public LogisticRegression(String modelPath) {
+    this.ann = new SmallLayeredNeuralNetwork(modelPath);
+  }
+  
+  /**
+   * Set the learning rate, recommend in range (0, 0.01]. Note that linear
+   * regression are easy to get diverge if the learning rate is not small
+   * enough.
+   * 
+   * @param learningRate
+   */
+  public void setLearningRate(double learningRate) {
+    ann.setLearningRate(learningRate);
+  }
+
+  /**
+   * Get the learning rate.
+   */
+  public double getLearningRate() {
+    return ann.getLearningRate();
+  }
+
+  /**
+   * Set the weight of the momemtum. Recommend in range [0, 1.0]. Too large
+   * momemtum weight may make model hard to converge.
+   * 
+   * @param momemtumWeight
+   */
+  public void setMomemtumWeight(double momemtumWeight) {
+    ann.setMomentumWeight(momemtumWeight);
+  }
+
+  /**
+   * Get the weight of momemtum.
+   * 
+   * @return
+   */
+  public double getMomemtumWeight() {
+    return ann.getMomemtumWeight();
+  }
+
+  /**
+   * Set the weight of regularization, recommend in range [0, 0.1]. Too large
+   * regularization will mislead the model.
+   * 
+   * @param regularizationWeight
+   */
+  public void setRegularizationWeight(double regularizationWeight) {
+    ann.setRegularizationWeight(regularizationWeight);
+  }
+
+  /**
+   * Get the weight of regularization.
+   * 
+   * @return
+   */
+  public double getRegularizationWeight() {
+    return ann.getRegularizationWeight();
+  }
+
+  /**
+   * Train the linear regression model with one instance. It is HIGHLY
+   * RECOMMENDED to normalize the data first.
+   * 
+   * @param trainingInstance
+   */
+  public void trainOnline(DoubleVector trainingInstance) {
+    // ann.trainOnline(trainingInstance);
+    DoubleMatrix[] updates = ann.trainByInstance(trainingInstance);
+    // System.out.printf("%s\n", updates[0]);
+    ann.updateWeightMatrices(updates);
+  }
+
+  /**
+   * Train the model with given data. It is HIGHLY RECOMMENDED to normalize the
+   * data first.
+   * 
+   * @param dataInputPath The file path that contains the training instance.
+   * @param trainingParams The training parameters.
+   * @throws IOException
+   * @throws InterruptedException
+   * @throws ClassNotFoundException
+   */
+  public void train(Path dataInputPath, Map<String, String> trainingParams) {
+    try {
+      ann.train(dataInputPath, trainingParams);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Get the output according to given input instance.
+   * 
+   * @param instance
+   * @return
+   */
+  public DoubleVector getOutput(DoubleVector instance) {
+    return ann.getOutput(instance);
+  }
+
+  /**
+   * Set the path to store the model. Note this is just set the path, it does
+   * not save the model. You should call writeModelToFile to save the model.
+   * 
+   * @param modelPath
+   */
+  public void setModelPath(String modelPath) {
+    ann.setModelPath(modelPath);
+  }
+
+  /**
+   * Save the model to specified model path.
+   */
+  public void writeModelToFile() {
+    try {
+      ann.writeModelToFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Get the weights of the model.
+   * 
+   * @return
+   */
+  public DoubleVector getWeights() {
+    return ann.getWeightsByLayer(0).getRowVector(0);
+  }
 
 }

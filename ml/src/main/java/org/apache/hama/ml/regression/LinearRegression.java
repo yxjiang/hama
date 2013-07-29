@@ -28,8 +28,8 @@ import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 
 /**
- * Linear regression model.
- *
+ * Linear regression model. It can be used for numeric regression or prediction.
+ * 
  */
 public class LinearRegression {
 
@@ -107,20 +107,21 @@ public class LinearRegression {
   }
 
   /**
-   * Train the linear regression model with one instance.
-   * It is HIGHLY RECOMMENDED to normalize the data first.
+   * Train the linear regression model with one instance. It is HIGHLY
+   * RECOMMENDED to normalize the data first.
+   * 
    * @param trainingInstance
    */
   public void trainOnline(DoubleVector trainingInstance) {
     // ann.trainOnline(trainingInstance);
     DoubleMatrix[] updates = ann.trainByInstance(trainingInstance);
-//    System.out.printf("%s\n", updates[0]);
+    // System.out.printf("%s\n", updates[0]);
     ann.updateWeightMatrices(updates);
   }
 
   /**
-   * Train the model with given data.
-   * It is HIGHLY RECOMMENDED to normalize the data first.
+   * Train the model with given data. It is HIGHLY RECOMMENDED to normalize the
+   * data first.
    * 
    * @param dataInputPath The file path that contains the training instance.
    * @param trainingParams The training parameters.
