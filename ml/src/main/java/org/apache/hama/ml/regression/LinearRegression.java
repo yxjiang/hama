@@ -75,7 +75,7 @@ public class LinearRegression {
    * @param momemtumWeight
    */
   public void setMomemtumWeight(double momemtumWeight) {
-    ann.setMomentumWeight(momemtumWeight);
+    ann.setMomemtumWeight(momemtumWeight);
   }
 
   /**

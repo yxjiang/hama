@@ -72,7 +72,7 @@ public class LogisticRegression {
    * @param momemtumWeight
    */
   public void setMomemtumWeight(double momemtumWeight) {
-    ann.setMomentumWeight(momemtumWeight);
+    ann.setMomemtumWeight(momemtumWeight);
   }
 
   /**

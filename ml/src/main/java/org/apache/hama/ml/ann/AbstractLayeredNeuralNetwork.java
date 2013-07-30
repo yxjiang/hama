@@ -97,7 +97,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * 
    * @param momentumWeight
    */
-  public void setMomentumWeight(double momentumWeight) {
+  public void setMomemtumWeight(double momentumWeight) {
     Preconditions.checkArgument(momentumWeight >= 0 && momentumWeight <= 1.0,
         "Momentum weight must be in range [0, 1.0]");
     this.momentumWeight = momentumWeight;

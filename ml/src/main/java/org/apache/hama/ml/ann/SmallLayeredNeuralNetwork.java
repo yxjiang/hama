@@ -250,7 +250,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     // add bias feature
     DoubleVector instanceWithBias = new DenseDoubleVector(
         instance.getDimension() + 1);
-    instanceWithBias.set(0, 0.99); // set bias to be a little bit less than 1.0
+    instanceWithBias.set(0, 0.99999); // set bias to be a little bit less than 1.0
     for (int i = 1; i < instanceWithBias.getDimension(); ++i) {
       instanceWithBias.set(i, instance.get(i - 1));
     }
