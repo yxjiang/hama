@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hama.ml.math.DenseDoubleVector;
@@ -67,18 +68,45 @@ public class TestLogisticRegression {
     } catch (IOException e) {
       e.printStackTrace();
     }
+    
+    int dimension = instanceList.get(0).length - 1;
+    
+    // min-max normalization
+    double[] mins = new double[dimension];
+    double[] maxs = new double[dimension];
+    Arrays.fill(mins, Double.MAX_VALUE);
+    Arrays.fill(maxs, Double.MIN_VALUE);
+    
+    for (double[] instance : instanceList) {
+      for (int i = 0; i < instance.length - 1; ++i) {
+        if (mins[i] > instance[i]) {
+          mins[i] = instance[i];
+        }
+        if (maxs[i] < instance[i]) {
+          maxs[i] = instance[i];
+        }
+      }
+    }
+    
+    for (double[] instance : instanceList) {
+      for (int i = 0; i < instance.length - 1; ++i) {
+        double range = maxs[i] - mins[i];
+        if (range != 0) {
+          instance[i] = (instance[i] - mins[i]) / range;
+        }
+      }
+    }
+    
     // divide dataset into training and testing
     List<double[]> testInstances = new ArrayList<double[]>();
     testInstances.addAll(instanceList.subList(instanceList.size() - 100, instanceList.size()));
     instanceList.subList(0, instanceList.size() - 100);
     
-    int dimension = instanceList.get(0).length - 1;
-    
     LogisticRegression regression = new LogisticRegression(dimension);
-    regression.setLearningRate(0.05);
-    regression.setMomemtumWeight(0.6);
-    regression.setRegularizationWeight(0.01);
-    int iterations = 5000;
+    regression.setLearningRate(0.0001);
+    regression.setMomemtumWeight(0.3);
+    regression.setRegularizationWeight(0.02);
+    int iterations = 1000;
     for (int i = 0; i < iterations; ++i) {
       for (double[] trainingInstance : instanceList) {
         regression.trainOnline(new DenseDoubleVector(trainingInstance));
@@ -92,7 +120,7 @@ public class TestLogisticRegression {
       double expected = instance.get(instance.getDimension() - 1);
       instance = instance.slice(instance.getDimension() - 1);
       double actual = regression.getOutput(instance).get(0);
-      if (Math.abs(expected - actual) >= 0.5) {
+      if (actual < 0.5 && expected >= 0.5 || actual >= 0.5 && expected < 0.5) {
         ++errorRate;
         System.out.printf("Actual: %f, Expected: %f\n", actual, expected);
       }

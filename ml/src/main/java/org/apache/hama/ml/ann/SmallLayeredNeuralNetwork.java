@@ -30,6 +30,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
+import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
@@ -249,7 +250,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     // add bias feature
     DoubleVector instanceWithBias = new DenseDoubleVector(
         instance.getDimension() + 1);
-    instanceWithBias.set(0, 1);
+    instanceWithBias.set(0, 0.99); // set bias to be a little bit less than 1.0
     for (int i = 1; i < instanceWithBias.getDimension(); ++i) {
       instanceWithBias.set(i, instance.get(i - 1));
     }
@@ -313,7 +314,9 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * @param trainingInstance
    */
   public void trainOnline(DoubleVector trainingInstance) {
-    this.updateWeightMatrices(this.trainByInstance(trainingInstance));
+    DoubleMatrix[] updateMatrices = this.trainByInstance(trainingInstance);
+//    System.out.printf("Sum: %f\n", updateMatrices[0].sum());
+    this.updateWeightMatrices(updateMatrices);
   }
 
   @Override
@@ -332,10 +335,6 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     throw new IllegalArgumentException(
         String.format("Training method is not supported."));
   }
-//  
-//  public void trainOnline(DoubleVector trainingInstance) {
-//    
-//  }
 
   /**
    * Train by gradient descent. Get the updated weights using one training
@@ -371,6 +370,23 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     DoubleVector deltaVec = new DenseDoubleVector(
         this.layerSizeList.get(this.layerSizeList.size() - 1));
     DoubleVector output = internalResults.get(internalResults.size() - 1);
+    
+    
+//    // calculate norm-2 error ||t - o||^2
+//    DoubleVector errorVec = output.slice(output.getDimension() - 1).applyToElements(labels, new DoubleDoubleFunction() {
+//      @Override
+//      public double apply(double x1, double x2) {
+//        double v = x1 - x2;
+//        return v * v;
+//      }
+//      @Override
+//      public double applyDerivative(double x1, double x2) {
+//        throw new UnsupportedOperationException();
+//      }
+//    });
+//    double error = errorVec.sum();
+//    System.out.printf("Error: %f\n", error);
+    
 
 //    System.out.printf("Output: %s\n", output);
 

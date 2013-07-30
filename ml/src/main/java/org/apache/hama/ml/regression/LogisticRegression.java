@@ -110,10 +110,7 @@ public class LogisticRegression {
    * @param trainingInstance
    */
   public void trainOnline(DoubleVector trainingInstance) {
-    // ann.trainOnline(trainingInstance);
-    DoubleMatrix[] updates = ann.trainByInstance(trainingInstance);
-//     System.out.printf("%s\n", updates[0]);
-    ann.updateWeightMatrices(updates);
+    ann.trainOnline(trainingInstance);
   }
 
   /**
