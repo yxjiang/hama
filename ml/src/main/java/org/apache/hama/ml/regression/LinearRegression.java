@@ -57,8 +57,9 @@ public class LinearRegression {
    * 
    * @param learningRate
    */
-  public void setLearningRate(double learningRate) {
+  public LinearRegression setLearningRate(double learningRate) {
     ann.setLearningRate(learningRate);
+    return this;
   }
 
   /**
@@ -74,8 +75,9 @@ public class LinearRegression {
    * 
    * @param momemtumWeight
    */
-  public void setMomemtumWeight(double momemtumWeight) {
+  public LinearRegression setMomemtumWeight(double momemtumWeight) {
     ann.setMomemtumWeight(momemtumWeight);
+    return this;
   }
 
   /**
@@ -93,8 +95,9 @@ public class LinearRegression {
    * 
    * @param regularizationWeight
    */
-  public void setRegularizationWeight(double regularizationWeight) {
+  public LinearRegression setRegularizationWeight(double regularizationWeight) {
     ann.setRegularizationWeight(regularizationWeight);
+    return this;
   }
 
   /**

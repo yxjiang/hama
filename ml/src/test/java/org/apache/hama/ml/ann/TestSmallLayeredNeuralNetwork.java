@@ -171,7 +171,7 @@ public class TestSmallLayeredNeuralNetwork {
     ann.addLayer(1, true, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.setCostFunction(FunctionFactory
         .createDoubleDoubleFunction("SquaredError"));
-    ann.setLearningRate(0.6);
+    ann.setLearningRate(0.5);
     ann.setMomemtumWeight(0.0);
 
     int iterations = 50000; // iteration should be set to a very large number
@@ -189,7 +189,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
       // the expected output is the last element in array
       double result = instances[i][2];
-      assertEquals(result, ann.getOutput(input).get(0), 0.05);
+      assertEquals(result, ann.getOutput(input).get(0), 0.1);
     }
 
     // write model into file and read out
@@ -206,7 +206,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
       // the expected output is the last element in array
       double result = instances[i][2];
-      assertEquals(result, annCopy.getOutput(input).get(0), 0.05);
+      assertEquals(result, annCopy.getOutput(input).get(0), 0.1);
     }
   }
   
@@ -218,10 +218,10 @@ public class TestSmallLayeredNeuralNetwork {
     ann.addLayer(1, true, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.setCostFunction(FunctionFactory
         .createDoubleDoubleFunction("SquaredError"));
-    ann.setLearningRate(0.7);
+    ann.setLearningRate(0.6);
     ann.setMomemtumWeight(0.5);
 
-    int iterations = 1000; // iteration should be set to a very large number
+    int iterations = 3000; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
       for (int j = 0; j < instances.length; ++j) {
@@ -233,7 +233,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
       // the expected output is the last element in array
       double result = instances[i][2];
-      assertEquals(result, ann.getOutput(input).get(0), 0.05);
+      assertEquals(result, ann.getOutput(input).get(0), 0.1);
     }
 
     // write model into file and read out
@@ -250,7 +250,7 @@ public class TestSmallLayeredNeuralNetwork {
       DoubleVector input = new DenseDoubleVector(instances[i]).slice(2);
       // the expected output is the last element in array
       double result = instances[i][2];
-      assertEquals(result, annCopy.getOutput(input).get(0), 0.05);
+      assertEquals(result, annCopy.getOutput(input).get(0), 0.1);
     }
   }
   
@@ -366,17 +366,17 @@ public class TestSmallLayeredNeuralNetwork {
     instanceList.subList(0, instanceList.size() - 100);
     
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
-    ann.setLearningRate(0.001);
-    ann.setMomemtumWeight(0.2);
-    ann.setRegularizationWeight(0.02);
+    ann.setLearningRate(0.01);
+    ann.setMomemtumWeight(0.6);
+    ann.setRegularizationWeight(0.01);
     ann.addLayer(dimension, false, FunctionFactory.createDoubleFunction("Sigmoid"));
-    ann.addLayer(dimension * 3, false, FunctionFactory.createDoubleFunction("Sigmoid"));
+    ann.addLayer(dimension, false, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.addLayer(dimension, false, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.addLayer(1, true, FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.setCostFunction(FunctionFactory.createDoubleDoubleFunction("CrossEntropy"));
     
     System.out.println(new Date());
-    int iterations = 8000;
+    int iterations = 7000;
     for (int i = 0; i < iterations; ++i) {
       for (double[] trainingInstance : instanceList) {
         ann.trainOnline(new DenseDoubleVector(trainingInstance));

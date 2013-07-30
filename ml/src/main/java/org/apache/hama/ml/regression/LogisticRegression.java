@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hama.ml.ann.SmallLayeredNeuralNetwork;
-import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 
@@ -54,8 +53,9 @@ public class LogisticRegression {
    * 
    * @param learningRate
    */
-  public void setLearningRate(double learningRate) {
+  public LogisticRegression setLearningRate(double learningRate) {
     ann.setLearningRate(learningRate);
+    return this;
   }
 
   /**
@@ -71,8 +71,9 @@ public class LogisticRegression {
    * 
    * @param momemtumWeight
    */
-  public void setMomemtumWeight(double momemtumWeight) {
+  public LogisticRegression setMomemtumWeight(double momemtumWeight) {
     ann.setMomemtumWeight(momemtumWeight);
+    return this;
   }
 
   /**
@@ -90,8 +91,9 @@ public class LogisticRegression {
    * 
    * @param regularizationWeight
    */
-  public void setRegularizationWeight(double regularizationWeight) {
+  public LogisticRegression setRegularizationWeight(double regularizationWeight) {
     ann.setRegularizationWeight(regularizationWeight);
+    return this;
   }
 
   /**

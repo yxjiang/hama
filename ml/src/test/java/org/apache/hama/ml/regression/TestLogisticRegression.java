@@ -106,7 +106,7 @@ public class TestLogisticRegression {
     regression.setLearningRate(0.0001);
     regression.setMomemtumWeight(0.3);
     regression.setRegularizationWeight(0.02);
-    int iterations = 1000;
+    int iterations = 3000;
     for (int i = 0; i < iterations; ++i) {
       for (double[] trainingInstance : instanceList) {
         regression.trainOnline(new DenseDoubleVector(trainingInstance));

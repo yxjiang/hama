@@ -30,7 +30,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
-import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
@@ -74,7 +73,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   public SmallLayeredNeuralNetwork(String modelPath) {
     super(modelPath);
   }
-
+  
   @Override
   /**
    * {@inheritDoc}
@@ -399,7 +398,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       // add regularization
       costFuncDerivative += this.regularizationWeight * lastWeightMatrix.getRowVector(i).sum();
       deltaVec.set(i, costFuncDerivative);
-//      deltaVec.set(i, deltaVec.get(i) * squashingFunction.applyDerivative(output.get(i + 1)));
+      deltaVec.set(i, deltaVec.get(i) * squashingFunction.applyDerivative(output.get(i + 1)));
     }
 
 //    System.out.printf("Delta output: %s\n", deltaVec.toString());

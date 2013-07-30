@@ -106,10 +106,10 @@ public class TestLinearRegression {
     int dimension = instanceList.get(0).length - 1;
     
     LinearRegression regression = new LinearRegression(dimension);
-    regression.setLearningRate(0.0000001);
+    regression.setLearningRate(0.00000005);
     regression.setMomemtumWeight(0.1);
     regression.setRegularizationWeight(0.05);
-    int iterations = 1000;
+    int iterations = 2000;
     for (int i = 0; i < iterations; ++i) {
       for (double[] trainingInstance : instanceList) {
         regression.trainOnline(new DenseDoubleVector(trainingInstance));
