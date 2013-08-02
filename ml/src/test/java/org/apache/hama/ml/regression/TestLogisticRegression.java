@@ -103,10 +103,10 @@ public class TestLogisticRegression {
     instanceList.subList(0, instanceList.size() - 100);
     
     LogisticRegression regression = new LogisticRegression(dimension);
-    regression.setLearningRate(0.0001);
-    regression.setMomemtumWeight(0.3);
+    regression.setLearningRate(0.001);
+    regression.setMomemtumWeight(0.5);
     regression.setRegularizationWeight(0.02);
-    int iterations = 3000;
+    int iterations = 10000;
     for (int i = 0; i < iterations; ++i) {
       for (double[] trainingInstance : instanceList) {
         regression.trainOnline(new DenseDoubleVector(trainingInstance));

@@ -30,18 +30,18 @@ import org.apache.hama.ml.perception.MLPMessage;
 import org.apache.hama.ml.writable.VectorWritable;
 
 /**
- * The trainer that is used to train the neural network with BSP. The trainer
+ * The trainer that is used to train the {@link SmallLayeredNeuralNetwork} with BSP. The trainer
  * would read the training data and obtain the trained parameters of the model.
  * 
  */
-public abstract class NeuralNetworkTrainer extends
+public class NeuralNetworkTrainer extends
     BSP<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> {
 
   protected Configuration conf;
   protected int maxIteration;
   protected int batchSize;
   protected String trainingMode;
-
+  
   @Override
   final public void setup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
@@ -59,17 +59,21 @@ public abstract class NeuralNetworkTrainer extends
    * @throws SyncException
    * @throws InterruptedException
    */
-  protected abstract void extraSetup(
+  protected void extraSetup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-      throws IOException, SyncException, InterruptedException;
+      throws IOException, SyncException, InterruptedException {
+    
+  }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public abstract void bsp(
+  public void bsp(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-      throws IOException, SyncException, InterruptedException;
+      throws IOException, SyncException, InterruptedException {
+    
+  }
 
   @Override
   public void cleanup(
@@ -88,8 +92,10 @@ public abstract class NeuralNetworkTrainer extends
    * @throws SyncException
    * @throws InterruptedException
    */
-  protected abstract void extraCleanup(
+  protected void extraCleanup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer)
-      throws IOException;
+      throws IOException {
+    
+  }
 
 }
