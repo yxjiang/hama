@@ -120,7 +120,7 @@ abstract class NeuralNetwork implements Writable {
    */
   protected void readFromModel() throws IOException {
     Preconditions.checkArgument(this.modelPath != null,
-        "Model path has not be set.");
+        "Model path has not been set.");
     Configuration conf = new Configuration();
     try {
       URI uri = new URI(this.modelPath);
