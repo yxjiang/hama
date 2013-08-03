@@ -56,7 +56,7 @@ public class TestSmallLayeredNeuralNetworkMessage {
     SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
         ownerIdx, isTerminated, matrices, null);
     Configuration conf = new Configuration();
-    String strPath = "tmp/testReadWrite-SmallLayeredNeuralNetworkMessage";
+    String strPath = "/tmp/testReadWriteSmallLayeredNeuralNetworkMessage";
     Path path = new Path(strPath);
     try {
       FileSystem fs = FileSystem.get(new URI(strPath), conf);
@@ -121,7 +121,7 @@ public class TestSmallLayeredNeuralNetworkMessage {
     SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
         ownerIdx, isTerminated, matrices, prevMatrices);
     Configuration conf = new Configuration();
-    String strPath = "tmp/testReadWrite-SmallLayeredNeuralNetworkMessage";
+    String strPath = "/tmp/testReadWriteSmallLayeredNeuralNetworkMessageWithPrev";
     Path path = new Path(strPath);
     try {
       FileSystem fs = FileSystem.get(new URI(strPath), conf);

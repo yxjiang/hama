@@ -67,7 +67,7 @@ public class TestSmallLayeredNeuralNetwork {
     ann.setWeightMatrices(matrices);
     
     //  write to file
-    String modelPath = "tmp/testReadWrite";
+    String modelPath = "/tmp/testSmallLayeredNeuralNetworkReadWrite";
     ann.setModelPath(modelPath);
     try {
       ann.writeModelToFile();
@@ -193,7 +193,7 @@ public class TestSmallLayeredNeuralNetwork {
     }
 
     // write model into file and read out
-    String modelPath = "tmp/testXORLocal";
+    String modelPath = "/tmp/testSmallLayeredNeuralNetworkXORLocal";
     ann.setModelPath(modelPath);
     try {
       ann.writeModelToFile();
@@ -237,7 +237,7 @@ public class TestSmallLayeredNeuralNetwork {
     }
 
     // write model into file and read out
-    String modelPath = "tmp/testXORLocal";
+    String modelPath = "/tmp/testSmallLayeredNeuralNetworkXORLocalWithMomentum";
     ann.setModelPath(modelPath);
     try {
       ann.writeModelToFile();
@@ -282,7 +282,7 @@ public class TestSmallLayeredNeuralNetwork {
     }
 
     // write model into file and read out
-    String modelPath = "tmp/testXORLocal";
+    String modelPath = "/tmp/testSmallLayeredNeuralNetworkXORLocalWithRegularization";
     ann.setModelPath(modelPath);
     try {
       ann.writeModelToFile();
