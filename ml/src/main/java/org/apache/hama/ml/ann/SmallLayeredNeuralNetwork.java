@@ -334,10 +334,11 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     // validate training instance
     int inputDimension = this.layerSizeList.get(0) - 1;
     int outputDimension = this.layerSizeList.get(this.layerSizeList.size() - 1);
-    Preconditions
-        .checkArgument(
-            inputDimension + outputDimension == trainingInstance.getDimension(),
-            "The dimension of training instance does not equals to the dimension of input layer plus dimension of output layer.");
+    Preconditions.checkArgument(
+        inputDimension + outputDimension == trainingInstance.getDimension(),
+        String.format(
+            "The dimension of training instance is %d, but requires %d.",
+            trainingInstance.getDimension(), inputDimension + outputDimension));
 
     if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
       return this.trainByInstanceGradientDescent(trainingInstance);
