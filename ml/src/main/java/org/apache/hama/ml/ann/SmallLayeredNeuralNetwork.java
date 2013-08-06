@@ -340,8 +340,25 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
             "The dimension of training instance is %d, but requires %d.",
             trainingInstance.getDimension(), inputDimension + outputDimension));
 
+    // prepare the features and labels
+    DoubleVector inputInstance = new DenseDoubleVector(
+        this.layerSizeList.get(0));
+    inputInstance.set(0, 1); // add bias
+    for (int i = 0; i < inputDimension; ++i) {
+      inputInstance.set(i + 1, trainingInstance.get(i));
+    }
+
+    DoubleVector labels = trainingInstance.sliceUnsafe(
+        inputInstance.getDimension() - 1, trainingInstance.getDimension() - 1);
+
+    List<DoubleVector> internalResults = this.getOutputInternal(inputInstance);
+    DoubleVector output = internalResults.get(internalResults.size() - 1);
+    
+    // get the training error
+    double trainingError = calculateTrainingError(labels, output);
+
     if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
-      return this.trainByInstanceGradientDescent(trainingInstance);
+      return this.trainByInstanceGradientDescent(labels, internalResults);
     }
     throw new IllegalArgumentException(
         String.format("Training method is not supported."));
@@ -354,20 +371,10 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * @param trainingInstance
    * @return The weight update matrices.
    */
-  private DoubleMatrix[] trainByInstanceGradientDescent(
-      DoubleVector trainingInstance) {
-    int inputDimension = this.layerSizeList.get(0) - 1;
+  private DoubleMatrix[] trainByInstanceGradientDescent(DoubleVector labels,
+      List<DoubleVector> internalResults) {
 
-    DoubleVector inputInstance = new DenseDoubleVector(
-        this.layerSizeList.get(0));
-    inputInstance.set(0, 1); // add bias
-    for (int i = 0; i < inputDimension; ++i) {
-      inputInstance.set(i + 1, trainingInstance.get(i));
-    }
-
-    DoubleVector labels = trainingInstance.sliceUnsafe(
-        inputInstance.getDimension() - 1, trainingInstance.getDimension() - 1);
-
+    DoubleVector output = internalResults.get(internalResults.size() - 1);
     // initialize weight update matrices
     DenseDoubleMatrix[] weightUpdateMatrices = new DenseDoubleMatrix[this.weightMatrixList
         .size()];
@@ -375,12 +382,8 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       weightUpdateMatrices[m] = new DenseDoubleMatrix(this.weightMatrixList
           .get(m).getRowCount(), this.weightMatrixList.get(m).getColumnCount());
     }
-
-    List<DoubleVector> internalResults = this.getOutputInternal(inputInstance);
-
     DoubleVector deltaVec = new DenseDoubleVector(
         this.layerSizeList.get(this.layerSizeList.size() - 1));
-    DoubleVector output = internalResults.get(internalResults.size() - 1);
 
     // // calculate norm-2 error ||t - o||^2
     // DoubleVector errorVec = output.slice(output.getDimension() -
@@ -492,6 +495,14 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       InterruptedException, ClassNotFoundException {
     // TODO Auto-generated method stub
 
+  }
+
+  @Override
+  protected double calculateTrainingError(DoubleVector labels,
+      DoubleVector output) {
+    DoubleVector errors = labels.deepCopy().applyToElements(output,
+        this.costFunction);
+    return errors.sum();
   }
 
 }
