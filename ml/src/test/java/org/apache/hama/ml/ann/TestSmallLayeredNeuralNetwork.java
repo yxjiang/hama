@@ -393,7 +393,6 @@ public class TestSmallLayeredNeuralNetwork {
       double actual = ann.getOutput(instance).get(0);
       if (actual < 0.5 && expected >= 0.5 || actual >= 0.5 && expected < 0.5) {
         ++errorRate;
-        System.out.printf("Actual: %f, Expected: %f\n", actual, expected);
       }
     }
     errorRate /= testInstances.size();

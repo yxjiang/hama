@@ -107,7 +107,6 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
         public double apply(double value) {
           return rnd.nextDouble() - 0.5;
         }
-
         @Override
         public double applyDerivative(double value) {
           throw new UnsupportedOperationException("");
@@ -234,17 +233,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * @return
    */
   public boolean isConverge() {
-    // check whether prev matrix updates is small enough
-    for (int i = 0; i < this.prevWeightUpdatesList.size(); ++i) {
-      DoubleMatrix updateMatrix = this.prevWeightUpdatesList.get(i);
-      DoubleMatrix weightMatrix = this.weightMatrixList.get(i);
-      double updateSum = updateMatrix.sum();
-      double weightSum = weightMatrix.sum();
-      if (updateSum != 0 && Math.abs(updateSum / weightSum) > 0.1) {
-        return false;
-      }
-    }
-    return true;
+    return this.canTerminate;
   }
 
   /**
@@ -356,6 +345,14 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     
     // get the training error
     double trainingError = calculateTrainingError(labels, output);
+    if (this.iterations++ % this.convergenceCheckInterval == 0) {
+      // average error does not decrease
+      if (this.prevAvgErrorBatch < this.curAvgErrorBatch) { 
+        this.canTerminate = true;
+      }
+      this.prevAvgErrorBatch = this.curAvgErrorBatch;
+    }
+    this.curAvgErrorBatch += trainingError / this.convergenceCheckInterval;
 
     if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
       return this.trainByInstanceGradientDescent(labels, internalResults);

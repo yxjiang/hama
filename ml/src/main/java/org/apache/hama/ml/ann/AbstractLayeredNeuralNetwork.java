@@ -54,6 +54,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   protected long iterations;
   protected double prevAvgErrorBatch = Double.MAX_VALUE;
   protected double curAvgErrorBatch;
+  protected boolean canTerminate;
   
   /* The weight of regularization */
   protected double regularizationWeight;
@@ -79,11 +80,13 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
     this.regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
     this.momentumWeight = DEFAULT_MOMENTUM_WEIGHT;
     this.trainingMethod = TrainingMethod.GRADIATE_DESCENT;
+    this.canTerminate = false;
   }
 
   public AbstractLayeredNeuralNetwork(String modelPath) {
     super(modelPath);
     this.iterations = 0;
+    this.canTerminate = false;
   }
   
   /**
