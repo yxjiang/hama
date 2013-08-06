@@ -40,7 +40,7 @@ public final class SmallLayeredNeuralNetworkTrainer
   private Configuration conf;
   /* Default batch size */
   private int batchSize;
-  
+
   @Override
   /**
    * If the model path is specified, load the existing from storage location.
@@ -49,7 +49,8 @@ public final class SmallLayeredNeuralNetworkTrainer
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
     this.conf = peer.getConfiguration();
     String existingModelPath = conf.get("existingModelPath");
-    if (existingModelPath != null) { // load existing model from specified location
+    if (existingModelPath != null) { // load existing model from specified
+                                     // location
       this.inMemoryModel = new SmallLayeredNeuralNetwork(existingModelPath);
     }
     this.batchSize = conf.getInt("training.batch.size", 500);
@@ -61,14 +62,43 @@ public final class SmallLayeredNeuralNetworkTrainer
    */
   public void cleanup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
-
   }
 
   @Override
   public void bsp(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer)
       throws IOException, SyncException, InterruptedException {
-    
+    while (!this.inMemoryModel.isConverge()) {
+      // each groom calculate the matrices updates according to local data
+      calculateUpdates(peer);
+      peer.sync();
+
+      // master merge the updates model
+      if (peer.getPeerIndex() == 0) {
+        mergeUpdates(peer);
+      }
+      peer.sync();
+
+    }
   }
+  
+  /**
+   * Calculate the matrices updates according to local partition of data.
+   * @param peer
+   */
+  private void calculateUpdates(
+      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
+
+  }
+
+  /**
+   * Merge the updates according to the updates of the grooms.
+   * @param peer
+   */
+  private void mergeUpdates(
+      BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
+
+  }
+
 
 }
