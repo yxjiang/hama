@@ -19,6 +19,8 @@ package org.apache.hama.ml.ann;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -36,6 +38,8 @@ import org.apache.hama.ml.writable.VectorWritable;
 public abstract class NeuralNetworkTrainer extends
     BSP<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> {
 
+  protected static final Log LOG = LogFactory.getLog(NeuralNetworkTrainer.class);
+  
   protected Configuration conf;
   protected int maxIteration;
   protected int batchSize;
@@ -78,7 +82,6 @@ public abstract class NeuralNetworkTrainer extends
       throws IOException {
     this.extraCleanup(peer);
     //  write model to modelPath
-    
   }
 
   /**

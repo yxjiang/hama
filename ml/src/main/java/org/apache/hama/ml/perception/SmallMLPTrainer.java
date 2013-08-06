@@ -36,7 +36,6 @@ import org.apache.hama.ml.writable.VectorWritable;
  */
 class SmallMLPTrainer extends NeuralNetworkTrainer {
 
-  private static final Log LOG = LogFactory.getLog(SmallMLPTrainer.class);
   /* used by master only, check whether all slaves finishes reading */
   private BitSet statusSet;
 
@@ -52,11 +51,11 @@ class SmallMLPTrainer extends NeuralNetworkTrainer {
   protected void extraSetup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) {
 
-    //  obtain parameters
+    // obtain parameters
     this.trainingMode = conf.get("training.mode", "minibatch.gradient.descent");
     // mini-batch by default
     this.batchSize = conf.getInt("training.batch.size", 100);
-    
+
     this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
 
     String outputModelPath = conf.get("modelPath");
