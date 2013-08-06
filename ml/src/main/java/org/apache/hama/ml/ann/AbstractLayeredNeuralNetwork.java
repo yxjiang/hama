@@ -44,17 +44,11 @@ import com.google.common.base.Preconditions;
  */
 abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
-  /* The interval to check the convergence, averaging every 500 examples      */
-  private static final int DEFAULT_CONVERGENCE_CHECK_INTERVAL = 500;
   private static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
   private static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
   
-  /* The number of instances between two convergence checks */
-  protected int convergenceCheckInterval;
-  protected long iterations;
-  protected double prevAvgErrorBatch = Double.MAX_VALUE;
-  protected double curAvgErrorBatch;
-  protected boolean canTerminate;
+  protected boolean isConverge;
+  double trainingError;
   
   /* The weight of regularization */
   protected double regularizationWeight;
@@ -75,32 +69,23 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   }
 
   public AbstractLayeredNeuralNetwork() {
-    this.iterations = 0;
-    this.convergenceCheckInterval = DEFAULT_CONVERGENCE_CHECK_INTERVAL;
     this.regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
     this.momentumWeight = DEFAULT_MOMENTUM_WEIGHT;
     this.trainingMethod = TrainingMethod.GRADIATE_DESCENT;
-    this.canTerminate = false;
+    this.isConverge = false;
   }
 
   public AbstractLayeredNeuralNetwork(String modelPath) {
     super(modelPath);
-    this.iterations = 0;
-    this.canTerminate = false;
+    this.isConverge = false;
   }
   
-  /**
-   * Set the number of examples between two convergence check.
-   * 
-   * @param interval
-   */
-  public void setConvergenceCheckInterval(int interval) {
-    Preconditions.checkArgument(interval > 0, "Interval must be larger than 0");
-    this.convergenceCheckInterval = interval;
+  public boolean isConverge() {
+    return isConverge;
   }
-  
-  public int getConvergenceCheckInterval() {
-    return this.convergenceCheckInterval;
+
+  void setConverge(boolean isConverge) {
+    this.isConverge = isConverge;
   }
 
   /**
@@ -221,7 +206,7 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @param output
    * @return
    */
-  protected abstract double calculateTrainingError(DoubleVector labels, DoubleVector output);
+  protected abstract void calculateTrainingError(DoubleVector labels, DoubleVector output);
   
   @Override
   public void readFields(DataInput input) throws IOException {

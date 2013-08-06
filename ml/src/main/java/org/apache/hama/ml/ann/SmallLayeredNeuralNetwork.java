@@ -130,7 +130,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
       this.weightMatrixList.set(i, matrix.add(matrices[i]));
     }
   }
-
+  
   /**
    * Add a batch of matrices onto the given destination matrices.
    * 
@@ -225,15 +225,6 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   @Override
   public DoubleMatrix getWeightsByLayer(int layerIdx) {
     return this.weightMatrixList.get(layerIdx);
-  }
-
-  /**
-   * Check whether the model converges.
-   * 
-   * @return
-   */
-  public boolean isConverge() {
-    return this.canTerminate;
   }
 
   /**
@@ -344,15 +335,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     DoubleVector output = internalResults.get(internalResults.size() - 1);
     
     // get the training error
-    double trainingError = calculateTrainingError(labels, output);
-    if (this.iterations++ % this.convergenceCheckInterval == 0) {
-      // average error does not decrease
-      if (this.prevAvgErrorBatch < this.curAvgErrorBatch) { 
-        this.canTerminate = true;
-      }
-      this.prevAvgErrorBatch = this.curAvgErrorBatch;
-    }
-    this.curAvgErrorBatch += trainingError / this.convergenceCheckInterval;
+    calculateTrainingError(labels, output);
 
     if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
       return this.trainByInstanceGradientDescent(labels, internalResults);
@@ -495,11 +478,11 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   }
 
   @Override
-  protected double calculateTrainingError(DoubleVector labels,
+  protected void calculateTrainingError(DoubleVector labels,
       DoubleVector output) {
     DoubleVector errors = labels.deepCopy().applyToElements(output,
         this.costFunction);
-    return errors.sum();
+    this.trainingError = errors.sum();
   }
 
 }
