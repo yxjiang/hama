@@ -419,11 +419,10 @@ public class TestSmallLayeredNeuralNetwork {
     String tmpStrDatasetPath = "/tmp/logistic_regression_data";
     Path tmpDatasetPath = new Path(tmpStrDatasetPath);
     String strDataPath = "src/test/resources/logistic_regression_data.txt";
-    Path dataInputPath = new Path(strDataPath);
     String modelPath = "/tmp/distributed-model";
 
     Configuration conf = new Configuration();
-    List<double[]> records = new ArrayList<double[]>();
+    List<double[]> instanceList = new ArrayList<double[]>();
     List<double[]> trainingInstances = null;
     List<double[]> testInstances = null;
     
@@ -444,11 +443,39 @@ public class TestSmallLayeredNeuralNetwork {
         for (int i = 0; i < tokens.length; ++i) {
           instance[i] = Double.parseDouble(tokens[i]);
         }
-        records.add(instance);
+        instanceList.add(instance);
       }
-      int trainingSize = (int)(records.size() * 0.8);
-      trainingInstances = records.subList(0, trainingSize);
-      testInstances = records.subList(trainingSize, records.size());
+      
+      int dimension = instanceList.get(0).length - 1;
+      // min-max normalization
+      double[] mins = new double[dimension];
+      double[] maxs = new double[dimension];
+      Arrays.fill(mins, Double.MAX_VALUE);
+      Arrays.fill(maxs, Double.MIN_VALUE);
+
+      for (double[] instance : instanceList) {
+        for (int i = 0; i < instance.length - 1; ++i) {
+          if (mins[i] > instance[i]) {
+            mins[i] = instance[i];
+          }
+          if (maxs[i] < instance[i]) {
+            maxs[i] = instance[i];
+          }
+        }
+      }
+
+      for (double[] instance : instanceList) {
+        for (int i = 0; i < instance.length - 1; ++i) {
+          double range = maxs[i] - mins[i];
+          if (range != 0) {
+            instance[i] = (instance[i] - mins[i]) / range;
+          }
+        }
+      }
+      
+      int trainingSize = (int)(instanceList.size() * 0.8);
+      trainingInstances = instanceList.subList(0, trainingSize);
+      testInstances = instanceList.subList(trainingSize, instanceList.size());
       for (double[] instance : trainingInstances) {
         DoubleVector vec = new DenseDoubleVector(instance);
         writer.append(new LongWritable(count++), new VectorWritable(vec));
@@ -466,9 +493,9 @@ public class TestSmallLayeredNeuralNetwork {
     // create model
     int dimension = 8;
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
-    ann.setLearningRate(0.001);
+    ann.setLearningRate(0.6);
     ann.setMomemtumWeight(0.6);
-    ann.setRegularizationWeight(0.001);
+    ann.setRegularizationWeight(0.01);
     ann.addLayer(dimension, false,
         FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.addLayer(dimension, false,
@@ -482,6 +509,7 @@ public class TestSmallLayeredNeuralNetwork {
 
     Date start = new Date();
     Map<String, String> trainingParameters = new HashMap<String, String>();
+    trainingParameters.put("tasks", "4");
     ann.train(tmpDatasetPath, trainingParameters);
 
     // validate results

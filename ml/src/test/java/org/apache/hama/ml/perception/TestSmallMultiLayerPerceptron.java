@@ -358,7 +358,6 @@ public class TestSmallMultiLayerPerceptron {
    * Test the XOR problem.
    */
   @Test
-  @Ignore
   public void testTrainingByXOR() {
     // write in some training instances
     Configuration conf = new Configuration();

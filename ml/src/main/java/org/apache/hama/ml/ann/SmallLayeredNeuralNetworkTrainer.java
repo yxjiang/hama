@@ -80,12 +80,15 @@ public final class SmallLayeredNeuralNetworkTrainer
   public void cleanup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
     // write model to modelPath
-    try {
-      Log.info(String.format("End of training, number of iterations: %d.\n", this.iterations));
-      System.out.printf("Write model back to %s\n", inMemoryModel.getModelPath());
-      this.inMemoryModel.writeModelToFile();
-    } catch (IOException e) {
-      e.printStackTrace();
+    if (peer.getPeerIndex() == 0) {
+      try {
+        Log.info(String.format("End of training, number of iterations: %d.\n",
+            this.iterations));
+        System.out.printf("Write model back to %s\n", inMemoryModel.getModelPath());
+        this.inMemoryModel.writeModelToFile();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
