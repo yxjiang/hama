@@ -26,8 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.WritableUtils;
+import org.apache.hama.HamaConfiguration;
+import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleFunction;
@@ -35,6 +40,8 @@ import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.apache.hama.ml.writable.MatrixWritable;
+import org.apache.hama.ml.writable.VectorWritable;
+import org.mortbay.log.Log;
 
 import com.google.common.base.Preconditions;
 
@@ -56,7 +63,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   protected List<DoubleMatrix> weightMatrixList;
 
   /* Previous weight updates between neurons at adjacent layers */
-  protected List<DenseDoubleMatrix> prevWeightUpdatesList;
+  protected List<DoubleMatrix> prevWeightUpdatesList;
 
   /* Different layers can have different squashing function */
   protected List<DoubleFunction> squashingFunctionList;
@@ -66,7 +73,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   public SmallLayeredNeuralNetwork() {
     this.layerSizeList = new ArrayList<Integer>();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
-    this.prevWeightUpdatesList = new ArrayList<DenseDoubleMatrix>();
+    this.prevWeightUpdatesList = new ArrayList<DoubleMatrix>();
     this.squashingFunctionList = new ArrayList<DoubleFunction>();
   }
 
@@ -131,6 +138,13 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     }
   }
   
+  void setPrevWeightMatrices(DoubleMatrix[] prevUpdates) {
+    this.prevWeightUpdatesList.clear();
+    for (DoubleMatrix prevUpdate : prevUpdates) {
+      this.prevWeightUpdatesList.add(prevUpdate);
+    }
+  }
+
   /**
    * Add a batch of matrices onto the given destination matrices.
    * 
@@ -172,6 +186,20 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     }
   }
 
+  /**
+   * Get the previous matrices updates in form of array.
+   * 
+   * @return
+   */
+  public DoubleMatrix[] getPrevMatricesUpdates() {
+    DoubleMatrix[] prevMatricesUpdates = new DoubleMatrix[this.prevWeightUpdatesList
+        .size()];
+    for (int i = 0; i < this.prevWeightUpdatesList.size(); ++i) {
+      prevMatricesUpdates[i] = this.prevWeightUpdatesList.get(i);
+    }
+    return prevMatricesUpdates;
+  }
+
   public void setWeightMatrix(int index, DoubleMatrix matrix) {
     Preconditions.checkArgument(
         0 <= index && index < this.weightMatrixList.size(),
@@ -194,7 +222,7 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     // read weights and construct matrices of previous updates
     int numOfMatrices = input.readInt();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
-    this.prevWeightUpdatesList = new ArrayList<DenseDoubleMatrix>();
+    this.prevWeightUpdatesList = new ArrayList<DoubleMatrix>();
     for (int i = 0; i < numOfMatrices; ++i) {
       DoubleMatrix matrix = MatrixWritable.read(input);
       this.weightMatrixList.add(matrix);
@@ -333,9 +361,9 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
 
     List<DoubleVector> internalResults = this.getOutputInternal(inputInstance);
     DoubleVector output = internalResults.get(internalResults.size() - 1);
-    
+
     // get the training error
-    calculateTrainingError(labels, output);
+    calculateTrainingError(labels, output.deepCopy().sliceUnsafe(1, output.getDimension() - 1));
 
     if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
       return this.trainByInstanceGradientDescent(labels, internalResults);
@@ -410,8 +438,8 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
           weightUpdateMatrices[layer]);
     }
 
-    this.prevWeightUpdatesList = Arrays.asList(weightUpdateMatrices);
-
+    this.setPrevWeightMatrices(weightUpdateMatrices);
+    
     return weightUpdateMatrices;
   }
 
@@ -473,16 +501,59 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
   protected void trainInternal(Path dataInputPath,
       Map<String, String> trainingParams) throws IOException,
       InterruptedException, ClassNotFoundException {
-    // TODO Auto-generated method stub
+    // add all training parameters to configuration
+    Configuration conf = new Configuration();
+    for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
+      conf.set(entry.getKey(), entry.getValue());
+    }
+
+    // if training parameters contains the model path, update the model path
+    String modelPath = trainingParams.get("modelPath");
+    if (modelPath != null) {
+      this.modelPath = modelPath;
+    }
+    // modelPath must be set before training
+    if (this.modelPath == null) {
+      throw new IllegalArgumentException(
+          "Please specify the modelPath for model, "
+              + "either through setModelPath() or add 'modelPath' to the training parameters.");
+    }
+
+    conf.set("modelPath", this.modelPath);
+    this.writeModelToFile();
+
+    HamaConfiguration hamaConf = new HamaConfiguration(conf);
+
+    // create job
+    BSPJob job = new BSPJob(hamaConf, SmallLayeredNeuralNetworkTrainer.class);
+    job.setJobName("Small scale Neural Network training");
+    job.setJarByClass(SmallLayeredNeuralNetworkTrainer.class);
+    job.setBspClass(SmallLayeredNeuralNetworkTrainer.class);
+    job.setInputPath(dataInputPath);
+    job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+    job.setInputKeyClass(LongWritable.class);
+    job.setInputValueClass(VectorWritable.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(NullWritable.class);
+    job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
+
+    int numTasks = conf.getInt("tasks", 1);
+    job.setNumBspTask(numTasks);
+    job.waitForCompletion(true);
+
+    // reload learned model
+    Log.info(String.format("Reload model from %s.", this.modelPath));
+    this.readFromModel();
 
   }
 
   @Override
-  protected void calculateTrainingError(DoubleVector labels,
-      DoubleVector output) {
+  protected void calculateTrainingError(DoubleVector labels, DoubleVector output) {
     DoubleVector errors = labels.deepCopy().applyToElements(output,
         this.costFunction);
+//    System.out.printf("Labels: %s\tOutput: %s\n", labels, output);
     this.trainingError = errors.sum();
+//    System.out.printf("Training error: %s\n", errors);
   }
 
 }

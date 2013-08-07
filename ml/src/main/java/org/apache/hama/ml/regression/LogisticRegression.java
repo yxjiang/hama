@@ -126,15 +126,7 @@ public class LogisticRegression {
    * @throws ClassNotFoundException
    */
   public void train(Path dataInputPath, Map<String, String> trainingParams) {
-    try {
-      ann.train(dataInputPath, trainingParams);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
+    ann.train(dataInputPath, trainingParams);
   }
 
   /**

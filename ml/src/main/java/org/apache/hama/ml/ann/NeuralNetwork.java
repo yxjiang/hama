@@ -94,13 +94,20 @@ abstract class NeuralNetwork implements Writable {
    * @param trainingParams The parameters for training.
    * @throws IOException
    */
-  public void train(Path dataInputPath, Map<String, String> trainingParams)
-      throws IOException, InterruptedException, ClassNotFoundException {
+  public void train(Path dataInputPath, Map<String, String> trainingParams) {
     Preconditions.checkArgument(this.modelPath != null, "Please set the model path before training.");
     // train with BSP job
-    trainInternal(dataInputPath, trainingParams);
-    // write the trained model back to model path
-    this.readFromModel();
+    try {
+      trainInternal(dataInputPath, trainingParams);
+      // write the trained model back to model path
+      this.readFromModel();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
   }
 
   /**

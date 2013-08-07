@@ -33,21 +33,24 @@ import org.apache.hama.ml.writable.MatrixWritable;
  */
 public class SmallLayeredNeuralNetworkMessage implements Writable {
 
-  protected int ownerIdx;
-  protected boolean terminated;
+  protected double trainingError;
   protected DoubleMatrix[] curMatrices;
   protected DoubleMatrix[] prevMatrices;
-  
-  public SmallLayeredNeuralNetworkMessage(int ownerIdx, boolean terminated, DoubleMatrix[] weightMatrices, DoubleMatrix[] prevMatrices) {
-    this.ownerIdx = ownerIdx;
-    this.terminated = terminated;
+  protected boolean converge;
+
+  public SmallLayeredNeuralNetworkMessage(
+      double trainingError, boolean converge, DoubleMatrix[] weightMatrices,
+      DoubleMatrix[] prevMatrices) {
+    this.trainingError = trainingError;
+    this.converge = converge;
     this.curMatrices = weightMatrices;
     this.prevMatrices = prevMatrices;
   }
 
   @Override
   public void readFields(DataInput input) throws IOException {
-    terminated = input.readBoolean();
+    trainingError = input.readDouble();
+    converge = input.readBoolean();
     int numMatrices = input.readInt();
     boolean hasPrevMatrices = input.readBoolean();
     curMatrices = new DenseDoubleMatrix[numMatrices];
@@ -55,7 +58,7 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
     for (int i = 0; i < curMatrices.length; ++i) {
       curMatrices[i] = (DenseDoubleMatrix) MatrixWritable.read(input);
     }
-    
+
     if (hasPrevMatrices) {
       prevMatrices = new DenseDoubleMatrix[numMatrices];
       // read previous matrices updates
@@ -67,12 +70,12 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
 
   @Override
   public void write(DataOutput output) throws IOException {
-    output.writeBoolean(terminated);
+    output.writeDouble(trainingError);
+    output.writeBoolean(converge);
     output.writeInt(curMatrices.length);
     if (prevMatrices == null) {
       output.writeBoolean(false);
-    }
-    else {
+    } else {
       output.writeBoolean(true);
     }
     for (int i = 0; i < curMatrices.length; ++i) {
@@ -85,12 +88,20 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
     }
   }
 
-  public void setTerminated(boolean terminated) {
-    this.terminated = terminated;
+  public double getTrainingError() {
+    return trainingError;
   }
 
-  public boolean isTerminated() {
-    return terminated;
+  public void setTrainingError(double trainingError) {
+    this.trainingError = trainingError;
+  }
+  
+  public boolean isConverge() {
+    return converge;
+  }
+
+  public void setConverge(boolean converge) {
+    this.converge = converge;
   }
 
   public DoubleMatrix[] getCurMatrices() {
@@ -108,5 +119,5 @@ public class SmallLayeredNeuralNetworkMessage implements Writable {
   public void setPrevMatrices(DoubleMatrix[] prevMatrices) {
     this.prevMatrices = prevMatrices;
   }
-  
+
 }

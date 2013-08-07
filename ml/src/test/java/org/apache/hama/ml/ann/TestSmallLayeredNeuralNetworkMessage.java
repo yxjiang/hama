@@ -21,6 +21,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,7 +32,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hama.ml.ann.SmallLayeredNeuralNetworkMessage;
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.junit.Test;
@@ -44,17 +44,17 @@ public class TestSmallLayeredNeuralNetworkMessage {
 
   @Test
   public void testReadWriteWithoutPrev() {
-    boolean isTerminated = false;
-    int ownerIdx = 11;
+    double error = 0.22;
     double[][] matrix1 = new double[][] { { 0.1, 0.2, 0.8, 0.5 },
         { 0.3, 0.4, 0.6, 0.2 }, { 0.5, 0.6, 0.1, 0.5 } };
     double[][] matrix2 = new double[][] { { 0.8, 1.2, 0.5 } };
     DoubleMatrix[] matrices = new DoubleMatrix[2];
     matrices[0] = new DenseDoubleMatrix(matrix1);
     matrices[1] = new DenseDoubleMatrix(matrix2);
+    
+    boolean isConverge = false;
 
-    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
-        ownerIdx, isTerminated, matrices, null);
+    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(error, isConverge, matrices, null);
     Configuration conf = new Configuration();
     String strPath = "/tmp/testReadWriteSmallLayeredNeuralNetworkMessage";
     Path path = new Path(strPath);
@@ -65,11 +65,11 @@ public class TestSmallLayeredNeuralNetworkMessage {
       out.close();
 
       FSDataInputStream in = fs.open(path);
-      SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(
-          0, false, null, null);
+      SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(0, isConverge, null, null);
       readMessage.readFields(in);
       in.close();
-      assertFalse(readMessage.isTerminated());
+      assertEquals(error, readMessage.getTrainingError(), 0.000001);
+      assertFalse(readMessage.isConverge());
       DoubleMatrix[] readMatrices = readMessage.getCurMatrices();
       assertEquals(2, readMatrices.length);
       for (int i = 0; i < readMatrices.length; ++i) {
@@ -94,8 +94,9 @@ public class TestSmallLayeredNeuralNetworkMessage {
 
   @Test
   public void testReadWriteWithPrev() {
-    boolean isTerminated = false;
-    int ownerIdx = 11;
+    double error = 0.22;
+    boolean isConverge = true;
+    
     double[][] matrix1 = new double[][] { { 0.1, 0.2, 0.8, 0.5 },
         { 0.3, 0.4, 0.6, 0.2 }, { 0.5, 0.6, 0.1, 0.5 } };
     double[][] matrix2 = new double[][] { { 0.8, 1.2, 0.5 } };
@@ -118,8 +119,7 @@ public class TestSmallLayeredNeuralNetworkMessage {
     prevMatrices[0] = new DenseDoubleMatrix(prevMatrix1);
     prevMatrices[1] = new DenseDoubleMatrix(prevMatrix2);
 
-    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
-        ownerIdx, isTerminated, matrices, prevMatrices);
+    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(error, isConverge, matrices, prevMatrices);
     Configuration conf = new Configuration();
     String strPath = "/tmp/testReadWriteSmallLayeredNeuralNetworkMessageWithPrev";
     Path path = new Path(strPath);
@@ -130,11 +130,11 @@ public class TestSmallLayeredNeuralNetworkMessage {
       out.close();
 
       FSDataInputStream in = fs.open(path);
-      SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(
-          0, false, null, null);
+      SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(0, isConverge, null, null);
       readMessage.readFields(in);
       in.close();
-      assertFalse(readMessage.isTerminated());
+      
+      assertTrue(readMessage.isConverge());
       
       DoubleMatrix[] readMatrices = readMessage.getCurMatrices();
       assertEquals(2, readMatrices.length);
