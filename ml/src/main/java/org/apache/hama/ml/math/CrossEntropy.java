@@ -29,6 +29,10 @@ public class CrossEntropy extends DoubleDoubleFunction {
 
   @Override
   public double apply(double target, double actual) {
+    target = (target == 0? 0.000001 : target);
+    target = (target == 1.0? 0.999999 : target);
+    actual = (actual == 0? 0.000001 : actual);
+    actual = (actual == 1? 0.999999 : actual);
     return -target * Math.log(actual) - (1 - target) * Math.log(1 - actual);
   }
 
