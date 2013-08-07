@@ -445,6 +445,7 @@ public class TestSmallLayeredNeuralNetwork {
         }
         instanceList.add(instance);
       }
+      br.close();
       
       int dimension = instanceList.get(0).length - 1;
       // min-max normalization
@@ -473,14 +474,13 @@ public class TestSmallLayeredNeuralNetwork {
         }
       }
       
-      int trainingSize = (int)(instanceList.size() * 0.8);
+      int trainingSize = instanceList.size() - 100;
       trainingInstances = instanceList.subList(0, trainingSize);
       testInstances = instanceList.subList(trainingSize, instanceList.size());
       for (double[] instance : trainingInstances) {
         DoubleVector vec = new DenseDoubleVector(instance);
         writer.append(new LongWritable(count++), new VectorWritable(vec));
       }
-      br.close();
       writer.close();
     } catch (FileNotFoundException e) {
       e.printStackTrace();
