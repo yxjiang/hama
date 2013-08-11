@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleVector;
 import org.junit.Test;
+import org.mortbay.log.Log;
 
 /**
  * Test the functionalities of LogisticRegression.
@@ -51,14 +52,8 @@ public class TestLogisticRegression {
         }
         String[] tokens = line.trim().split(",");
         double[] instance = new double[tokens.length];
-        for (int i = 0; i < tokens.length - 1; ++i) {
+        for (int i = 0; i < tokens.length; ++i) {
           instance[i] = Double.parseDouble(tokens[i]);
-        }
-        if (tokens[tokens.length - 1].equals("tested_negative")) {
-          instance[tokens.length - 1] = 0;
-        }
-        else {
-          instance[tokens.length - 1] = 1;
         }
         instanceList.add(instance);
       }
@@ -100,15 +95,15 @@ public class TestLogisticRegression {
     // divide dataset into training and testing
     List<double[]> testInstances = new ArrayList<double[]>();
     testInstances.addAll(instanceList.subList(instanceList.size() - 100, instanceList.size()));
-    instanceList.subList(0, instanceList.size() - 100);
+    List<double[]> trainingInstances = instanceList.subList(0, instanceList.size() - 100);
     
     LogisticRegression regression = new LogisticRegression(dimension);
-    regression.setLearningRate(0.001);
-    regression.setMomemtumWeight(0.5);
-    regression.setRegularizationWeight(0.02);
-    int iterations = 10000;
+    regression.setLearningRate(0.2);
+    regression.setMomemtumWeight(0.1);
+    regression.setRegularizationWeight(0.1);
+    int iterations = 1000;
     for (int i = 0; i < iterations; ++i) {
-      for (double[] trainingInstance : instanceList) {
+      for (double[] trainingInstance : trainingInstances) {
         regression.trainOnline(new DenseDoubleVector(trainingInstance));
       }
     }
@@ -118,16 +113,16 @@ public class TestLogisticRegression {
     for (double[] testInstance : testInstances) {
       DoubleVector instance = new DenseDoubleVector(testInstance);
       double expected = instance.get(instance.getDimension() - 1);
-      instance = instance.slice(instance.getDimension() - 1);
-      double actual = regression.getOutput(instance).get(0);
+      DoubleVector features = instance.slice(instance.getDimension() - 1);
+      double actual = regression.getOutput(features).get(0);
       if (actual < 0.5 && expected >= 0.5 || actual >= 0.5 && expected < 0.5) {
         ++errorRate;
-        System.out.printf("Actual: %f, Expected: %f\n", actual, expected);
       }
+      
     }
     errorRate /= testInstances.size();
     
-    System.out.printf("Relative error: %f%%\n", errorRate * 100);
+    Log.info(String.format("Relative error: %f%%\n", errorRate * 100));
   }
 
 }

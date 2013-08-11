@@ -21,7 +21,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -151,18 +150,13 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
    * @param destMatrices
    * @param sourceMatrices
    */
-  public static void matricesAdd(DoubleMatrix[] destMatrices,
+  static void matricesAdd(DoubleMatrix[] destMatrices,
       DoubleMatrix[] sourceMatrices) {
-    Preconditions
-        .checkArgument(
-            destMatrices != null && sourceMatrices != null
-                && destMatrices.length == sourceMatrices.length,
-            "Number of matrices should be equal for both destination matrices and source matrices.");
     for (int i = 0; i < destMatrices.length; ++i) {
       destMatrices[i] = destMatrices[i].add(sourceMatrices[i]);
     }
   }
-
+  
   /**
    * Get all the weight matrices.
    * 
@@ -248,6 +242,8 @@ public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
     for (int i = 0; i < this.weightMatrixList.size(); ++i) {
       MatrixWritable.write(this.weightMatrixList.get(i), output);
     }
+    
+    // DO NOT WRITE WEIGHT UPDATE
   }
 
   @Override

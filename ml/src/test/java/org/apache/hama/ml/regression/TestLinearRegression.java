@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleVector;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mortbay.log.Log;
 
 /**
  * Test the functionalities of the linear regression model.
@@ -69,7 +69,7 @@ public class TestLinearRegression {
     }
     
     relativeError /= instances.length;
-    System.out.printf("Relative error %f%%\n", relativeError);
+    Log.info(String.format("Relative error %f%%\n", relativeError));
   }
 
   @Test
@@ -101,7 +101,7 @@ public class TestLinearRegression {
     // divide dataset into training and testing
     List<double[]> testInstances = new ArrayList<double[]>();
     testInstances.addAll(instanceList.subList(instanceList.size() - 20, instanceList.size()));
-    instanceList.subList(0, instanceList.size() - 20);
+    List<double[]> trainingInstances = instanceList.subList(0, instanceList.size() - 20);
     
     int dimension = instanceList.get(0).length - 1;
     
@@ -111,7 +111,7 @@ public class TestLinearRegression {
     regression.setRegularizationWeight(0.05);
     int iterations = 2000;
     for (int i = 0; i < iterations; ++i) {
-      for (double[] trainingInstance : instanceList) {
+      for (double[] trainingInstance : trainingInstances) {
         regression.trainOnline(new DenseDoubleVector(trainingInstance));
       }
     }
@@ -130,7 +130,7 @@ public class TestLinearRegression {
     }
     relativeError /= testInstances.size();
     
-    System.out.printf("Relative error: %f%%\n", relativeError * 100);
+    Log.info(String.format("Relative error: %f%%\n", relativeError * 100));
   }
 
 }

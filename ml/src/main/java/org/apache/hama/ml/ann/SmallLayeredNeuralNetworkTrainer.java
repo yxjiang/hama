@@ -70,7 +70,7 @@ public final class SmallLayeredNeuralNetworkTrainer
     this.modelPath = conf.get("modelPath");
     this.inMemoryModel = new SmallLayeredNeuralNetwork(modelPath);
     this.prevAvgTrainingError = Integer.MAX_VALUE;
-    this.batchSize = conf.getInt("training.batch.size", 100);
+    this.batchSize = conf.getInt("training.batch.size", 50);
   }
 
   @Override
@@ -84,7 +84,7 @@ public final class SmallLayeredNeuralNetworkTrainer
       try {
         Log.info(String.format("End of training, number of iterations: %d.\n",
             this.iterations));
-        System.out.printf("Write model back to %s\n", inMemoryModel.getModelPath());
+        Log.info(String.format("Write model back to %s\n", inMemoryModel.getModelPath()));
         this.inMemoryModel.writeModelToFile();
       } catch (IOException e) {
         e.printStackTrace();
@@ -97,7 +97,6 @@ public final class SmallLayeredNeuralNetworkTrainer
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer)
       throws IOException, SyncException, InterruptedException {
     while (this.iterations++ < maxIterations) {
-      
       // each groom calculate the matrices updates according to local data
       calculateUpdates(peer);
       peer.sync();
@@ -121,20 +120,18 @@ public final class SmallLayeredNeuralNetworkTrainer
       throws IOException {
     // receive update information from master
     if (peer.getNumCurrentMessages() != 0) {
-      SmallLayeredNeuralNetworkMessage message = peer.getCurrentMessage();
-      DoubleMatrix[] curMatrix = message.getCurMatrices();
-      this.inMemoryModel.setWeightMatrices(curMatrix);
-      boolean isConverge = message.isConverge();
+      SmallLayeredNeuralNetworkMessage inMessage = peer.getCurrentMessage();
+      DoubleMatrix[] newWeights = inMessage.getCurMatrices();
+      DoubleMatrix[] preWeightUpdates = inMessage.getPrevMatrices();
+      this.inMemoryModel.setWeightMatrices(newWeights);
+      this.inMemoryModel.setPrevWeightMatrices(preWeightUpdates);
+      boolean isConverge = inMessage.isConverge();
+      // check converge
       if (isConverge) {
         return;
       }
     }
 
-    // continue to train
-    int recordsRead = 0;
-    double avgTrainingError = 0.0;
-    LongWritable key = new LongWritable();
-    VectorWritable value = new VectorWritable();
     DoubleMatrix[] weightUpdates = new DoubleMatrix[this.inMemoryModel.weightMatrixList.size()];
     for (int i = 0; i < weightUpdates.length; ++i) {
       int row = this.inMemoryModel.weightMatrixList.get(i).getRowCount();
@@ -142,15 +139,20 @@ public final class SmallLayeredNeuralNetworkTrainer
       weightUpdates[i] = new DenseDoubleMatrix(row, col);
     }
     
-    while (recordsRead++ < batchSize) {
+    // continue to train
+    double avgTrainingError = 0.0;
+    LongWritable key = new LongWritable();
+    VectorWritable value = new VectorWritable();
+    for (int recordsRead = 0; recordsRead < batchSize; ++recordsRead) {
       if (peer.readNext(key, value) == false) {
         peer.reopenInput();
         peer.readNext(key, value);
       }
       DoubleVector trainingInstance = value.getVector();
       SmallLayeredNeuralNetwork.matricesAdd(weightUpdates, this.inMemoryModel.trainByInstance(trainingInstance));
-      avgTrainingError += this.inMemoryModel.trainingError / batchSize;
+      avgTrainingError += this.inMemoryModel.trainingError;
     }
+    avgTrainingError /= batchSize;
     
     // calculate the average of updates
     for (int i = 0; i < weightUpdates.length; ++i) {
@@ -173,7 +175,6 @@ public final class SmallLayeredNeuralNetworkTrainer
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer)
       throws IOException {
     int numMessages = peer.getNumCurrentMessages();
-
     if (numMessages == 0) { // converges
       this.inMemoryModel.setConverge(true);
       return;
@@ -192,10 +193,11 @@ public final class SmallLayeredNeuralNetworkTrainer
         SmallLayeredNeuralNetwork.matricesAdd(matricesUpdates, message.getCurMatrices());
         SmallLayeredNeuralNetwork.matricesAdd(prevMatricesUpdates, message.getPrevMatrices());
       }
-      avgTrainingError += message.getTrainingError() / numMessages;
+      avgTrainingError += message.getTrainingError();
     }
 
     if (numMessages != 1) {
+      avgTrainingError /= numMessages;
       for (int i = 0; i < matricesUpdates.length; ++i) {
         matricesUpdates[i] = matricesUpdates[i].divide(numMessages);
         prevMatricesUpdates[i] = prevMatricesUpdates[i].divide(numMessages);
@@ -206,7 +208,6 @@ public final class SmallLayeredNeuralNetworkTrainer
 
     // check convergence
     if (iterations % convergenceCheckInterval == 0) {
-      System.out.printf("Prev avg error %f, cur avg error %f\n", prevAvgTrainingError, curAvgTrainingError);
       if (prevAvgTrainingError < curAvgTrainingError) {
         // error cannot decrease any more
         this.inMemoryModel.setConverge(true);

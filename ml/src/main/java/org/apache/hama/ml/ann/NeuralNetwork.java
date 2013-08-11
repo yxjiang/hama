@@ -46,6 +46,7 @@ abstract class NeuralNetwork implements Writable {
   private static final double DEFAULT_LEARNING_RATE = 0.5;
 
   protected double learningRate;
+  protected boolean learningRateDecay = false;
 
   // the name of the model
   protected String modelType;
@@ -81,6 +82,10 @@ abstract class NeuralNetwork implements Writable {
 
   public double getLearningRate() {
     return this.learningRate;
+  }
+  
+  public void isLearningRateDecay(boolean decay) {
+    this.learningRateDecay = decay;
   }
   
   public String getModelType() {

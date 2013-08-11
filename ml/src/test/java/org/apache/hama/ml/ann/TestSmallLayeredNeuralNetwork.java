@@ -28,6 +28,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -45,15 +46,15 @@ import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.apache.hama.ml.writable.VectorWritable;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mortbay.log.Log;
 
 /**
  * Test the functionality of SmallLayeredNeuralNetwork.
  * 
  */
 public class TestSmallLayeredNeuralNetwork {
-
+  
   @Test
   public void testReadWrite() {
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
@@ -175,7 +176,6 @@ public class TestSmallLayeredNeuralNetwork {
     assertEquals(0.8315410, output.get(0), 0.000001);
   }
 
-  @Ignore
   @Test
   public void testXORlocal() {
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
@@ -223,7 +223,6 @@ public class TestSmallLayeredNeuralNetwork {
     }
   }
 
-  @Ignore
   @Test
   public void testXORWithMomentum() {
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
@@ -268,7 +267,6 @@ public class TestSmallLayeredNeuralNetwork {
     }
   }
 
-  @Ignore
   @Test
   public void testXORLocalWithRegularization() {
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
@@ -314,7 +312,6 @@ public class TestSmallLayeredNeuralNetwork {
     }
   }
 
-  @Ignore
   @Test
   public void testTwoClassClassification() {
     // use logistic regression data
@@ -371,11 +368,11 @@ public class TestSmallLayeredNeuralNetwork {
     List<double[]> testInstances = new ArrayList<double[]>();
     testInstances.addAll(instanceList.subList(instanceList.size() - 100,
         instanceList.size()));
-    instanceList.subList(0, instanceList.size() - 100);
+    List<double[]> trainingInstances = instanceList.subList(0, instanceList.size() - 100);
 
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
-    ann.setLearningRate(0.01);
-    ann.setMomemtumWeight(0.6);
+    ann.setLearningRate(0.001);
+    ann.setMomemtumWeight(0.1);
     ann.setRegularizationWeight(0.01);
     ann.addLayer(dimension, false,
         FunctionFactory.createDoubleFunction("Sigmoid"));
@@ -387,14 +384,15 @@ public class TestSmallLayeredNeuralNetwork {
     ann.setCostFunction(FunctionFactory
         .createDoubleDoubleFunction("CrossEntropy"));
 
-    System.out.println(new Date());
-    int iterations = 7000;
+    long start = new Date().getTime();
+    int iterations = 1000;
     for (int i = 0; i < iterations; ++i) {
-      for (double[] trainingInstance : instanceList) {
+      for (double[] trainingInstance : trainingInstances) {
         ann.trainOnline(new DenseDoubleVector(trainingInstance));
       }
     }
-    System.out.println(new Date());
+    long end = new Date().getTime();
+    Log.info(String.format("Training time: %fs\n", (double)(end - start) / 1000));
 
     double errorRate = 0;
     // calculate the error on test instance
@@ -409,12 +407,11 @@ public class TestSmallLayeredNeuralNetwork {
     }
     errorRate /= testInstances.size();
 
-    System.out.printf("Relative error: %f%%\n", errorRate * 100);
+    Log.info(String.format("Relative error: %f%%\n", errorRate * 100));
   }
 
   @Test
   public void testDistributedVersion() {
-    System.out.println("Test distributed version.");
     // write data into a sequence file
     String tmpStrDatasetPath = "/tmp/logistic_regression_data";
     Path tmpDatasetPath = new Path(tmpStrDatasetPath);
@@ -432,8 +429,7 @@ public class TestSmallLayeredNeuralNetwork {
       if (fs.exists(tmpDatasetPath)) {
         fs.createNewFile(tmpDatasetPath);
       }
-      SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf,
-          tmpDatasetPath, LongWritable.class, VectorWritable.class);
+      
       BufferedReader br = new BufferedReader(new FileReader(strDataPath));
       String line = null;
       int count = 0;
@@ -456,12 +452,8 @@ public class TestSmallLayeredNeuralNetwork {
 
       for (double[] instance : instanceList) {
         for (int i = 0; i < instance.length - 1; ++i) {
-          if (mins[i] > instance[i]) {
-            mins[i] = instance[i];
-          }
-          if (maxs[i] < instance[i]) {
-            maxs[i] = instance[i];
-          }
+          mins[i] = Math.min(mins[i], instance[i]);
+          maxs[i] = Math.max(maxs[i], instance[i]);
         }
       }
 
@@ -474,9 +466,17 @@ public class TestSmallLayeredNeuralNetwork {
         }
       }
       
-      int trainingSize = instanceList.size() - 100;
-      trainingInstances = instanceList.subList(0, trainingSize);
-      testInstances = instanceList.subList(trainingSize, instanceList.size());
+      // write training data to temporal sequence file
+      SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf,
+          tmpDatasetPath, LongWritable.class, VectorWritable.class);
+      int testSize = 150;
+      
+      Collections.shuffle(instanceList);
+      testInstances = new ArrayList<double[]>();
+      testInstances.addAll(instanceList.subList(instanceList.size() - testSize,
+          instanceList.size()));
+      trainingInstances = instanceList.subList(0, instanceList.size() - testSize);
+      
       for (double[] instance : trainingInstances) {
         DoubleVector vec = new DenseDoubleVector(instance);
         writer.append(new LongWritable(count++), new VectorWritable(vec));
@@ -493,9 +493,9 @@ public class TestSmallLayeredNeuralNetwork {
     // create model
     int dimension = 8;
     SmallLayeredNeuralNetwork ann = new SmallLayeredNeuralNetwork();
-    ann.setLearningRate(0.6);
-    ann.setMomemtumWeight(0.6);
-    ann.setRegularizationWeight(0.01);
+    ann.setLearningRate(0.7);
+    ann.setMomemtumWeight(0.5);
+    ann.setRegularizationWeight(0.1);
     ann.addLayer(dimension, false,
         FunctionFactory.createDoubleFunction("Sigmoid"));
     ann.addLayer(dimension, false,
@@ -507,10 +507,15 @@ public class TestSmallLayeredNeuralNetwork {
         .createDoubleDoubleFunction("CrossEntropy"));
     ann.setModelPath(modelPath);
 
-    Date start = new Date();
+    long start = new Date().getTime();
     Map<String, String> trainingParameters = new HashMap<String, String>();
-    trainingParameters.put("tasks", "4");
+    trainingParameters.put("tasks", "5");
+    trainingParameters.put("training.max.iterations", "3000");
+    trainingParameters.put("training.batch.size", "500");
+    trainingParameters.put("convergence.check.interval", "100");
     ann.train(tmpDatasetPath, trainingParameters);
+    
+    long end = new Date().getTime();
 
     // validate results
     double errorRate = 0;
@@ -526,8 +531,8 @@ public class TestSmallLayeredNeuralNetwork {
     }
     errorRate /= testInstances.size();
 
-    System.out.printf("Relative error: %f%%\n", errorRate * 100);
-    System.out.printf("Start: %s, End: %s\n", start, new Date());
+    Log.info(String.format("Training time: %fs\n", (double)(end - start) / 1000));
+    Log.info(String.format("Relative error: %f%%\n", errorRate * 100));
   }
 
 }
