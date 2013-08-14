@@ -232,9 +232,9 @@ public class TestSmallLayeredNeuralNetwork {
     ann.setCostFunction(FunctionFactory
         .createDoubleDoubleFunction("SquaredError"));
     ann.setLearningRate(0.6);
-    ann.setMomemtumWeight(0.5);
+    ann.setMomemtumWeight(0.3);
 
-    int iterations = 3000; // iteration should be set to a very large number
+    int iterations = 2000; // iteration should be set to a very large number
     double[][] instances = { { 0, 1, 1 }, { 0, 0, 0 }, { 1, 0, 1 }, { 1, 1, 0 } };
     for (int i = 0; i < iterations; ++i) {
       for (int j = 0; j < instances.length; ++j) {
@@ -510,9 +510,9 @@ public class TestSmallLayeredNeuralNetwork {
     long start = new Date().getTime();
     Map<String, String> trainingParameters = new HashMap<String, String>();
     trainingParameters.put("tasks", "5");
-    trainingParameters.put("training.max.iterations", "3000");
-    trainingParameters.put("training.batch.size", "500");
-    trainingParameters.put("convergence.check.interval", "100");
+    trainingParameters.put("training.max.iterations", "2000");
+    trainingParameters.put("training.batch.size", "300");
+    trainingParameters.put("convergence.check.interval", "1000");
     ann.train(tmpDatasetPath, trainingParameters);
     
     long end = new Date().getTime();

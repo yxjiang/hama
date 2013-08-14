@@ -51,6 +51,7 @@ public final class SmallLayeredNeuralNetworkTrainer
   private long convergenceCheckInterval;
   private long iterations;
   private long maxIterations;
+  private boolean isConverge;
 
   private String modelPath;
 
@@ -60,7 +61,10 @@ public final class SmallLayeredNeuralNetworkTrainer
    */
   public void setup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer) {
-    Log.info("Begin to train");
+    if (peer.getPeerIndex() == 0) {
+      Log.info("Begin to train");
+    }
+    this.isConverge = false;
     this.conf = peer.getConfiguration();
     this.iterations = 0;
     this.modelPath = conf.get("modelPath");
@@ -100,12 +104,15 @@ public final class SmallLayeredNeuralNetworkTrainer
       // each groom calculate the matrices updates according to local data
       calculateUpdates(peer);
       peer.sync();
-
+      
       // master merge the updates model
       if (peer.getPeerIndex() == 0) {
         mergeUpdates(peer);
       }
       peer.sync();
+      if (this.isConverge) {
+        break;
+      }
     }
   }
 
@@ -125,7 +132,7 @@ public final class SmallLayeredNeuralNetworkTrainer
       DoubleMatrix[] preWeightUpdates = inMessage.getPrevMatrices();
       this.inMemoryModel.setWeightMatrices(newWeights);
       this.inMemoryModel.setPrevWeightMatrices(preWeightUpdates);
-      boolean isConverge = inMessage.isConverge();
+      this.isConverge= inMessage.isConverge();
       // check converge
       if (isConverge) {
         return;
@@ -175,8 +182,9 @@ public final class SmallLayeredNeuralNetworkTrainer
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, SmallLayeredNeuralNetworkMessage> peer)
       throws IOException {
     int numMessages = peer.getNumCurrentMessages();
+    boolean isConverge = false;
     if (numMessages == 0) { // converges
-      this.inMemoryModel.setConverge(true);
+      isConverge = true;
       return;
     }
 
@@ -210,7 +218,7 @@ public final class SmallLayeredNeuralNetworkTrainer
     if (iterations % convergenceCheckInterval == 0) {
       if (prevAvgTrainingError < curAvgTrainingError) {
         // error cannot decrease any more
-        this.inMemoryModel.setConverge(true);
+        isConverge = true;
       } 
       // update
       prevAvgTrainingError = curAvgTrainingError;
@@ -221,7 +229,7 @@ public final class SmallLayeredNeuralNetworkTrainer
     // broadcast updated weight matrices
     for (String peerName : peer.getAllPeerNames()) {
       SmallLayeredNeuralNetworkMessage msg = new SmallLayeredNeuralNetworkMessage(
-          0, this.inMemoryModel.isConverge(),
+          0, isConverge,
           this.inMemoryModel.getWeightMatrices(),
           this.inMemoryModel.getPrevMatricesUpdates());
       peer.send(peerName, msg);

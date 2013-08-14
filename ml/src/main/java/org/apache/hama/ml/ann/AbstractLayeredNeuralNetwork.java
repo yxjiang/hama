@@ -47,7 +47,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   private static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
   private static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
   
-  protected boolean isConverge;
   double trainingError;
   
   /* The weight of regularization */
@@ -72,22 +71,12 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
     this.regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
     this.momentumWeight = DEFAULT_MOMENTUM_WEIGHT;
     this.trainingMethod = TrainingMethod.GRADIATE_DESCENT;
-    this.isConverge = false;
   }
 
   public AbstractLayeredNeuralNetwork(String modelPath) {
     super(modelPath);
-    this.isConverge = false;
   }
   
-  public boolean isConverge() {
-    return isConverge;
-  }
-
-  void setConverge(boolean isConverge) {
-    this.isConverge = isConverge;
-  }
-
   /**
    * Set the regularization weight. Recommend in the range [0, 0.1), More
    * complex the model is, less weight the regularization is.
