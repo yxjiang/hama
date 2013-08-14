@@ -56,8 +56,8 @@ public abstract class MultiLayerPerceptron {
    * @param learningRate Larger learningRate makes MLP learn more aggressive.
    *          Learning rate cannot be negative.
    * @param regularization Regularization makes MLP less likely to overfit. The
-   *          value of regularization cannot be negative or too large,
-   *          otherwise it will affect the precision.
+   *          value of regularization cannot be negative or too large, otherwise
+   *          it will affect the precision.
    * @param momentum The momentum makes the historical adjust have affect to
    *          current adjust. The weight of momentum cannot be negative.
    * @param squashingFunctionName The name of squashing function.

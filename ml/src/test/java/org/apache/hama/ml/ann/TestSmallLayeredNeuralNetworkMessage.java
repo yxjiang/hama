@@ -20,6 +20,11 @@ package org.apache.hama.ml.ann;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+<<<<<<< HEAD
+=======
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+>>>>>>> upstream/trunk
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,8 +47,12 @@ public class TestSmallLayeredNeuralNetworkMessage {
 
   @Test
   public void testReadWriteWithoutPrev() {
+<<<<<<< HEAD
     boolean isTerminated = false;
     int ownerIdx = 11;
+=======
+    double error = 0.22;
+>>>>>>> upstream/trunk
     double[][] matrix1 = new double[][] { { 0.1, 0.2, 0.8, 0.5 },
         { 0.3, 0.4, 0.6, 0.2 }, { 0.5, 0.6, 0.1, 0.5 } };
     double[][] matrix2 = new double[][] { { 0.8, 1.2, 0.5 } };
@@ -51,10 +60,19 @@ public class TestSmallLayeredNeuralNetworkMessage {
     matrices[0] = new DenseDoubleMatrix(matrix1);
     matrices[1] = new DenseDoubleMatrix(matrix2);
 
+<<<<<<< HEAD
     SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
         ownerIdx, isTerminated, matrices, null);
     Configuration conf = new Configuration();
     String strPath = "tmp/testReadWrite-SmallLayeredNeuralNetworkMessage";
+=======
+    boolean isConverge = false;
+
+    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
+        error, isConverge, matrices, null);
+    Configuration conf = new Configuration();
+    String strPath = "/tmp/testReadWriteSmallLayeredNeuralNetworkMessage";
+>>>>>>> upstream/trunk
     Path path = new Path(strPath);
     try {
       FileSystem fs = FileSystem.get(new URI(strPath), conf);
@@ -64,6 +82,7 @@ public class TestSmallLayeredNeuralNetworkMessage {
 
       FSDataInputStream in = fs.open(path);
       SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(
+<<<<<<< HEAD
           0, false, null, null);
       readMessage.readFields(in);
       in.close();
@@ -73,10 +92,104 @@ public class TestSmallLayeredNeuralNetworkMessage {
       for (int i = 0; i < readMatrices.length; ++i) {
         double[][] doubleMatrices = ((DenseDoubleMatrix)readMatrices[i]).getValues();
         double[][] doubleExpected = ((DenseDoubleMatrix)matrices[i]).getValues();
+=======
+          0, isConverge, null, null);
+      readMessage.readFields(in);
+      in.close();
+      assertEquals(error, readMessage.getTrainingError(), 0.000001);
+      assertFalse(readMessage.isConverge());
+      DoubleMatrix[] readMatrices = readMessage.getCurMatrices();
+      assertEquals(2, readMatrices.length);
+      for (int i = 0; i < readMatrices.length; ++i) {
+        double[][] doubleMatrices = ((DenseDoubleMatrix) readMatrices[i])
+            .getValues();
+        double[][] doubleExpected = ((DenseDoubleMatrix) matrices[i])
+            .getValues();
+>>>>>>> upstream/trunk
         for (int r = 0; r < doubleMatrices.length; ++r) {
           assertArrayEquals(doubleExpected[r], doubleMatrices[r], 0.000001);
         }
       }
+<<<<<<< HEAD
+=======
+
+      DoubleMatrix[] readPrevMatrices = readMessage.getPrevMatrices();
+      assertNull(readPrevMatrices);
+
+      // delete
+      fs.delete(path, true);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void testReadWriteWithPrev() {
+    double error = 0.22;
+    boolean isConverge = true;
+
+    double[][] matrix1 = new double[][] { { 0.1, 0.2, 0.8, 0.5 },
+        { 0.3, 0.4, 0.6, 0.2 }, { 0.5, 0.6, 0.1, 0.5 } };
+    double[][] matrix2 = new double[][] { { 0.8, 1.2, 0.5 } };
+    DoubleMatrix[] matrices = new DoubleMatrix[2];
+    matrices[0] = new DenseDoubleMatrix(matrix1);
+    matrices[1] = new DenseDoubleMatrix(matrix2);
+
+    double[][] prevMatrix1 = new double[][] { { 0.1, 0.1, 0.2, 0.3 },
+        { 0.2, 0.4, 0.1, 0.5 }, { 0.5, 0.1, 0.5, 0.2 } };
+    double[][] prevMatrix2 = new double[][] { { 0.1, 0.2, 0.5, 0.9 },
+        { 0.3, 0.5, 0.2, 0.6 }, { 0.6, 0.8, 0.7, 0.5 } };
+
+    DoubleMatrix[] prevMatrices = new DoubleMatrix[2];
+    prevMatrices[0] = new DenseDoubleMatrix(prevMatrix1);
+    prevMatrices[1] = new DenseDoubleMatrix(prevMatrix2);
+
+    SmallLayeredNeuralNetworkMessage message = new SmallLayeredNeuralNetworkMessage(
+        error, isConverge, matrices, prevMatrices);
+    Configuration conf = new Configuration();
+    String strPath = "/tmp/testReadWriteSmallLayeredNeuralNetworkMessageWithPrev";
+    Path path = new Path(strPath);
+    try {
+      FileSystem fs = FileSystem.get(new URI(strPath), conf);
+      FSDataOutputStream out = fs.create(path);
+      message.write(out);
+      out.close();
+
+      FSDataInputStream in = fs.open(path);
+      SmallLayeredNeuralNetworkMessage readMessage = new SmallLayeredNeuralNetworkMessage(
+          0, isConverge, null, null);
+      readMessage.readFields(in);
+      in.close();
+
+      assertTrue(readMessage.isConverge());
+
+      DoubleMatrix[] readMatrices = readMessage.getCurMatrices();
+      assertEquals(2, readMatrices.length);
+      for (int i = 0; i < readMatrices.length; ++i) {
+        double[][] doubleMatrices = ((DenseDoubleMatrix) readMatrices[i])
+            .getValues();
+        double[][] doubleExpected = ((DenseDoubleMatrix) matrices[i])
+            .getValues();
+        for (int r = 0; r < doubleMatrices.length; ++r) {
+          assertArrayEquals(doubleExpected[r], doubleMatrices[r], 0.000001);
+        }
+      }
+
+      DoubleMatrix[] readPrevMatrices = readMessage.getPrevMatrices();
+      assertEquals(2, readPrevMatrices.length);
+      for (int i = 0; i < readPrevMatrices.length; ++i) {
+        double[][] doubleMatrices = ((DenseDoubleMatrix) readPrevMatrices[i])
+            .getValues();
+        double[][] doubleExpected = ((DenseDoubleMatrix) prevMatrices[i])
+            .getValues();
+        for (int r = 0; r < doubleMatrices.length; ++r) {
+          assertArrayEquals(doubleExpected[r], doubleMatrices[r], 0.000001);
+        }
+      }
+
+>>>>>>> upstream/trunk
       // delete
       fs.delete(path, true);
     } catch (IOException e) {

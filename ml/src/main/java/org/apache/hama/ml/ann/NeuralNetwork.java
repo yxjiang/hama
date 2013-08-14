@@ -17,6 +17,11 @@
  */
 package org.apache.hama.ml.ann;
 
+<<<<<<< HEAD
+=======
+import java.io.DataInput;
+import java.io.DataOutput;
+>>>>>>> upstream/trunk
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,9 +33,13 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
+<<<<<<< HEAD
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.FunctionFactory;
 import org.mortbay.log.Log;
+=======
+import org.apache.hadoop.io.WritableUtils;
+>>>>>>> upstream/trunk
 
 import com.google.common.base.Preconditions;
 
@@ -43,6 +52,7 @@ import com.google.common.base.Preconditions;
  */
 abstract class NeuralNetwork implements Writable {
 
+<<<<<<< HEAD
   public static final double DEFAULT_LEARNING_RATE = 0.5;
   
   protected double learningRate = DEFAULT_LEARNING_RATE;
@@ -54,6 +64,21 @@ abstract class NeuralNetwork implements Writable {
 
   public NeuralNetwork() {
     this.setModelType();
+=======
+  private static final double DEFAULT_LEARNING_RATE = 0.5;
+
+  protected double learningRate;
+  protected boolean learningRateDecay = false;
+
+  // the name of the model
+  protected String modelType;
+  // the path to store the model
+  protected String modelPath;
+
+  public NeuralNetwork() {
+    this.learningRate = DEFAULT_LEARNING_RATE;
+    this.modelType = this.getClass().getSimpleName();
+>>>>>>> upstream/trunk
   }
 
   public NeuralNetwork(String modelPath) {
@@ -82,10 +107,20 @@ abstract class NeuralNetwork implements Writable {
     return this.learningRate;
   }
 
+<<<<<<< HEAD
   /**
    * Set the modelType variable to specify the model type.
    */
   protected abstract void setModelType();
+=======
+  public void isLearningRateDecay(boolean decay) {
+    this.learningRateDecay = decay;
+  }
+
+  public String getModelType() {
+    return this.modelType;
+  }
+>>>>>>> upstream/trunk
 
   /**
    * Train the model with the path of given training data and parameters.
@@ -94,6 +129,7 @@ abstract class NeuralNetwork implements Writable {
    * @param trainingParams The parameters for training.
    * @throws IOException
    */
+<<<<<<< HEAD
   public void train(Path dataInputPath, Map<String, String> trainingParams)
       throws IOException, InterruptedException, ClassNotFoundException {
     // set model path
@@ -105,6 +141,23 @@ abstract class NeuralNetwork implements Writable {
         trainingParams.get("modelPath")));
     this.modelPath = trainingParams.get("modelPath");
     this.readFromModel();
+=======
+  public void train(Path dataInputPath, Map<String, String> trainingParams) {
+    Preconditions.checkArgument(this.modelPath != null,
+        "Please set the model path before training.");
+    // train with BSP job
+    try {
+      trainInternal(dataInputPath, trainingParams);
+      // write the trained model back to model path
+      this.readFromModel();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+>>>>>>> upstream/trunk
   }
 
   /**
@@ -123,6 +176,7 @@ abstract class NeuralNetwork implements Writable {
    * @throws IOException
    */
   protected void readFromModel() throws IOException {
+<<<<<<< HEAD
     Configuration conf = new Configuration();
     try {
       URI uri = new URI(modelPath);
@@ -133,6 +187,16 @@ abstract class NeuralNetwork implements Writable {
           .getSimpleName()), String.format(
           "Model type incorrect, cannot load model '%s' for '%s'.",
           this.modelType, this.getClass().getSimpleName()));
+=======
+    Preconditions.checkArgument(this.modelPath != null,
+        "Model path has not been set.");
+    Configuration conf = new Configuration();
+    try {
+      URI uri = new URI(this.modelPath);
+      FileSystem fs = FileSystem.get(uri, conf);
+      FSDataInputStream is = new FSDataInputStream(fs.open(new Path(modelPath)));
+      this.readFields(is);
+>>>>>>> upstream/trunk
     } catch (URISyntaxException e) {
       e.printStackTrace();
     }
@@ -144,6 +208,7 @@ abstract class NeuralNetwork implements Writable {
    * @param modelPath The location in file system to store the model.
    * @throws IOException
    */
+<<<<<<< HEAD
   public void writeModelToFile(String modelPath) throws IOException {
     Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
@@ -154,18 +219,68 @@ abstract class NeuralNetwork implements Writable {
   
   /**
    * Set the model path.
+=======
+  public void writeModelToFile() throws IOException {
+    Preconditions.checkArgument(this.modelPath != null,
+        "Model path has not been set.");
+    Configuration conf = new Configuration();
+    FileSystem fs = FileSystem.get(conf);
+    FSDataOutputStream stream = fs.create(new Path(this.modelPath), true);
+    this.write(stream);
+    stream.close();
+  }
+
+  /**
+   * Set the model path.
+   * 
+>>>>>>> upstream/trunk
    * @param modelPath
    */
   public void setModelPath(String modelPath) {
     this.modelPath = modelPath;
   }
+<<<<<<< HEAD
   
   /**
    * Get the model path.
+=======
+
+  /**
+   * Get the model path.
+   * 
+>>>>>>> upstream/trunk
    * @return
    */
   public String getModelPath() {
     return this.modelPath;
   }
 
+<<<<<<< HEAD
+=======
+  public void readFields(DataInput input) throws IOException {
+    // read model type
+    this.modelType = WritableUtils.readString(input);
+    // read learning rate
+    this.learningRate = input.readDouble();
+    // read model path
+    this.modelPath = WritableUtils.readString(input);
+    if (this.modelPath.equals("null")) {
+      this.modelPath = null;
+    }
+  }
+
+  public void write(DataOutput output) throws IOException {
+    // write model type
+    WritableUtils.writeString(output, modelType);
+    // write learning rate
+    output.writeDouble(learningRate);
+    // write model path
+    if (this.modelPath != null) {
+      WritableUtils.writeString(output, modelPath);
+    } else {
+      WritableUtils.writeString(output, "null");
+    }
+  }
+
+>>>>>>> upstream/trunk
 }

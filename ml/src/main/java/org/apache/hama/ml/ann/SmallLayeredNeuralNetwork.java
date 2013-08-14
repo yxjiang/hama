@@ -17,15 +17,40 @@
  */
 package org.apache.hama.ml.ann;
 
+<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+=======
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.WritableUtils;
+import org.apache.hama.HamaConfiguration;
+import org.apache.hama.bsp.BSPJob;
+>>>>>>> upstream/trunk
 import org.apache.hama.ml.math.DenseDoubleMatrix;
 import org.apache.hama.ml.math.DenseDoubleVector;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
 import org.apache.hama.ml.math.DoubleVector;
+<<<<<<< HEAD
+=======
+import org.apache.hama.ml.math.FunctionFactory;
+import org.apache.hama.ml.writable.MatrixWritable;
+import org.apache.hama.ml.writable.VectorWritable;
+import org.mortbay.log.Log;
+>>>>>>> upstream/trunk
 
 import com.google.common.base.Preconditions;
 
@@ -41,18 +66,37 @@ import com.google.common.base.Preconditions;
  * form a bipartite weighted graph.
  * 
  */
+<<<<<<< HEAD
 public abstract class SmallLayeredNeuralNetwork extends
     AbstractLayeredNeuralNetwork {
+=======
+public class SmallLayeredNeuralNetwork extends AbstractLayeredNeuralNetwork {
+>>>>>>> upstream/trunk
 
   /* Weights between neurons at adjacent layers */
   protected List<DoubleMatrix> weightMatrixList;
 
+<<<<<<< HEAD
   /* Different layers can have different squashing function */
   protected List<DoubleFunction> squashingFunctionList;
 
   public SmallLayeredNeuralNetwork() {
     this.layerSizeList = new ArrayList<Integer>();
     this.weightMatrixList = new ArrayList<DoubleMatrix>();
+=======
+  /* Previous weight updates between neurons at adjacent layers */
+  protected List<DoubleMatrix> prevWeightUpdatesList;
+
+  /* Different layers can have different squashing function */
+  protected List<DoubleFunction> squashingFunctionList;
+
+  protected int finalLayerIdx;
+
+  public SmallLayeredNeuralNetwork() {
+    this.layerSizeList = new ArrayList<Integer>();
+    this.weightMatrixList = new ArrayList<DoubleMatrix>();
+    this.prevWeightUpdatesList = new ArrayList<DoubleMatrix>();
+>>>>>>> upstream/trunk
     this.squashingFunctionList = new ArrayList<DoubleFunction>();
   }
 
@@ -64,7 +108,12 @@ public abstract class SmallLayeredNeuralNetwork extends
   /**
    * {@inheritDoc}
    */
+<<<<<<< HEAD
   protected int addLayer(int size, boolean isFinalLayer) {
+=======
+  public int addLayer(int size, boolean isFinalLayer,
+      DoubleFunction squashingFunction) {
+>>>>>>> upstream/trunk
     Preconditions.checkArgument(size > 0, "Size of layer must larger than 0.");
     if (!isFinalLayer) {
       size += 1;
@@ -72,6 +121,7 @@ public abstract class SmallLayeredNeuralNetwork extends
 
     this.layerSizeList.add(size);
     int layerIdx = this.layerSizeList.size() - 1;
+<<<<<<< HEAD
 
     if (layerIdx > 0) { // add weights between current layer and previous layer
       int sizePrevLayer = this.layerSizeList.get(layerIdx - 1);
@@ -86,20 +136,49 @@ public abstract class SmallLayeredNeuralNetwork extends
         public double apply(double value) {
           //
           return 0.5;
+=======
+    if (isFinalLayer) {
+      this.finalLayerIdx = layerIdx;
+    }
+
+    // add weights between current layer and previous layer, and input layer has
+    // no squashing function
+    if (layerIdx > 0) {
+      int sizePrevLayer = this.layerSizeList.get(layerIdx - 1);
+      // row count equals to size of current size and column count equals to
+      // size of previous layer
+      int row = isFinalLayer ? size : size - 1;
+      int col = sizePrevLayer;
+      DoubleMatrix weightMatrix = new DenseDoubleMatrix(row, col);
+      // initialize weights
+      final Random rnd = new Random();
+      weightMatrix.applyToElements(new DoubleFunction() {
+        @Override
+        public double apply(double value) {
+          return rnd.nextDouble() - 0.5;
+>>>>>>> upstream/trunk
         }
 
         @Override
         public double applyDerivative(double value) {
           throw new UnsupportedOperationException("");
         }
+<<<<<<< HEAD
 
       });
       this.weightMatrixList.add(weightMatrix);
       this.squashingFunctionList.add(null);
+=======
+      });
+      this.weightMatrixList.add(weightMatrix);
+      this.prevWeightUpdatesList.add(new DenseDoubleMatrix(row, col));
+      this.squashingFunctionList.add(squashingFunction);
+>>>>>>> upstream/trunk
     }
     return layerIdx;
   }
 
+<<<<<<< HEAD
   @Override
   /**
    * {@inheritDoc}
@@ -118,6 +197,8 @@ public abstract class SmallLayeredNeuralNetwork extends
     }
   }
 
+=======
+>>>>>>> upstream/trunk
   /**
    * Update the weight matrices with given matrices.
    * 
@@ -130,12 +211,23 @@ public abstract class SmallLayeredNeuralNetwork extends
     }
   }
 
+<<<<<<< HEAD
+=======
+  void setPrevWeightMatrices(DoubleMatrix[] prevUpdates) {
+    this.prevWeightUpdatesList.clear();
+    for (DoubleMatrix prevUpdate : prevUpdates) {
+      this.prevWeightUpdatesList.add(prevUpdate);
+    }
+  }
+
+>>>>>>> upstream/trunk
   /**
    * Add a batch of matrices onto the given destination matrices.
    * 
    * @param destMatrices
    * @param sourceMatrices
    */
+<<<<<<< HEAD
   public static void matricesAdd(DoubleMatrix[] destMatrices,
       DoubleMatrix[] sourceMatrices) {
     Preconditions
@@ -143,6 +235,10 @@ public abstract class SmallLayeredNeuralNetwork extends
             destMatrices != null && sourceMatrices != null
                 && destMatrices.length == sourceMatrices.length,
             "Number of matrices should be equal for both destination matrices and source matrices.");
+=======
+  static void matricesAdd(DoubleMatrix[] destMatrices,
+      DoubleMatrix[] sourceMatrices) {
+>>>>>>> upstream/trunk
     for (int i = 0; i < destMatrices.length; ++i) {
       destMatrices[i] = destMatrices[i].add(sourceMatrices[i]);
     }
@@ -153,8 +249,15 @@ public abstract class SmallLayeredNeuralNetwork extends
    * 
    * @return
    */
+<<<<<<< HEAD
   public DoubleMatrix[] getWeightMatrices() {
     return (DoubleMatrix[]) this.weightMatrixList.toArray();
+=======
+  DoubleMatrix[] getWeightMatrices() {
+    DoubleMatrix[] matrices = new DoubleMatrix[this.weightMatrixList.size()];
+    this.weightMatrixList.toArray(matrices);
+    return matrices;
+>>>>>>> upstream/trunk
   }
 
   /**
@@ -170,6 +273,7 @@ public abstract class SmallLayeredNeuralNetwork extends
   }
 
   /**
+<<<<<<< HEAD
    * Get the output of the model according to given feature instance.
    */
   public DoubleVector getOutput(DoubleVector instance) {
@@ -177,13 +281,104 @@ public abstract class SmallLayeredNeuralNetwork extends
     DoubleVector instanceWithBias = new DenseDoubleVector(
         instance.getDimension() + 1);
     instanceWithBias.set(0, 1);
+=======
+   * Get the previous matrices updates in form of array.
+   * 
+   * @return
+   */
+  public DoubleMatrix[] getPrevMatricesUpdates() {
+    DoubleMatrix[] prevMatricesUpdates = new DoubleMatrix[this.prevWeightUpdatesList
+        .size()];
+    for (int i = 0; i < this.prevWeightUpdatesList.size(); ++i) {
+      prevMatricesUpdates[i] = this.prevWeightUpdatesList.get(i);
+    }
+    return prevMatricesUpdates;
+  }
+
+  public void setWeightMatrix(int index, DoubleMatrix matrix) {
+    Preconditions.checkArgument(
+        0 <= index && index < this.weightMatrixList.size(),
+        String.format("index [%d] out of range.", index));
+    this.weightMatrixList.set(index, matrix);
+  }
+
+  @Override
+  public void readFields(DataInput input) throws IOException {
+    super.readFields(input);
+
+    // read squash functions
+    int squashingFunctionSize = input.readInt();
+    this.squashingFunctionList = new ArrayList<DoubleFunction>();
+    for (int i = 0; i < squashingFunctionSize; ++i) {
+      this.squashingFunctionList.add(FunctionFactory
+          .createDoubleFunction(WritableUtils.readString(input)));
+    }
+
+    // read weights and construct matrices of previous updates
+    int numOfMatrices = input.readInt();
+    this.weightMatrixList = new ArrayList<DoubleMatrix>();
+    this.prevWeightUpdatesList = new ArrayList<DoubleMatrix>();
+    for (int i = 0; i < numOfMatrices; ++i) {
+      DoubleMatrix matrix = MatrixWritable.read(input);
+      this.weightMatrixList.add(matrix);
+      this.prevWeightUpdatesList.add(new DenseDoubleMatrix(
+          matrix.getRowCount(), matrix.getColumnCount()));
+    }
+
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    super.write(output);
+
+    // write squashing functions
+    output.writeInt(this.squashingFunctionList.size());
+    for (int i = 0; i < this.squashingFunctionList.size(); ++i) {
+      WritableUtils.writeString(output, this.squashingFunctionList.get(i)
+          .getFunctionName());
+    }
+
+    // write weight matrices
+    output.writeInt(this.weightMatrixList.size());
+    for (int i = 0; i < this.weightMatrixList.size(); ++i) {
+      MatrixWritable.write(this.weightMatrixList.get(i), output);
+    }
+
+    // DO NOT WRITE WEIGHT UPDATE
+  }
+
+  @Override
+  public DoubleMatrix getWeightsByLayer(int layerIdx) {
+    return this.weightMatrixList.get(layerIdx);
+  }
+
+  /**
+   * Get the output of the model according to given feature instance.
+   */
+  public DoubleVector getOutput(DoubleVector instance) {
+    Preconditions.checkArgument(this.layerSizeList.get(0) == instance
+        .getDimension() + 1, String.format(
+        "The dimension of input instance should be %d.",
+        this.layerSizeList.get(0) - 1));
+    // add bias feature
+    DoubleVector instanceWithBias = new DenseDoubleVector(
+        instance.getDimension() + 1);
+    instanceWithBias.set(0, 0.99999); // set bias to be a little bit less than
+                                      // 1.0
+>>>>>>> upstream/trunk
     for (int i = 1; i < instanceWithBias.getDimension(); ++i) {
       instanceWithBias.set(i, instance.get(i - 1));
     }
 
     List<DoubleVector> outputCache = getOutputInternal(instanceWithBias);
     // return the output of the last layer
+<<<<<<< HEAD
     return outputCache.get(outputCache.size() - 1);
+=======
+    DoubleVector result = outputCache.get(outputCache.size() - 1);
+    // remove bias
+    return result.sliceUnsafe(1, result.getDimension() - 1);
+>>>>>>> upstream/trunk
   }
 
   /**
@@ -198,6 +393,7 @@ public abstract class SmallLayeredNeuralNetwork extends
     // fill with instance
     DoubleVector intermediateOutput = instance;
     outputCache.add(intermediateOutput);
+<<<<<<< HEAD
     // System.out.println("Input:");
     // for (int j = 0; j < intermediateOutput.getDimension(); ++j) {
     // System.out.printf("%f ", intermediateOutput.get(j));
@@ -211,6 +407,12 @@ public abstract class SmallLayeredNeuralNetwork extends
         // System.out.printf("%f ", intermediateOutput.get(j));
       }
       System.out.println();
+=======
+    // System.out.printf("Input layer: %s\n", intermediateOutput.toString());
+
+    for (int i = 0; i < this.layerSizeList.size() - 1; ++i) {
+      intermediateOutput = forward(i, intermediateOutput);
+>>>>>>> upstream/trunk
       outputCache.add(intermediateOutput);
     }
     return outputCache;
@@ -224,9 +426,259 @@ public abstract class SmallLayeredNeuralNetwork extends
    * @return
    */
   protected DoubleVector forward(int fromLayer, DoubleVector intermediateOutput) {
+<<<<<<< HEAD
     return this.weightMatrixList.get(fromLayer)
         .multiplyVectorUnsafe(intermediateOutput)
         .applyToElements(this.squashingFunctionList.get(fromLayer));
+=======
+    DoubleMatrix weightMatrix = this.weightMatrixList.get(fromLayer);
+
+    DoubleVector vec = weightMatrix.multiplyVectorUnsafe(intermediateOutput);
+    // System.out.printf("Before applying squashing, from Layer %d to %d: %s\n",
+    // fromLayer, fromLayer + 1, vec.toString());
+    vec = vec.applyToElements(this.squashingFunctionList.get(fromLayer));
+    // System.out.printf("After applying squashing, from Layer %d to %d: %s\n",
+    // fromLayer, fromLayer + 1, vec.toString());
+
+    // add bias
+    DoubleVector vecWithBias = new DenseDoubleVector(vec.getDimension() + 1);
+    vecWithBias.set(0, 1);
+    for (int i = 0; i < vec.getDimension(); ++i) {
+      vecWithBias.set(i + 1, vec.get(i));
+    }
+    return vecWithBias;
+  }
+
+  /**
+   * Train the model online.
+   * 
+   * @param trainingInstance
+   */
+  public void trainOnline(DoubleVector trainingInstance) {
+    DoubleMatrix[] updateMatrices = this.trainByInstance(trainingInstance);
+    // System.out.printf("Sum: %f\n", updateMatrices[0].sum());
+    this.updateWeightMatrices(updateMatrices);
+  }
+
+  @Override
+  public DoubleMatrix[] trainByInstance(DoubleVector trainingInstance) {
+    // validate training instance
+    int inputDimension = this.layerSizeList.get(0) - 1;
+    int outputDimension = this.layerSizeList.get(this.layerSizeList.size() - 1);
+    Preconditions.checkArgument(
+        inputDimension + outputDimension == trainingInstance.getDimension(),
+        String.format(
+            "The dimension of training instance is %d, but requires %d.",
+            trainingInstance.getDimension(), inputDimension + outputDimension));
+
+    // prepare the features and labels
+    DoubleVector inputInstance = new DenseDoubleVector(
+        this.layerSizeList.get(0));
+    inputInstance.set(0, 1); // add bias
+    for (int i = 0; i < inputDimension; ++i) {
+      inputInstance.set(i + 1, trainingInstance.get(i));
+    }
+
+    DoubleVector labels = trainingInstance.sliceUnsafe(
+        inputInstance.getDimension() - 1, trainingInstance.getDimension() - 1);
+
+    List<DoubleVector> internalResults = this.getOutputInternal(inputInstance);
+    DoubleVector output = internalResults.get(internalResults.size() - 1);
+
+    // get the training error
+    calculateTrainingError(labels,
+        output.deepCopy().sliceUnsafe(1, output.getDimension() - 1));
+
+    if (this.trainingMethod.equals(TrainingMethod.GRADIATE_DESCENT)) {
+      return this.trainByInstanceGradientDescent(labels, internalResults);
+    }
+    throw new IllegalArgumentException(
+        String.format("Training method is not supported."));
+  }
+
+  /**
+   * Train by gradient descent. Get the updated weights using one training
+   * instance.
+   * 
+   * @param trainingInstance
+   * @return The weight update matrices.
+   */
+  private DoubleMatrix[] trainByInstanceGradientDescent(DoubleVector labels,
+      List<DoubleVector> internalResults) {
+
+    DoubleVector output = internalResults.get(internalResults.size() - 1);
+    // initialize weight update matrices
+    DenseDoubleMatrix[] weightUpdateMatrices = new DenseDoubleMatrix[this.weightMatrixList
+        .size()];
+    for (int m = 0; m < weightUpdateMatrices.length; ++m) {
+      weightUpdateMatrices[m] = new DenseDoubleMatrix(this.weightMatrixList
+          .get(m).getRowCount(), this.weightMatrixList.get(m).getColumnCount());
+    }
+    DoubleVector deltaVec = new DenseDoubleVector(
+        this.layerSizeList.get(this.layerSizeList.size() - 1));
+
+    // // calculate norm-2 error ||t - o||^2
+    // DoubleVector errorVec = output.slice(output.getDimension() -
+    // 1).applyToElements(labels, new DoubleDoubleFunction() {
+    // @Override
+    // public double apply(double x1, double x2) {
+    // double v = x1 - x2;
+    // return v * v;
+    // }
+    // @Override
+    // public double applyDerivative(double x1, double x2) {
+    // throw new UnsupportedOperationException();
+    // }
+    // });
+    // double error = errorVec.sum();
+    // System.out.printf("Error: %f\n", error);
+
+    // System.out.printf("Output: %s\n", output);
+
+    DoubleFunction squashingFunction = this.squashingFunctionList
+        .get(this.squashingFunctionList.size() - 1);
+
+    DoubleMatrix lastWeightMatrix = this.weightMatrixList
+        .get(this.weightMatrixList.size() - 1);
+    for (int i = 0; i < deltaVec.getDimension(); ++i) {
+      double costFuncDerivative = this.costFunction.applyDerivative(
+          labels.get(i), output.get(i + 1));
+      // add regularization
+      costFuncDerivative += this.regularizationWeight
+          * lastWeightMatrix.getRowVector(i).sum();
+      deltaVec.set(i, costFuncDerivative);
+      deltaVec.set(
+          i,
+          deltaVec.get(i)
+              * squashingFunction.applyDerivative(output.get(i + 1)));
+    }
+
+    // System.out.printf("Delta output: %s\n", deltaVec.toString());
+
+    // start from previous layer of output layer
+    for (int layer = this.layerSizeList.size() - 2; layer >= 0; --layer) {
+      output = internalResults.get(layer);
+      deltaVec = backpropagate(layer, deltaVec, internalResults,
+          weightUpdateMatrices[layer]);
+    }
+
+    this.setPrevWeightMatrices(weightUpdateMatrices);
+
+    return weightUpdateMatrices;
+  }
+
+  /**
+   * Back-propagate the errors to from next layer to current layer. The weight
+   * updated information will be stored in the weightUpdateMatrices, and the
+   * delta of the prevLayer would be returned.
+   * 
+   * @param layer Index of current layer.
+   * @param internalOutput Internal output of current layer.
+   * @param deltaVec Delta of next layer.
+   * @return
+   */
+  private DoubleVector backpropagate(int curLayerIdx,
+      DoubleVector nextLayerDelta, List<DoubleVector> outputCache,
+      DenseDoubleMatrix weightUpdateMatrix) {
+
+    // get layer related information
+    DoubleFunction squashingFunction = this.squashingFunctionList
+        .get(curLayerIdx);
+    DoubleVector curLayerOutput = outputCache.get(curLayerIdx);
+    DoubleMatrix weightMatrix = this.weightMatrixList.get(curLayerIdx);
+    DoubleMatrix prevWeightMatrix = this.prevWeightUpdatesList.get(curLayerIdx);
+
+    // next layer is not output layer, remove the delta of bias neuron
+    if (curLayerIdx != this.layerSizeList.size() - 2) {
+      nextLayerDelta = nextLayerDelta.slice(1,
+          nextLayerDelta.getDimension() - 1);
+    }
+
+    DoubleVector delta = weightMatrix.transpose()
+        .multiplyVector(nextLayerDelta);
+    for (int i = 0; i < delta.getDimension(); ++i) {
+      delta.set(
+          i,
+          delta.get(i)
+              * squashingFunction.applyDerivative(curLayerOutput.get(i)));
+    }
+
+    // System.out.printf("Delta layer: %d, %s\n", curLayerIdx,
+    // delta.toString());
+
+    // update weights
+    for (int i = 0; i < weightUpdateMatrix.getRowCount(); ++i) {
+      for (int j = 0; j < weightUpdateMatrix.getColumnCount(); ++j) {
+        weightUpdateMatrix.set(i, j,
+            -learningRate * nextLayerDelta.get(i) * curLayerOutput.get(j)
+                + this.momentumWeight * prevWeightMatrix.get(i, j));
+      }
+    }
+
+    // System.out.printf("Weight Layer %d, %s\n", curLayerIdx,
+    // weightUpdateMatrix.toString());
+
+    return delta;
+  }
+
+  @Override
+  protected void trainInternal(Path dataInputPath,
+      Map<String, String> trainingParams) throws IOException,
+      InterruptedException, ClassNotFoundException {
+    // add all training parameters to configuration
+    Configuration conf = new Configuration();
+    for (Map.Entry<String, String> entry : trainingParams.entrySet()) {
+      conf.set(entry.getKey(), entry.getValue());
+    }
+
+    // if training parameters contains the model path, update the model path
+    String modelPath = trainingParams.get("modelPath");
+    if (modelPath != null) {
+      this.modelPath = modelPath;
+    }
+    // modelPath must be set before training
+    if (this.modelPath == null) {
+      throw new IllegalArgumentException(
+          "Please specify the modelPath for model, "
+              + "either through setModelPath() or add 'modelPath' to the training parameters.");
+    }
+
+    conf.set("modelPath", this.modelPath);
+    this.writeModelToFile();
+
+    HamaConfiguration hamaConf = new HamaConfiguration(conf);
+
+    // create job
+    BSPJob job = new BSPJob(hamaConf, SmallLayeredNeuralNetworkTrainer.class);
+    job.setJobName("Small scale Neural Network training");
+    job.setJarByClass(SmallLayeredNeuralNetworkTrainer.class);
+    job.setBspClass(SmallLayeredNeuralNetworkTrainer.class);
+    job.setInputPath(dataInputPath);
+    job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+    job.setInputKeyClass(LongWritable.class);
+    job.setInputValueClass(VectorWritable.class);
+    job.setOutputKeyClass(NullWritable.class);
+    job.setOutputValueClass(NullWritable.class);
+    job.setOutputFormat(org.apache.hama.bsp.NullOutputFormat.class);
+
+    int numTasks = conf.getInt("tasks", 1);
+    job.setNumBspTask(numTasks);
+    job.waitForCompletion(true);
+
+    // reload learned model
+    Log.info(String.format("Reload model from %s.", this.modelPath));
+    this.readFromModel();
+
+  }
+
+  @Override
+  protected void calculateTrainingError(DoubleVector labels, DoubleVector output) {
+    DoubleVector errors = labels.deepCopy().applyToElements(output,
+        this.costFunction);
+    // System.out.printf("Labels: %s\tOutput: %s\n", labels, output);
+    this.trainingError = errors.sum();
+    // System.out.printf("Training error: %s\n", errors);
+>>>>>>> upstream/trunk
   }
 
 }
