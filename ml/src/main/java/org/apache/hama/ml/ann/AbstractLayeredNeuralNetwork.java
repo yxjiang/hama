@@ -17,10 +17,6 @@
  */
 package org.apache.hama.ml.ann;
 
-<<<<<<< HEAD
-import java.util.List;
-
-=======
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -28,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.io.WritableUtils;
->>>>>>> upstream/trunk
 import org.apache.hama.ml.math.DoubleDoubleFunction;
 import org.apache.hama.ml.math.DoubleFunction;
 import org.apache.hama.ml.math.DoubleMatrix;
@@ -49,19 +44,6 @@ import com.google.common.base.Preconditions;
  */
 abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
 
-<<<<<<< HEAD
-  public static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
-  /* Record the size of each layer */
-  protected List<Integer> layerSizeList;
-  
-  /* The weight of regularization */
-  protected double regularizationWeight;
-
-  /* The cost function of the model */
-  protected DoubleDoubleFunction costFunction;
-
-  public AbstractLayeredNeuralNetwork() {
-=======
   private static final double DEFAULT_REGULARIZATION_WEIGHT = 0;
   private static final double DEFAULT_MOMENTUM_WEIGHT = 0.1;
 
@@ -89,7 +71,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
     this.regularizationWeight = DEFAULT_REGULARIZATION_WEIGHT;
     this.momentumWeight = DEFAULT_MOMENTUM_WEIGHT;
     this.trainingMethod = TrainingMethod.GRADIATE_DESCENT;
->>>>>>> upstream/trunk
   }
 
   public AbstractLayeredNeuralNetwork(String modelPath) {
@@ -97,24 +78,15 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   }
 
   /**
-<<<<<<< HEAD
-   * Set the regularization weight. Recommend in the range [0, 0.5), More
-=======
    * Set the regularization weight. Recommend in the range [0, 0.1), More
->>>>>>> upstream/trunk
    * complex the model is, less weight the regularization is.
    * 
    * @param regularization
    */
   public void setRegularizationWeight(double regularizationWeight) {
-<<<<<<< HEAD
-    Preconditions.checkArgument(regularizationWeight >= 0 && regularizationWeight < 1,
-        "Regularization weight must be in range [0, 1.)");
-=======
     Preconditions.checkArgument(regularizationWeight >= 0
         && regularizationWeight < 1.0,
         "Regularization weight must be in range [0, 1.0)");
->>>>>>> upstream/trunk
     this.regularizationWeight = regularizationWeight;
   }
 
@@ -123,8 +95,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   }
 
   /**
-<<<<<<< HEAD
-=======
    * Set the momemtum weight for the model. Recommend in range [0, 0.5].
    * 
    * @param momentumWeight
@@ -148,7 +118,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   }
 
   /**
->>>>>>> upstream/trunk
    * Set the cost function for the model.
    * 
    * @param costFunctionName
@@ -164,14 +133,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * 
    * @param size
    * @param isFinalLayer If false, add a bias neuron.
-<<<<<<< HEAD
-   * @return The layer index, starts with 0.
-   */
-  protected abstract int addLayer(int size, boolean isFinalLayer);
-  
-  /**
-   * Get the size of a particular layer.
-=======
    * @param squashingFunction The squashing function for this layer, input layer
    *          is f(x) = x by default.
    * @return The layer index, starts with 0.
@@ -182,29 +143,16 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
   /**
    * Get the size of a particular layer.
    * 
->>>>>>> upstream/trunk
    * @param layer
    * @return
    */
   public int getLayerSize(int layer) {
     Preconditions.checkArgument(
-<<<<<<< HEAD
-        layer >= 0 && layer < this.layerSizeList.size() - 1,
-=======
         layer >= 0 && layer < this.layerSizeList.size(),
->>>>>>> upstream/trunk
         String.format("Input must be in range [0, %d]\n",
             this.layerSizeList.size() - 1));
     return this.layerSizeList.get(layer);
   }
-<<<<<<< HEAD
-  
-  /**
-   * Get the layer size list.
-   * @return
-   */
-  List<Integer> getLayerSizeList() {
-=======
 
   /**
    * Get the layer size list.
@@ -212,31 +160,10 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    * @return
    */
   protected List<Integer> getLayerSizeList() {
->>>>>>> upstream/trunk
     return this.layerSizeList;
   }
 
   /**
-<<<<<<< HEAD
-   * Set the squashing function of the specified layer. It will have no effect
-   * if the specified layer is the input layer.
-   * 
-   * @param layerIdx
-   * @param squashingFunction The the squashing function.
-   */
-  protected abstract void setSquashingFunction(int layerIdx,
-      DoubleFunction squashingFunction);
-
-  /**
-   * Set the squashing function for all layers.
-   * 
-   * @param squashingFunction
-   */
-  public abstract void setSquashingFunction(DoubleFunction squashingFunction);
-
-  /**
-=======
->>>>>>> upstream/trunk
    * Get the weights between layer layerIdx and layerIdx + 1
    * 
    * @param layerIdx The index of the layer
@@ -262,8 +189,6 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
    */
   public abstract DoubleVector getOutput(DoubleVector instance);
 
-<<<<<<< HEAD
-=======
   /**
    * Calculate the training error based on the labels and outputs.
    * 
@@ -316,5 +241,4 @@ abstract class AbstractLayeredNeuralNetwork extends NeuralNetwork {
     WritableUtils.writeEnum(output, this.trainingMethod);
   }
 
->>>>>>> upstream/trunk
 }

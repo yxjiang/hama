@@ -51,19 +51,11 @@ class SmallMLPTrainer extends NeuralNetworkTrainer {
   protected void extraSetup(
       BSPPeer<LongWritable, VectorWritable, NullWritable, NullWritable, MLPMessage> peer) {
 
-<<<<<<< HEAD
-    //  obtain parameters
-    this.trainingMode = conf.get("training.mode", "minibatch.gradient.descent");
-    // mini-batch by default
-    this.batchSize = conf.getInt("training.batch.size", 100);
-    
-=======
     // obtain parameters
     this.trainingMode = conf.get("training.mode", "minibatch.gradient.descent");
     // mini-batch by default
     this.batchSize = conf.getInt("training.batch.size", 100);
 
->>>>>>> upstream/trunk
     this.statusSet = new BitSet(peer.getConfiguration().getInt("tasks", 1));
 
     String outputModelPath = conf.get("modelPath");

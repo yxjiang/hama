@@ -17,13 +17,12 @@
  */
 package org.apache.hama.ml.math;
 
-
 /**
  * Factory to create the functions.
  * 
  */
 public class FunctionFactory {
-  
+
   /**
    * Create a double function with specified name.
    * 
@@ -35,7 +34,8 @@ public class FunctionFactory {
       return new Sigmoid();
     } else if (functionName.equalsIgnoreCase(Tanh.class.getSimpleName())) {
       return new Tanh();
-    } else if (functionName.equalsIgnoreCase(IdentityFunction.class.getSimpleName())) {
+    } else if (functionName.equalsIgnoreCase(IdentityFunction.class
+        .getSimpleName())) {
       return new IdentityFunction();
     }
 
