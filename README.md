@@ -6,6 +6,7 @@ This copy is used to implement the distributed machine learning algorithms, incl
 1. Multi layer perception.
 2. Neural Network based Linear Regression.
 3. Neural Network based Logistic Regression.
+4. Neural Network based Autoencoder.
 
 
 For the latest information about Hama, please visit our website at:
