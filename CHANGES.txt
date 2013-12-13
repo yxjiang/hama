@@ -11,11 +11,13 @@ Release 0.7.0 (unreleased changes)
 
   BUG FIXES
 
+   HAMA-830: KMeans and NeuralNetwork doesn't load config file (edwardyoon)
    HAMA-812: In local mode BSPJobClient.close throws Exception (Martin Illecker)
    HAMA-821: Fix bugs in KMeans example and make output more readable (edwardyoon)
 
   IMPROVEMENTS
 
+   HAMA-829: Improve code and fix Javadoc warnings in org.apache.hama.pipes (Martin Illecker)
    HAMA-808: Hama Pipes Testcase (Martin Illecker)
    HAMA-828: Improve code, fix typo and modify unclear comment in org.apache.hama.ml.ann package (Yexi Jiang)
    HAMA-699: Add commons module (Martin Illecker)
