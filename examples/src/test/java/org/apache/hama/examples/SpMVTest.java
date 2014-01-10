@@ -46,13 +46,15 @@ public class SpMVTest {
 
   protected static final Log LOG = LogFactory.getLog(SpMVTest.class);
 
-  private HamaConfiguration conf;
-  private String baseDir;
+  private static HamaConfiguration conf;
+  private static String baseDir;
+  private static FileSystem fs;
 
   @Before
   public void prepare() throws IOException {
     conf = new HamaConfiguration();
     baseDir = "/tmp/spmv";
+    fs = FileSystem.get(conf);
   }
 
   /**
@@ -83,10 +85,17 @@ public class SpMVTest {
    */
   @Test
   public void simpleSpMVTest() {
+    HamaConfiguration conf = new HamaConfiguration();
+    String testDir = "/simple/";
+    int size = 4;
+    String matrixPath = baseDir + testDir + "inputMatrix";
+    String vectorPath = baseDir + testDir + "inputVector";
+    String outputPath = baseDir + testDir;
+
     try {
-      HamaConfiguration conf = new HamaConfiguration();
-      String testDir = "/simple/";
-      int size = 4;
+      if (fs.exists(new Path(baseDir))) {
+        fs.delete(new Path(baseDir), true);
+      }
 
       // creating test matrix
       HashMap<Integer, Writable> inputMatrix = new HashMap<Integer, Writable>();
@@ -109,7 +118,6 @@ public class SpMVTest {
       inputMatrix.put(1, vector1);
       inputMatrix.put(2, vector2);
       inputMatrix.put(3, vector3);
-      String matrixPath = baseDir + testDir + "inputMatrix";
       writeMatrix(matrixPath, conf, inputMatrix);
 
       HashMap<Integer, Writable> inputVector = new HashMap<Integer, Writable>();
@@ -120,15 +128,14 @@ public class SpMVTest {
       vector.addCell(2, 6);
       vector.addCell(3, 1);
       inputVector.put(0, vector);
-      String vectorPath = baseDir + testDir + "inputVector";
       writeMatrix(vectorPath, conf, inputVector);
 
-      String outputPath = baseDir + testDir;
       SpMV.main(new String[] { matrixPath, vectorPath, outputPath, "4" });
 
       String resultPath = SpMV.getResultPath();
       DenseVectorWritable result = new DenseVectorWritable();
       SpMV.readFromFile(resultPath, result, conf);
+      LOG.info("result is a file: " + fs.isFile(new Path(resultPath)));
 
       double expected[] = { 38, 12, 24, 11 };
       if (result.getSize() != size)
@@ -141,9 +148,11 @@ public class SpMVTest {
         if (expected[i] != 0)
           throw new Exception("Result doesn't meets expectations");
 
+      fs.delete(new Path(baseDir), true);
     } catch (Exception e) {
       e.printStackTrace();
       fail(e.getLocalizedMessage());
+    } finally {
     }
   }
 
@@ -197,7 +206,6 @@ public class SpMVTest {
   public static void writeMatrix(String pathString, Configuration conf,
       Map<Integer, Writable> matrix) throws IOException {
     boolean inited = false;
-    FileSystem fs = FileSystem.get(conf);
     SequenceFile.Writer writer = null;
     try {
       for (Integer index : matrix.keySet()) {

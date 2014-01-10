@@ -112,7 +112,8 @@ public final class KMeansBSP
       try {
         distanceMeasurer = ReflectionUtils.newInstance(distanceClass);
       } catch (ClassNotFoundException e) {
-        throw new RuntimeException("Wrong DistanceMeasurer implementation " + distanceClass + " provided");
+        throw new RuntimeException("Wrong DistanceMeasurer implementation "
+            + distanceClass + " provided");
       }
     } else {
       distanceMeasurer = new EuclidianDistance();
@@ -244,8 +245,8 @@ public final class KMeansBSP
       // add the vector to the center
       newCenterArray[lowestDistantCenter] = newCenterArray[lowestDistantCenter]
           .addUnsafe(key);
-      summationCount[lowestDistantCenter]++;
     }
+    summationCount[lowestDistantCenter]++;
   }
 
   private int getNearestCenter(DoubleVector key) {
@@ -488,17 +489,12 @@ public final class KMeansBSP
 
       dataWriter.append(vector, value);
       if (k > i) {
-        assert centerWriter != null;
         centerWriter.append(vector, value);
-      } else {
-        if (centerWriter != null) {
-          centerWriter.close();
-          centerWriter = null;
-        }
       }
       i++;
     }
     br.close();
+    centerWriter.close();
     dataWriter.close();
     return in;
   }
@@ -514,7 +510,7 @@ public final class KMeansBSP
       fs.delete(out, true);
 
     if (fs.exists(center))
-      fs.delete(out, true);
+      fs.delete(center, true);
 
     if (fs.exists(in))
       fs.delete(in, true);
@@ -538,10 +534,9 @@ public final class KMeansBSP
       dataWriter.append(vector, value);
       if (k > i) {
         centerWriter.append(vector, value);
-      } else if (k == i) {
-        centerWriter.close();
       }
     }
+    centerWriter.close();
     dataWriter.close();
   }
 }

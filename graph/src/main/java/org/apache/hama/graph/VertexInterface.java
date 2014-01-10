@@ -38,7 +38,10 @@ public interface VertexInterface<V extends WritableComparable, E extends Writabl
     extends WritableComparable<VertexInterface<V, E, M>> {
 
   /**
-   * Used to setup a vertex.
+   * This method is called once before the Vertex computation begins. Since the
+   * Vertex object is serializable, variables in your Vertex program always
+   * should be declared a s static.
+   * 
    */
   public void setup(HamaConfiguration conf);
 
@@ -78,12 +81,14 @@ public interface VertexInterface<V extends WritableComparable, E extends Writabl
   public void sendMessage(V destinationVertexID, M msg) throws IOException;
 
   /**
-   * Sends a message to add a new vertex through the partitioner to the appropriate BSP peer 
+   * Sends a message to add a new vertex through the partitioner to the
+   * appropriate BSP peer
    */
-  public void addVertex(V vertexID, List<Edge<V, E>> edges, M value) throws IOException;
+  public void addVertex(V vertexID, List<Edge<V, E>> edges, M value)
+      throws IOException;
 
   /**
-   * Removes current Vertex from local peer. 
+   * Removes current Vertex from local peer.
    */
   public void remove() throws IOException;
 
@@ -106,5 +111,20 @@ public interface VertexInterface<V extends WritableComparable, E extends Writabl
    * Gets the vertex value
    */
   public M getValue();
+
+  /**
+   * Provides a value to the specified aggregator.
+   * 
+   * @throws IOException
+   * 
+   * @param name identifies a aggregator
+   * @param value value to be aggregated
+   */
+  public void aggregate(String name, M value) throws IOException;
+
+  /**
+   * Returns the value of the specified aggregator.
+   */
+  public Writable getAggregatedValue(String name);
 
 }

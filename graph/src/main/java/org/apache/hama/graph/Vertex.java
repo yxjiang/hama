@@ -17,14 +17,18 @@
  */
 package org.apache.hama.graph;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hama.HamaConfiguration;
@@ -65,7 +69,7 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
 
   @Override
   public V getVertexID() {
-    return vertexID;
+    return this.vertexID;
   }
 
   @Override
@@ -116,24 +120,26 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
   private void alterVertexCounter(int i) throws IOException {
     this.runner.setChangedVertexCnt(this.runner.getChangedVertexCnt() + i);
   }
-  
+
   @Override
-  public void addVertex(V vertexID, List<Edge<V, E>> edges, M value) throws IOException {
+  public void addVertex(V vertexID, List<Edge<V, E>> edges, M value)
+      throws IOException {
     MapWritable msg = new MapWritable();
     // Create the new vertex.
-    Vertex<V, E, M> vertex = GraphJobRunner.<V, E, M> newVertexInstance(GraphJobRunner.VERTEX_CLASS);
+    Vertex<V, E, M> vertex = GraphJobRunner
+        .<V, E, M> newVertexInstance(GraphJobRunner.VERTEX_CLASS);
     vertex.setEdges(edges);
     vertex.setValue(value);
     vertex.setVertexID(vertexID);
-    
+
     msg.put(GraphJobRunner.FLAG_VERTEX_INCREASE, vertex);
     // Find the proper partition to host the new vertex.
-    int partition = getPartitioner().getPartition(vertexID, value, 
+    int partition = getPartitioner().getPartition(vertexID, value,
         runner.getPeer().getNumPeers());
     String destPeer = runner.getPeer().getAllPeerNames()[partition];
-    
+
     runner.getPeer().send(destPeer, new GraphJobMessage(msg));
-    
+
     alterVertexCounter(1);
   }
 
@@ -141,11 +147,11 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
   public void remove() throws IOException {
     MapWritable msg = new MapWritable();
     msg.put(GraphJobRunner.FLAG_VERTEX_DECREASE, this.vertexID);
-    
+
     // Get master task peer.
     String destPeer = GraphJobRunner.getMasterTask(this.getPeer());
     runner.getPeer().send(destPeer, new GraphJobMessage(msg));
-    
+
     alterVertexCounter(-1);
   }
 
@@ -172,7 +178,7 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
 
   @Override
   public M getValue() {
-    return value;
+    return this.value;
   }
 
   @Override
@@ -186,31 +192,6 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
 
   public int getMaxIteration() {
     return runner.getMaxIteration();
-  }
-
-  /**
-   * Get the last aggregated value of the defined aggregator, null if nothing
-   * was configured or not returned a result. You have to supply an index, the
-   * index is defined by the order you set the aggregator classes in
-   * {@link GraphJob#setAggregatorClass(Class...)}. Index is starting at zero,
-   * so if you have a single aggregator you can retrieve it via
-   * {@link #getLastAggregatedValue}(0).
-   */
-  @SuppressWarnings("unchecked")
-  public M getLastAggregatedValue(int index) {
-    return (M) runner.getLastAggregatedValue(index);
-  }
-
-  /**
-   * Get the number of aggregated vertices in the last superstep. Or null if no
-   * aggregator is available.You have to supply an index, the index is defined
-   * by the order you set the aggregator classes in
-   * {@link GraphJob#setAggregatorClass(Class...)}. Index is starting at zero,
-   * so if you have a single aggregator you can retrieve it via
-   * {@link #getNumLastAggregatedVertices}(0).
-   */
-  public IntWritable getNumLastAggregatedVertices(int index) {
-    return runner.getNumLastAggregatedVertices(index);
   }
 
   public int getNumPeers() {
@@ -239,21 +220,6 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
   @Override
   public void voteToHalt() {
     this.votedToHalt = true;
-  }
-
-  /**
-   * Disable an aggregator for the next superstep. The returning value of 
-   * the aggregator will be null.
-   */
-  public void skipAggregator(int index) throws IOException {
-    MapWritable msg = new MapWritable();
-    msg.put(GraphJobRunner.FLAG_AGGREGATOR_SKIP, new IntWritable(index));
-    
-    this.runner.getAggregationRunner().addSkipAggregator(index);
-    
-    // Get master task peer.
-    String destPeer = GraphJobRunner.getMasterTask(this.getPeer());
-    runner.getPeer().send(destPeer, new GraphJobMessage(msg));
   }
 
   void setActive() {
@@ -299,17 +265,18 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
   @Override
   public void readFields(DataInput in) throws IOException {
     if (in.readBoolean()) {
-      if (vertexID == null) {
-        vertexID = GraphJobRunner.createVertexIDObject();
+      if (this.vertexID == null) {
+        this.vertexID = GraphJobRunner.createVertexIDObject();
       }
-      vertexID.readFields(in);
+      this.vertexID.readFields(in);
     }
     if (in.readBoolean()) {
       if (this.value == null) {
-        value = GraphJobRunner.createVertexValue();
+        this.value = GraphJobRunner.createVertexValue();
       }
-      value.readFields(in);
+      this.value.readFields(in);
     }
+
     this.edges = new ArrayList<Edge<V, E>>();
     if (in.readBoolean()) {
       int num = in.readInt();
@@ -340,6 +307,7 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
       out.writeBoolean(true);
       vertexID.write(out);
     }
+
     if (value == null) {
       out.writeBoolean(false);
     } else {
@@ -393,11 +361,48 @@ public abstract class Vertex<V extends WritableComparable, E extends Writable, M
 
   }
 
+  /**
+   * Provides a value to the specified aggregator.
+   * 
+   * @throws IOException
+   * 
+   * @param name identifies an aggregator
+   * @param value value to be aggregated
+   */
+  @Override
+  public void aggregate(String name, M value) throws IOException {
+    MapWritable msg = new MapWritable();
+    msg.put(new Text(GraphJobRunner.S_FLAG_AGGREGATOR_VALUE + ";" + name),
+        value);
+
+    // Get master task peer.
+    String destPeer = GraphJobRunner.getMasterTask(this.getPeer());
+    runner.getPeer().send(destPeer, new GraphJobMessage(msg));
+  }
+
+  @Override
+  public Writable getAggregatedValue(String name) {
+    return this.runner.getAggregationRunner().getAggregatedValue(name);
+  }
+
   protected void setRunner(GraphJobRunner<V, E, M> runner) {
     this.runner = runner;
   }
 
   protected GraphJobRunner<V, E, M> getRunner() {
     return runner;
+  }
+  
+  public Vertex<V, E, M> deepCopy() throws IOException {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    DataOutputStream dos = new DataOutputStream(bos);
+    this.write(dos);
+    
+    ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+    DataInputStream dis = new DataInputStream(bis);
+    
+    Vertex<V, E, M> vertex = GraphJobRunner.<V, E, M> newVertexInstance(GraphJobRunner.VERTEX_CLASS);
+    vertex.readFields(dis);
+    return vertex;
   }
 }
