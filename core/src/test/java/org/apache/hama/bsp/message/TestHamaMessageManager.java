@@ -40,7 +40,7 @@ import org.apache.hama.bsp.message.queue.MessageQueue;
 import org.apache.hama.bsp.message.queue.MessageTransferQueue;
 import org.apache.hama.util.BSPNetUtils;
 
-public class TestHadoopMessageManager extends TestCase {
+public class TestHamaMessageManager extends TestCase {
 
   public static final String TMP_OUTPUT_PATH = "/tmp/messageQueue";
   // increment is here to solve race conditions in parallel execution to choose
@@ -65,11 +65,11 @@ public class TestHadoopMessageManager extends TestCase {
 
   private static void messagingInternal(HamaConfiguration conf) throws Exception {
     conf.set(MessageManagerFactory.MESSAGE_MANAGER_CLASS,
-        "org.apache.hama.bsp.message.HadoopMessageManagerImpl");
+        "org.apache.hama.bsp.message.HamaMessageManagerImpl");
     MessageManager<IntWritable> messageManager = MessageManagerFactory
         .getMessageManager(conf);
 
-    assertTrue(messageManager instanceof HadoopMessageManagerImpl);
+    assertTrue(messageManager instanceof HamaMessageManagerImpl);
 
     InetSocketAddress peer = new InetSocketAddress(
         BSPNetUtils.getCanonicalHostname(), BSPNetUtils.getFreePort()
