@@ -15,27 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.bsp.message.queue;
+package org.apache.hama.ml.recommendation;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.WritableComparable;
+import java.util.List;
 
-/**
- * Queue transfer protocol for sorted message queue.
- *
- * @param <M>
- */
-public class SortedMessageTransferProtocol<M extends WritableComparable<M>> implements
-    MessageTransferQueue<M> {
+import org.apache.commons.math3.util.Pair;
 
-  @Override
-  public SortedMessageQueue<M> getSenderQueue(Configuration conf) {
-    return new SortedMessageQueue<M>();
-  }
+public interface ItemSimilarity {
+  /**
+   * calculate similarity between two items
+   * @param item1 - first item
+   * @param item2 - second item
+   * @return item similarity, 0 == similar item
+   */
+  double calculateItemSimilarity(long item1, long item2);
 
-  @Override
-  public SortedMessageQueue<M> getReceiverQueue(Configuration conf) {
-    return new SortedMessageQueue<M>();
-  }
-
+  /**
+   * get most similar users
+   * @param item - item id
+   * @param count - number of similar items
+   * @return list of similar item ids(key) and similarity(value)
+   */
+  List<Pair<Long, Double>> getMostSimilarItems(long item, int count);
 }

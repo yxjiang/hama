@@ -15,27 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.bsp.message.queue;
+package org.apache.hama.commons.math;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Writable;
-
-/**
- * The disk transfer queue protocol.
- *
- * @param <M>
- */
-public class DiskTransferProtocolQueue<M extends Writable> implements
-    MessageTransferQueue<M> {
+@SuppressWarnings("deprecation")
+public class SquareVectorFunction implements DoubleVectorFunction {
 
   @Override
-  public MessageQueue<M> getSenderQueue(Configuration conf) {
-    return new DiskQueue<M>();
-  }
-
-  @Override
-  public MessageQueue<M> getReceiverQueue(Configuration conf) {
-    return new DiskQueue<M>();
+  public double calculate(int index, double value) {
+    return Math.pow(value, 2);
   }
 
 }

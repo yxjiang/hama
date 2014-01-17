@@ -15,26 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.bsp.message.queue;
+package org.apache.hama.ml.recommendation;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Writable;
+import java.util.List;
 
-/**
- * Queue transfer protocol for spilling queue.
- *
- * @param <M> The message type.
- */
-public class SpillingQueueTransferProtocol<M extends Writable> implements
-    MessageTransferQueue<M> {
+import org.apache.commons.math3.util.Pair;
 
-  @Override
-  public MessageQueue<M> getSenderQueue(Configuration conf) {
-    return new SpillingQueue<M>();
-  }
+public interface UserSimilarity {
+  /**
+   * calculate similarity between two users
+   * @param user1 - first user
+   * @param user2 - second user
+   * @return user similarity, 0 == similar user
+   */
+  double calculateUserSimilarity(long user1, long user2);
 
-  @Override
-  public MessageQueue<M> getReceiverQueue(Configuration conf) {
-    return new SpillingQueue<M>();
-  }
+  /**
+   * get most similar users
+   * @param user - user id
+   * @param count - number of similar users
+   * @return list of similar user ids(key) and similarity(value)
+   */
+  List<Pair<Long, Double>> getMostSimilarUsers(long user, int count);
 }

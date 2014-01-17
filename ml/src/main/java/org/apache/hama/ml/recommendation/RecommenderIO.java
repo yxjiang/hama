@@ -15,25 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hama.bsp.message.queue;
+package org.apache.hama.ml.recommendation;
 
-import org.apache.hadoop.conf.Configuration;
-
-/**
- * Interface to define the sender queue and receiver queue protocol.
- * 
- * @param <M>
- */
-public interface MessageTransferQueue<M> {
+public interface RecommenderIO {
+  /**
+   * set preferences input data
+   * @param path - file path to preferences data
+   * 
+   */
+  void setInputPreferences(String path);
   
   /**
-   * Instantiate a sender queue.
+   * set user features input data
+   * @param path - file path to user features data if any
+   * 
    */
-  public MessageQueue<M> getSenderQueue(Configuration conf);
+  void setInputUserFeatures(String path);
+  
+  /**
+   * set item features input data
+   * @param path - file path to item features data if any
+   * 
+   */
+  void setInputItemFeatures(String path);
 
   /**
-   * Instantiate a receiver queue.
+   * set output path for trained model
+   * @param path - output path
+   * 
    */
-  public MessageQueue<M> getReceiverQueue(Configuration conf);
+  void setOutputPath(String path);
 
 }
