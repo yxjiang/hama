@@ -14,6 +14,7 @@ Release 0.7.0 (unreleased changes)
 
   BUG FIXES
 
+	 HAMA-860: Make aggregators start from the first superstep (Anastasis Andronidis)
    HAMA-857: Graph Combiners is wrongly implemented (edwardyoon)
    HAMA-845: The size() of Spilling Queue returns always numMessagesWritten (edwardyoon)
    HAMA-834: Fix KMeans example (Martin Illecker)
@@ -24,6 +25,7 @@ Release 0.7.0 (unreleased changes)
 
   IMPROVEMENTS
 
+   HAMA-859: Leverage commons cli2 to parse the input argument for NeuralNetwork Example (Yexi Jiang)
    HAMA-853: Refactor Outgoing message manager (edwardyoon)
    HAMA-852: Add MessageClass property in BSPJob (Martin Illecker)
    HAMA-843: Message communication overhead between master aggregation and vertex computation supersteps (edwardyoon)
