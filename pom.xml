@@ -88,10 +88,13 @@
     <!-- Dependencies -->
     <commons-logging.version>1.1.1</commons-logging.version>
     <commons-cli.version>1.2</commons-cli.version>
-    <commons-configuration>1.7</commons-configuration>
-    <commons-lang>2.6</commons-lang>
-    <commons-httpclient>3.0.1</commons-httpclient>
+    <commons-configuration.version>1.7</commons-configuration.version>
+    <commons-lang.version>2.6</commons-lang.version>
+    <commons-httpclient.version>3.0.1</commons-httpclient.version>
+    <commons-collections.version>3.2.1</commons-collections.version>
+    <commons-io.version>2.4</commons-io.version>
     <hadoop.version>1.2.0</hadoop.version>
+    <protobuf.version>2.5.0</protobuf.version>
     <jetty.version>6.1.14</jetty.version>
     <junit.version>4.8.1</junit.version>
     <slf4j.version>1.5.8</slf4j.version>
@@ -100,6 +103,25 @@
     <zookeeper.version>3.4.5</zookeeper.version>
     <ant.version>1.7.1</ant.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>maven-repo</id> <!-- This should be at top, it makes maven try the central repo first and then others and hence faster dep resolution -->
+      <name>Maven Repository</name>
+      <url>http://repo.maven.apache.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>cloudera-repo</id>
+      <name>Cloudera Repository</name>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos</url>
+    </repository>
+  </repositories>
 
   <profiles>
     <profile>
@@ -124,7 +146,7 @@
     <profile>
       <id>hadoop2</id>
       <properties>
-        <hadoop.version>2.1.0-beta</hadoop.version>
+        <hadoop.version>2.2.0</hadoop.version>
       </properties>
 
       <dependencies>
@@ -158,7 +180,12 @@
         <dependency>
           <groupId>com.google.protobuf</groupId>
           <artifactId>protobuf-java</artifactId>
-          <version>2.4.0a</version>
+          <version>${protobuf.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+          <version>${commons-io.version}</version>
         </dependency>
     </dependencies>
     </profile>
@@ -174,8 +201,8 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>13.0.1</version> 
-      </dependency>    
+        <version>13.0.1</version>
+      </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
@@ -189,17 +216,22 @@
       <dependency>
         <groupId>commons-configuration</groupId>
         <artifactId>commons-configuration</artifactId>
-        <version>${commons-configuration}</version>
+        <version>${commons-configuration.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-lang</groupId>
         <artifactId>commons-lang</artifactId>
-        <version>${commons-lang}</version>
+        <version>${commons-lang.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-httpclient</groupId>
         <artifactId>commons-httpclient</artifactId>
-        <version>${commons-httpclient}</version>
+        <version>${commons-httpclient.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-collections</groupId>
+        <artifactId>commons-collections</artifactId>
+        <version>${commons-collections.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mortbay.jetty</groupId>
@@ -327,7 +359,7 @@
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.6</version>
       </plugin>
-      
+
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>2.2.2</version>
@@ -343,7 +375,7 @@
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
-        <version>0.8</version>
+        <version>0.10</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -428,7 +460,7 @@
       </plugin>
     </plugins>
   </build>
-  
+
   <distributionManagement>
     <site>
       <id>apache.website</id>

@@ -3,7 +3,7 @@ Hama Change Log
 Release 0.7.0 (unreleased changes)
 
   NEW FEATURES
-   
+
    HAMA-864: Fix/improve DoubleVector and DenseDoubleVector (Yexi Jiang)
    HAMA-842: Add persistent queue option to JobConf (edwardyoon)
    HAMA-839: Support NullWritable in Hama Pipes (Martin Illecker)    
@@ -15,6 +15,9 @@ Release 0.7.0 (unreleased changes)
 
   BUG FIXES
 
+   HAMA-868: Fix SemiClustering bugs (edwardyoon)
+   HAMA-871: NPE when building core module due to gmaven-plugin (Martin Illecker) 
+   HAMA-867: HAMA 0.7 doesn't work with HDFS 2X due to lack of libs (Skater Xu via edwardyoon)
    HAMA-862: Handling max tasks exception (edwardyoon)
    HAMA-860: Make aggregators start from the first superstep (Anastasis Andronidis)
    HAMA-857: Graph Combiners is wrongly implemented (edwardyoon)
@@ -27,6 +30,10 @@ Release 0.7.0 (unreleased changes)
 
   IMPROVEMENTS
 
+   HAMA-873: Display counters of job on master's web page (Saisai Shao via edwardyoon)
+   HAMA-870: Runtime message compression in Bundle (edwardyoon)
+   HAMA-869: Add Cloudera repository in maven pom file (Saisai Shao via edwardyoon)
+   HAMA-856: Optimize BSPMessageBundle (edwardyoon)
    HAMA-853: Refactor Outgoing message manager (edwardyoon)
    HAMA-852: Add MessageClass property in BSPJob (Martin Illecker)
    HAMA-843: Message communication overhead between master aggregation and vertex computation supersteps (edwardyoon)

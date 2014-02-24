@@ -18,6 +18,7 @@
 package org.apache.hama.bsp.message;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
@@ -25,12 +26,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
-import org.apache.hama.Constants;
+import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSPMessageBundle;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.BSPPeerImpl;
 import org.apache.hama.bsp.TaskAttemptID;
-import org.apache.hama.bsp.message.compress.BSPCompressedBundle;
 import org.apache.hama.ipc.HamaRPCProtocolVersion;
 import org.apache.hama.ipc.RPC;
 import org.apache.hama.ipc.RPC.Server;
@@ -41,7 +41,7 @@ import org.apache.hama.util.LRUCache;
  * 
  */
 public final class HamaMessageManagerImpl<M extends Writable> extends
-    CompressableMessageManager<M> implements HamaMessageManager<M> {
+    AbstractMessageManager<M> implements HamaMessageManager<M> {
 
   private static final Log LOG = LogFactory
       .getLog(HamaMessageManagerImpl.class);
@@ -53,9 +53,8 @@ public final class HamaMessageManagerImpl<M extends Writable> extends
   @SuppressWarnings("serial")
   @Override
   public final void init(TaskAttemptID attemptId, BSPPeer<?, ?, ?, ?, M> peer,
-      Configuration conf, InetSocketAddress peerAddress) {
+      HamaConfiguration conf, InetSocketAddress peerAddress) {
     super.init(attemptId, peer, conf, peerAddress);
-    super.initCompression(conf);
     startRPCServer(conf, peerAddress);
     peersLRUCache = new LRUCache<InetSocketAddress, HamaMessageManager<M>>(
         maxCachedConnections) {
@@ -75,20 +74,31 @@ public final class HamaMessageManagerImpl<M extends Writable> extends
   private final void startRPCServer(Configuration conf,
       InetSocketAddress peerAddress) {
     try {
-      String bindAddress = conf.get(Constants.PEER_HOST,
-          Constants.DEFAULT_PEER_HOST);
-      InetSocketAddress selfAddress = new InetSocketAddress(bindAddress, 0);
-
-      // TODO Make number of RPC Server threads configurable
-      this.server = RPC.getServer(this, selfAddress.getHostName(),
-          selfAddress.getPort(), conf.getInt("hama.default.messenger.handler.threads.num", 5), false, conf);
-      server.start();
-      
-      LOG.info(" BSPPeer address:" + server.getListenerAddress().getHostName()
-          + " port:" + server.getListenerAddress().getPort());
-    } catch (IOException e) {
-      LOG.error("Fail to start RPC server!", e);
+      startServer(peerAddress.getHostName(), peerAddress.getPort());
+    } catch (IOException ioe) {
+      LOG.error("Fail to start RPC server!", ioe);
       throw new RuntimeException("RPC Server could not be launched!");
+    }
+  }
+
+  private void startServer(String hostName, int port) throws IOException {
+    int retry = 0;
+    try {
+      this.server = RPC.getServer(this, hostName, port,
+          conf.getInt("hama.default.messenger.handler.threads.num", 5), false,
+          conf);
+
+      server.start();
+      LOG.info("BSPPeer address:" + server.getListenerAddress().getHostName()
+          + " port:" + server.getListenerAddress().getPort());
+    } catch (BindException e) {
+      LOG.warn("Address already in use. Retrying " + hostName + ":" + port + 1);
+      startServer(hostName, port + 1);
+      retry++;
+
+      if (retry > 5) {
+        throw new RuntimeException("RPC Server could not be launched!");
+      }
     }
   }
 
@@ -108,16 +118,8 @@ public final class HamaMessageManagerImpl<M extends Writable> extends
       throw new IllegalArgumentException("Can not find " + addr.toString()
           + " to transfer messages to!");
     } else {
-      if (compressor != null
-          && (bundle.getApproximateSize() > conf.getLong(
-              "hama.messenger.compression.threshold", 1048576))) {
-        
-        BSPCompressedBundle compMsgBundle = compressor.compressBundle(bundle);
-        bspPeerConnection.put(compMsgBundle);
-        peer.incrementCounter(BSPPeerImpl.PeerCounter.COMPRESSED_MESSAGES, 1L);
-      } else {
-        bspPeerConnection.put(bundle);
-      }
+      peer.incrementCounter(BSPPeerImpl.PeerCounter.MESSAGE_BYTES_TRANSFERED, bundle.getLength());
+      bspPeerConnection.put(bundle);
     }
   }
 
@@ -154,12 +156,6 @@ public final class HamaMessageManagerImpl<M extends Writable> extends
   }
 
   @Override
-  public final void put(BSPCompressedBundle compMsgBundle) throws IOException {
-    BSPMessageBundle<M> bundle = compressor.decompressBundle(compMsgBundle);
-    loopBackMessages(bundle);
-  }
-
-  @Override
   public final long getProtocolVersion(String arg0, long arg1)
       throws IOException {
     return versionID;
@@ -172,4 +168,5 @@ public final class HamaMessageManagerImpl<M extends Writable> extends
     }
     return null;
   }
+
 }
