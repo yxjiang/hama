@@ -24,28 +24,36 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 
 /**
- * @author yjian004
+ * The implementation of SparseVector.
  * 
  */
 public class SparseDoubleVector implements DoubleVector {
 
-  private int dimension;
+  private int dimension;        
   private double defaultValue; // 0 by default
-  private Map<Integer, Double> elements;
+  private Map<Integer, Double> elements;  // the non-default value
 
+  /**
+   * Initialize a sparse vector with given dimension with default value 0.
+   * @param dimension
+   */
   public SparseDoubleVector(int dimension) {
     this(dimension, 0.0);
   }
 
+  /**
+   * Initialize a sparse vector with given dimension and given default value 0.
+   * @param dimension
+   * @param defaultValue
+   */
   private SparseDoubleVector(int dimension, double defaultValue) {
     this.elements = new HashMap<Integer, Double>();
     this.defaultValue = defaultValue;
     this.dimension = dimension;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#get(int)
+  /**
+   * Get the value of a given index.
    */
   @Override
   public double get(int index) {
@@ -58,27 +66,24 @@ public class SparseDoubleVector implements DoubleVector {
     return val;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#getLength()
+  /**
+   * Get the dimension of the vector.
    */
   @Override
   public int getLength() {
-    return this.dimension;
+    return this.getDimension();
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#getDimension()
+  /**
+   * Get the dimension of the vector.
    */
   @Override
   public int getDimension() {
     return this.dimension;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#set(int, double)
+  /**
+   * Set the value of a given index.
    */
   @Override
   public void set(int index, double value) {
@@ -87,11 +92,8 @@ public class SparseDoubleVector implements DoubleVector {
     this.elements.put(index, value);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#applyToElements(org.apache.hama
-   * .commons.math.DoubleFunction)
+  /**
+   * Apply a function to the copy of current vector and return the result.
    */
   @Override
   public DoubleVector applyToElements(DoubleFunction func) {
@@ -105,12 +107,8 @@ public class SparseDoubleVector implements DoubleVector {
     return newVec;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#applyToElements(org.apache.hama
-   * .commons.math.DoubleVector,
-   * org.apache.hama.commons.math.DoubleDoubleFunction)
+  /**
+   * Apply a binary function to the copy of current vector with another vector and then return the result.
    */
   @Override
   public DoubleVector applyToElements(DoubleVector other,
@@ -138,11 +136,8 @@ public class SparseDoubleVector implements DoubleVector {
     return newVec;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#addUnsafe(org.apache.hama.commons
-   * .math.DoubleVector)
+  /**
+   * Add another vector.
    */
   @Override
   public DoubleVector addUnsafe(DoubleVector vector) {
@@ -159,11 +154,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#add(org.apache.hama.commons.math
-   * .DoubleVector)
+  /**
+   * Add another vector to the copy of the current vector and return the result.
    */
   @Override
   public DoubleVector add(DoubleVector vector) {
@@ -172,9 +164,8 @@ public class SparseDoubleVector implements DoubleVector {
     return this.addUnsafe(vector);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#add(double)
+  /**
+   * Add a scalar.
    */
   @Override
   public DoubleVector add(double scalar) {
@@ -192,11 +183,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#subtractUnsafe(org.apache.hama
-   * .commons.math.DoubleVector)
+  /**
+   * Subtract a vector from current vector.
    */
   @Override
   public DoubleVector subtractUnsafe(DoubleVector vector) {
@@ -213,11 +201,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#subtract(org.apache.hama.commons
-   * .math.DoubleVector)
+  /**
+   * Subtract a vector from current vector.
    */
   @Override
   public DoubleVector subtract(DoubleVector vector) {
@@ -226,9 +211,8 @@ public class SparseDoubleVector implements DoubleVector {
     return this.subtractUnsafe(vector);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#subtract(double)
+  /**
+   * Subtract a scalar from a copy of the current vector.
    */
   @Override
   public DoubleVector subtract(double scalar) {
@@ -246,9 +230,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#subtractFrom(double)
+  /**
+   * Subtract a scalar from a copy of the current vector and return the result.
    */
   @Override
   public DoubleVector subtractFrom(double scalar) {
@@ -266,9 +249,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#multiply(double)
+  /**
+   * Multiply a copy of the current vector by a scalar and return the result.
    */
   @Override
   public DoubleVector multiply(double scalar) {
@@ -286,11 +268,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#multiplyUnsafe(org.apache.hama
-   * .commons.math.DoubleVector)
+  /**
+   * Multiply a copy of the current vector with another vector and return the result.
    */
   @Override
   public DoubleVector multiplyUnsafe(DoubleVector vector) {
@@ -307,11 +286,8 @@ public class SparseDoubleVector implements DoubleVector {
     });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#multiply(org.apache.hama.commons
-   * .math.DoubleVector)
+  /**
+   * Multiply a copy of the current vector with another vector and return the result.
    */
   @Override
   public DoubleVector multiply(DoubleVector vector) {
@@ -320,11 +296,8 @@ public class SparseDoubleVector implements DoubleVector {
     return this.multiplyUnsafe(vector);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#multiply(org.apache.hama.commons
-   * .math.DoubleMatrix)
+  /**
+   * Multiply a copy of the current vector with a matrix and return the result, i.e. r = v * M.
    */
   @Override
   public DoubleVector multiply(DoubleMatrix matrix) {
@@ -334,26 +307,37 @@ public class SparseDoubleVector implements DoubleVector {
     return this.multiplyUnsafe(matrix);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see
-   * org.apache.hama.commons.math.DoubleVector#multiplyUnsafe(org.apache.hama
-   * .commons.math.DoubleMatrix)
+  /**
+   * Multiply a copy of the current vector with a matrix and return the result, i.e. r = v * M.
    */
   @Override
   public DoubleVector multiplyUnsafe(DoubleMatrix matrix) {
-    // TODO Auto-generated method stub
-    return null;
+    // currently the result is a dense double vector
+    DoubleVector res = new DenseDoubleVector(matrix.getColumnCount());
+    int columns = matrix.getColumnCount();
+    for (int i = 0; i < columns; ++i) {
+      res.set(i, this.dotUnsafe(matrix.getColumnVector(i)));
+    }
+    return res;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#divide(double)
+  /**
+   * Divide a copy of the current vector by a scala.
    */
   @Override
   public DoubleVector divide(double scalar) {
-    // TODO Auto-generated method stub
-    return null;
+    Preconditions.checkArgument(scalar != 0, "Scalar cannot be 0.");
+    final double factor = scalar;
+    return this.applyToElements(new DoubleFunction() {
+      @Override
+      public double apply(double value) {
+        return value / factor;
+      }
+      @Override
+      public double applyDerivative(double value) {
+        throw new UnsupportedOperationException();
+      }
+    });
   }
 
   /*
@@ -362,48 +346,83 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public DoubleVector divideFrom(double scalar) {
-    // TODO Auto-generated method stub
-    return null;
+    Preconditions.checkArgument(scalar != 0, "Scalar cannot be 0.");
+    final double factor = scalar;
+    return this.applyToElements(new DoubleFunction() {
+      @Override
+      public double apply(double value) {
+        return factor / value;  // value can be 0!
+      }
+      @Override
+      public double applyDerivative(double value) {
+        throw new UnsupportedOperationException();
+      }
+    });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#pow(int)
+  /**
+   * Apply the power to each element of a copy of the current vector.
    */
   @Override
   public DoubleVector pow(int x) {
-    // TODO Auto-generated method stub
-    return null;
+    final int p = x;
+    return this.applyToElements(new DoubleFunction() {
+      @Override
+      public double apply(double value) {
+        return Math.pow(value, p);
+      }
+      @Override
+      public double applyDerivative(double value) {
+        throw new UnsupportedOperationException();
+      }
+    });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#abs()
+  /**
+   * Apply the abs elementwise to a copy of current vector.
    */
   @Override
   public DoubleVector abs() {
-    // TODO Auto-generated method stub
-    return null;
+    return this.applyToElements(new DoubleFunction() {
+      @Override
+      public double apply(double value) {
+        return Math.abs(value);
+      }
+      @Override
+      public double applyDerivative(double value) {
+        throw new UnsupportedOperationException();
+      }
+    });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#sqrt()
+  /**
+   * Apply the sqrt elementwise to a copy of current vector.
    */
   @Override
   public DoubleVector sqrt() {
-    // TODO Auto-generated method stub
-    return null;
+    return this.applyToElements(new DoubleFunction() {
+      @Override
+      public double apply(double value) {
+        return Math.sqrt(value);
+      }
+      @Override
+      public double applyDerivative(double value) {
+        throw new UnsupportedOperationException();
+      }
+    });
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#sum()
+  /**
+   * Get the sum of all the elements.
    */
   @Override
   public double sum() {
-    // TODO Auto-generated method stub
-    return 0;
+    double sum = 0.0;
+    Iterator<DoubleVectorElement> itr = this.iterate();
+    while (itr.hasNext()) {
+      sum += itr.next().getValue();
+    }
+    return sum;
   }
 
   /*
