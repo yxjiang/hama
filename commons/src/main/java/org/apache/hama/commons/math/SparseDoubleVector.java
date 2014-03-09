@@ -124,7 +124,11 @@ public class SparseDoubleVector implements DoubleVector {
     Preconditions.checkArgument(this.getDimension() == other.getDimension(),
         "Dimension of two vectors should be equal.");
 
-    double otherDefaultValue = ((SparseDoubleVector) other).defaultValue;
+    
+    double otherDefaultValue = 0.0;
+    if (other instanceof SparseDoubleVector) {
+     otherDefaultValue = ((SparseDoubleVector) other).defaultValue;
+    }
     double newDefaultValue = this.defaultValue;
     if (other instanceof SparseDoubleVector) {
       newDefaultValue = func.apply(this.defaultValue, otherDefaultValue);
@@ -135,8 +139,8 @@ public class SparseDoubleVector implements DoubleVector {
 //  System.out.printf("This: %s\n", this.toString());
 //  System.out.printf("That: %s\n", other.toString());
 
-    Iterator<DoubleVectorElement> thisItr = this.iterateNonZero();
-    Iterator<DoubleVectorElement> otherItr = other.iterateNonZero();
+    Iterator<DoubleVectorElement> thisItr = this.iterateNonDefault();
+    Iterator<DoubleVectorElement> otherItr = other.iterateNonDefault();
 
     DoubleVectorElement thisCur = null;
     if (thisItr.hasNext()) {
@@ -146,14 +150,6 @@ public class SparseDoubleVector implements DoubleVector {
     if (otherItr.hasNext()) {
       otherCur = otherItr.next();
     }
-
-//    if (thisCur == null) {
-//      System.out.println("Null");
-//    }
-//
-//    if (otherCur == null) {
-//      System.out.println("Null");
-//    }
 
     // System.out.printf("This, %d: %f\n", thisCur.getIndex(),
     // thisCur.getValue());
@@ -685,7 +681,7 @@ public class SparseDoubleVector implements DoubleVector {
    * Generate the iterator that iterates the non-default values.
    */
   @Override
-  public Iterator<DoubleVectorElement> iterateNonZero() {
+  public Iterator<DoubleVectorElement> iterateNonDefault() {
     return new NonDefaultIterator();
   }
 
