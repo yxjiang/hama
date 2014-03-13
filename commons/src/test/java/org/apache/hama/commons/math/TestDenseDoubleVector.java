@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Iterator;
 
 import org.apache.hama.commons.math.DoubleVector.DoubleVectorElement;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**

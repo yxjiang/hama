@@ -544,7 +544,7 @@ public final class DenseDoubleVector implements DoubleVector {
   }
 
   /**
-   * Non-zero iterator for vector elements.
+   * Non-default iterator for vector elements.
    */
   private final class NonDefaultIterator extends
       AbstractIterator<DoubleVectorElement> {
