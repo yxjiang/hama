@@ -3,11 +3,9 @@ package org.apache.hama.commons.math;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import org.apache.hama.commons.math.DoubleVector.DoubleVectorElement;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -16,7 +14,6 @@ import org.junit.Test;
  */
 public class TestSparseDoubleVector {
 
-  @Ignore
   @Test
   public void testBasic() {
     DoubleVector v1 = new SparseDoubleVector(10);
@@ -36,7 +33,6 @@ public class TestSparseDoubleVector {
     assertEquals(v1.get(5), 2, 0.000001);
   }
 
-  @Ignore
   @Test
   public void testIterators() {
     DoubleVector v1 = new SparseDoubleVector(10, 5.5);
@@ -177,7 +173,57 @@ public class TestSparseDoubleVector {
 
   }
 
+  @Test
   public void testAdd() {
+    // addition of two sparse vectors
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10);
+    for (int i = 0; i < spVec2.getDimension(); ++i) {
+      spVec2.set(i, 1.5);
+    }
+    
+    DoubleVector expRes1 = new SparseDoubleVector(10, 3.0);
+    assertEquals(expRes1, spVec1.add(spVec2));
+    
+    // addition of one sparse vector and one dense vector
+    DoubleVector dsVec1 = new DenseDoubleVector(10);
+    for (int i = 0; i < dsVec1.getDimension(); ++i) {
+      dsVec1.set(i, 1.5);
+    }
+    
+    DoubleVector expRes2 = new DenseDoubleVector(10);
+    for (int i = 0; i < expRes2.getDimension(); ++i) {
+      expRes2.set(i, 3.0);
+    }
+    assertEquals(expRes2, dsVec1.add(spVec2));
+  }
+  
+  @Test
+  public void testSubtract() {
+    // subtract two sparse vectors
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 2.2);
+    for (int i = 0; i < spVec2.getDimension(); ++i) {
+      spVec2.set(i, 1.2);
+    }
+    DoubleVector expRes1 = new SparseDoubleVector(10, 0.3);
+    assertEquals(expRes1, spVec1.subtract(spVec2));
+    
+    DoubleVector expRes2 = new SparseDoubleVector(10, -0.7);
+    assertEquals(expRes2, spVec1.subtract(spVec3));
+    
+    // subtract one sparse vector from a dense vector
+    DoubleVector dsVec1 = new DenseDoubleVector(10);
+    for (int i = 0; i < dsVec1.getDimension(); ++i) {
+      dsVec1.set(i, 1.7);
+    }
+    DoubleVector expRes3 = new SparseDoubleVector(10, 0.2);
+    assertEquals(expRes3, dsVec1.subtract(spVec1));
+    
+    // subtract one dense vector from a sparse vector
+    DoubleVector expRes4 = new SparseDoubleVector(10, -0.2);
+    assertEquals(expRes4, spVec1.subtract(dsVec1));
   }
 
 }

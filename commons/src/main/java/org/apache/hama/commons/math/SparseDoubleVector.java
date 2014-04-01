@@ -811,4 +811,40 @@ public class SparseDoubleVector implements DoubleVector {
     return sb.toString();
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    long temp;
+    temp = Double.doubleToLongBits(defaultValue);
+    result = prime * result + (int) (temp ^ (temp >>> 32));
+    result = prime * result + dimension;
+    result = prime * result + ((elements == null) ? 0 : elements.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof DoubleVector) {
+      DoubleVector otherVec = (DoubleVector)other;
+      if (this.dimension != otherVec.getDimension()) {
+        return false;
+      }
+      // check non-default entries first
+      for (Map.Entry<Integer, Double> entry : this.elements.entrySet()) {
+        if (Math.abs(entry.getValue() - otherVec.get(entry.getKey())) > 0.000001) {
+          return false;
+        }
+      }
+      // check default values
+      for (int i = 0; i < this.dimension; ++i) {
+        if (Math.abs(this.get(i) - otherVec.get(i)) > 0.000001) {
+          return false;
+        }
+      }
+      
+      return true;
+    }
+    return false;
+  }
 }
