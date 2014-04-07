@@ -91,7 +91,7 @@ public class SparseDoubleVector implements DoubleVector {
   @Override
   public void set(int index, double value) {
     Preconditions.checkArgument(index < this.dimension,
-        "Index out of max allowd dimension of sparse vector.");
+        String.format("Index %d out of max allowd dimension %d of sparse vector.", index, this.dimension));
     if (value == this.defaultValue) {
       this.elements.remove(index);
     } else {
@@ -526,45 +526,7 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public double dotUnsafe(DoubleVector vector) {
-
-    double res = 0.0;
-
-    Iterator<DoubleVectorElement> curItr = this.iterate();
-    Iterator<DoubleVectorElement> otherItr = this.iterate();
-
-    int prevIdx = 0;
-    while (curItr.hasNext() || otherItr.hasNext()) {
-      if (!curItr.hasNext()) {
-        DoubleVectorElement elem = otherItr.next();
-        int curIdx = elem.getIndex();
-        if (prevIdx < elem.getIndex()) { // add default values
-          for (int i = prevIdx; i < curIdx; ++i) {
-            res += this.defaultValue * vector.get(elem.getIndex());
-          }
-        }
-        res += this.defaultValue * elem.getValue();
-        prevIdx = elem.getIndex();
-      } else if (!otherItr.hasNext()) {
-        DoubleVectorElement elem = curItr.next();
-        int curIdx = elem.getIndex();
-        for (int i = prevIdx; i < curIdx; ++i) { // add default values
-          res += this.defaultValue * elem.getIndex();
-        }
-        res += elem.getValue() * vector.get(elem.getIndex());
-        prevIdx = elem.getIndex();
-      } else {
-        DoubleVectorElement curElem = curItr.next();
-        DoubleVectorElement otherElem = otherItr.next();
-
-        int minIdx = Math.min(curElem.getIndex(), otherElem.getIndex());
-        for (int i = prevIdx; i < minIdx; ++i) {
-          res += this.defaultValue * vector.get(otherElem.getIndex());
-        }
-
-      }
-    }
-
-    return 0;
+    return this.multiplyUnsafe(vector).sum();
   }
 
   /**
@@ -592,10 +554,10 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public DoubleVector sliceUnsafe(int length) {
-    DoubleVector newVector = new SparseDoubleVector(this.dimension, this.defaultValue);
+    DoubleVector newVector = new SparseDoubleVector(length, this.defaultValue);
     for (Map.Entry<Integer, Double> entry : this.elements.entrySet()) {
-      if (entry.getKey() >= this.dimension) {
-        break;
+      if (entry.getKey() >= length) {
+        continue;
       }
       newVector.set(entry.getKey(), entry.getValue());
     }
@@ -604,6 +566,8 @@ public class SparseDoubleVector implements DoubleVector {
 
   /**
    * Obtain a sub-vector of the current vector
+   * @param start inclusive
+   * @param end inclusive
    */
   @Override
   public DoubleVector slice(int start, int end) {
@@ -612,19 +576,19 @@ public class SparseDoubleVector implements DoubleVector {
     return this.sliceUnsafe(start, end);
   }
 
-  /*
-   * (non-Javadoc)
-   * @see org.apache.hama.commons.math.DoubleVector#sliceUnsafe(int, int)
+  /**
+   * @param start inclusive
+   * @param end inclusive
    */
   @Override
   public DoubleVector sliceUnsafe(int start, int end) {
     SparseDoubleVector slicedVec = new SparseDoubleVector(end - start + 1, this.defaultValue);
     for (Map.Entry<Integer, Double> entry : this.elements.entrySet()) {
-      if (entry.getKey() >= start) {
-        slicedVec.elements.put(entry.getKey(), entry.getValue());
+      if (entry.getKey() >= start && entry.getKey() <= end) {
+        slicedVec.elements.put(entry.getKey() - start, entry.getValue());
       }
-      if (entry.getKey() >= end) {
-        break;
+      if (entry.getKey() > end) {
+        continue;
       }
     }
     return slicedVec;

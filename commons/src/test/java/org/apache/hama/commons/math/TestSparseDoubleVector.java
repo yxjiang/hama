@@ -225,5 +225,143 @@ public class TestSparseDoubleVector {
     DoubleVector expRes4 = new SparseDoubleVector(10, -0.2);
     assertEquals(expRes4, spVec1.subtract(dsVec1));
   }
+  
+  @Test
+  public void testMultiplyScala() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 2.2);
+    
+    DoubleVector spRes1 = spVec1.applyToElements(new DoubleFunction() {
+      @Override
+      public double apply(double value) {
+        return value * 3;
+      }
+      @Override
+      public double applyDerivative(double value) {
+        throw new UnsupportedOperationException();
+      }
+    });
+    
+    assertEquals(spRes1, spVec1.multiply(3));
+    assertEquals(spVec2, spVec2.multiply(1000));
+    assertEquals(spVec2, spVec1.multiply(0));
+    assertEquals(spVec1, spVec3.multiply(1.5 / 2.2));
+  }
+  
+  @Test
+  public void testMultiply() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 2.2);
+    
+    DoubleVector spRes1 = spVec1.applyToElements(spVec3, new DoubleDoubleFunction() {
+      @Override
+      public double apply(double first, double second) {
+        return first * second;
+      }
+      @Override
+      public double applyDerivative(double value, double second) {
+        throw new UnsupportedOperationException();
+      }
+    });
+
+    assertEquals(spRes1, spVec1.multiply(spVec3));
+    assertEquals(spVec2, spVec1.multiply(spVec2));
+  }
+  
+  @Test
+  public void testDivide() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 6.0);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 2.2);
+    
+    assertEquals(spVec3, spVec1.divide(1.5 / 2.2));
+    assertEquals(spVec2, spVec1.divideFrom(9));
+  }
+  
+  @Test
+  public void testPow() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 1);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 2.25);
+    
+    assertEquals(spVec3, spVec1.pow(2));
+    assertEquals(spVec2, spVec1.pow(0));
+  }
+  
+  @Test
+  public void testAbs() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 0);
+    DoubleVector spVec3 = new SparseDoubleVector(10, -1.5);
+    
+    assertEquals(spVec1, spVec3.abs());
+    assertEquals(spVec2, spVec2.abs());
+  }
+  
+  @Test
+  public void testSqrt() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 2.25);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 0);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec4 = new SparseDoubleVector(10, 1);
+    
+    assertEquals(spVec3, spVec1.sqrt());
+    assertEquals(spVec2, spVec2.sqrt());
+    assertEquals(spVec4, spVec4.sqrt());
+  }
+  
+  @Test
+  public void testSum() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 2.25);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 0);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 1.5);
+    
+    assertEquals(22.5, spVec1.sum(), 0.00001);
+    assertEquals(0, spVec2.sum(), 0.000001);
+    assertEquals(15, spVec3.sum(), 0.000001);
+  }
+  
+  @Test
+  public void testDot() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 2.25);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 0);
+    DoubleVector spVec3 = new SparseDoubleVector(10, 1.5);
+    DoubleVector spVec4 = new SparseDoubleVector(10, 1);
+    
+    assertEquals(spVec1.multiply(spVec3).sum(), spVec1.dot(spVec3), 0.000001);
+    assertEquals(spVec3.sum(), spVec3.dot(spVec4), 0.000001);
+    assertEquals(0, spVec1.dot(spVec2), 0.000001);
+  }
+  
+  @Test
+  public void testSlice() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 2.25);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 0);
+    DoubleVector spVec3 = new SparseDoubleVector(5, 2.25);
+    DoubleVector spVec4 = new SparseDoubleVector(5, 0);
+    
+    spVec1.set(7, 100);
+    spVec2.set(2, 200);
+    
+    assertEquals(spVec3, spVec1.sliceUnsafe(5));
+    assertFalse(spVec4.equals(spVec2.slice(5)));
+    
+    assertFalse(spVec3.equals(spVec1.slice(5, 9)));
+    assertEquals(spVec4, spVec2.slice(5, 9));
+  }
+  
+  @Test
+  public void testMaxMin() {
+    DoubleVector spVec1 = new SparseDoubleVector(10, 2.25);
+    DoubleVector spVec2 = new SparseDoubleVector(10, 0);
+    
+    spVec1.set(7, 100);
+    spVec2.set(2, 200);
+    
+    assertEquals(100, spVec1.max(), 0.000001);
+    assertEquals(0, spVec2.min(), 0.000001);
+  }
 
 }
