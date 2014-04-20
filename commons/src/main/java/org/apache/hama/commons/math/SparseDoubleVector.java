@@ -90,8 +90,9 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public void set(int index, double value) {
-    Preconditions.checkArgument(index < this.dimension,
-        String.format("Index %d out of max allowd dimension %d of sparse vector.", index, this.dimension));
+    Preconditions.checkArgument(index < this.dimension, String.format(
+        "Index %d out of max allowd dimension %d of sparse vector.", index,
+        this.dimension));
     if (value == this.defaultValue) {
       this.elements.remove(index);
     } else {
@@ -119,25 +120,23 @@ public class SparseDoubleVector implements DoubleVector {
    * and then return the result.
    */
   @Override
-  public DoubleVector applyToElements(DoubleVector other, DoubleDoubleFunction func) {
+  public DoubleVector applyToElements(DoubleVector other,
+      DoubleDoubleFunction func) {
 
     Preconditions.checkArgument(this.getDimension() == other.getDimension(),
         "Dimension of two vectors should be equal.");
 
-    
     double otherDefaultValue = 0.0;
     if (other instanceof SparseDoubleVector) {
-     otherDefaultValue = ((SparseDoubleVector) other).defaultValue;
+      otherDefaultValue = ((SparseDoubleVector) other).defaultValue;
     }
     double newDefaultValue = this.defaultValue;
     if (other instanceof SparseDoubleVector) {
       newDefaultValue = func.apply(this.defaultValue, otherDefaultValue);
     }
 
-    SparseDoubleVector newVec = new SparseDoubleVector(this.dimension, newDefaultValue);
-    
-//  System.out.printf("This: %s\n", this.toString());
-//  System.out.printf("That: %s\n", other.toString());
+    SparseDoubleVector newVec = new SparseDoubleVector(this.dimension,
+        newDefaultValue);
 
     Iterator<DoubleVectorElement> thisItr = this.iterateNonDefault();
     Iterator<DoubleVectorElement> otherItr = other.iterateNonDefault();
@@ -151,14 +150,10 @@ public class SparseDoubleVector implements DoubleVector {
       otherCur = otherItr.next();
     }
 
-    // System.out.printf("This, %d: %f\n", thisCur.getIndex(),
-    // thisCur.getValue());
-    // System.out.printf("Other,  %d: %f\n", otherCur.getIndex(),
-    // otherCur.getValue());
-
     while (thisCur != null || otherCur != null) {
       if (thisCur == null) { // the iterator of current vector reaches the end
-        newVec.set(otherCur.getIndex(), func.apply(this.defaultValue, otherCur.getValue()));
+        newVec.set(otherCur.getIndex(),
+            func.apply(this.defaultValue, otherCur.getValue()));
         if (newVec.get(otherCur.getIndex()) == newVec.defaultValue) {
           // remove if the value equals the default value
           newVec.elements.remove(otherCur.getIndex());
@@ -169,7 +164,8 @@ public class SparseDoubleVector implements DoubleVector {
           otherCur = null;
         }
       } else if (otherCur == null) {
-        newVec.set(thisCur.getIndex(), func.apply(thisCur.getValue(), otherDefaultValue));
+        newVec.set(thisCur.getIndex(),
+            func.apply(thisCur.getValue(), otherDefaultValue));
         if (newVec.get(thisCur.getIndex()) == newVec.defaultValue) {
           // remove if the value equals the default value
           newVec.elements.remove(thisCur.getIndex());
@@ -191,7 +187,8 @@ public class SparseDoubleVector implements DoubleVector {
           }
         } else if (thisCur.getIndex() > otherCur.getIndex()) {
           curIdx = otherCur.getIndex();
-          newVec.set(curIdx, func.apply(this.defaultValue, otherCur.getValue()));
+          newVec
+              .set(curIdx, func.apply(this.defaultValue, otherCur.getValue()));
           if (otherItr.hasNext()) {
             otherCur = otherItr.next();
           } else {
@@ -199,7 +196,8 @@ public class SparseDoubleVector implements DoubleVector {
           }
         } else {
           curIdx = thisCur.getIndex();
-          newVec.set(curIdx, func.apply(thisCur.getValue(), otherCur.getValue()));
+          newVec.set(curIdx,
+              func.apply(thisCur.getValue(), otherCur.getValue()));
           if (thisItr.hasNext()) {
             thisCur = thisItr.next();
           } else {
@@ -389,8 +387,9 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public DoubleVector multiply(DoubleMatrix matrix) {
-    Preconditions.checkArgument(this.dimension == matrix.getColumnCount(),
-        "The dimension of vector does not equal to the dimension of the matrix column.");
+    Preconditions
+        .checkArgument(this.dimension == matrix.getColumnCount(),
+            "The dimension of vector does not equal to the dimension of the matrix column.");
     return this.multiplyUnsafe(matrix);
   }
 
@@ -566,13 +565,14 @@ public class SparseDoubleVector implements DoubleVector {
 
   /**
    * Obtain a sub-vector of the current vector
+   * 
    * @param start inclusive
    * @param end inclusive
    */
   @Override
   public DoubleVector slice(int start, int end) {
-    Preconditions.checkArgument(start >= 0 && end < this.dimension,
-        String.format("Start and end range should be in [0, %d].", this.dimension));
+    Preconditions.checkArgument(start >= 0 && end < this.dimension, String
+        .format("Start and end range should be in [0, %d].", this.dimension));
     return this.sliceUnsafe(start, end);
   }
 
@@ -582,7 +582,8 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public DoubleVector sliceUnsafe(int start, int end) {
-    SparseDoubleVector slicedVec = new SparseDoubleVector(end - start + 1, this.defaultValue);
+    SparseDoubleVector slicedVec = new SparseDoubleVector(end - start + 1,
+        this.defaultValue);
     for (Map.Entry<Integer, Double> entry : this.elements.entrySet()) {
       if (entry.getKey() >= start && entry.getKey() <= end) {
         slicedVec.elements.put(entry.getKey() - start, entry.getValue());
@@ -626,7 +627,8 @@ public class SparseDoubleVector implements DoubleVector {
    */
   @Override
   public double[] toArray() {
-    throw new UnsupportedOperationException("SparseDoubleVector does not support toArray() method.");
+    throw new UnsupportedOperationException(
+        "SparseDoubleVector does not support toArray() method.");
   }
 
   /*
@@ -688,8 +690,8 @@ public class SparseDoubleVector implements DoubleVector {
   /**
    * Non-zero iterator for vector elements.
    */
-  private final class NonDefaultIterator extends AbstractIterator<DoubleVectorElement> {
-
+  private final class NonDefaultIterator extends
+      AbstractIterator<DoubleVectorElement> {
     private final DoubleVectorElement element = new DoubleVectorElement();
 
     private final int entryDimension;
@@ -729,7 +731,8 @@ public class SparseDoubleVector implements DoubleVector {
     }
   }
 
-  private final class DefaultIterator extends AbstractIterator<DoubleVectorElement> {
+  private final class DefaultIterator extends
+      AbstractIterator<DoubleVectorElement> {
 
     private final DoubleVectorElement element = new DoubleVectorElement();
 
@@ -790,7 +793,7 @@ public class SparseDoubleVector implements DoubleVector {
   @Override
   public boolean equals(Object other) {
     if (other instanceof DoubleVector) {
-      DoubleVector otherVec = (DoubleVector)other;
+      DoubleVector otherVec = (DoubleVector) other;
       if (this.dimension != otherVec.getDimension()) {
         return false;
       }
@@ -806,7 +809,7 @@ public class SparseDoubleVector implements DoubleVector {
           return false;
         }
       }
-      
+
       return true;
     }
     return false;
